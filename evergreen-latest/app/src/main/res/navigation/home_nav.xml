@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/home_nav"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.prod.evergreen.fragments.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home" />
+    <fragment
+        android:id="@+id/companiesFragment"
+        android:name="com.prod.evergreen.fragments.CompaniesFragment"
+        android:label="fragment_companies"
+        tools:layout="@layout/fragment_companies" />
+    <fragment
+        android:id="@+id/taskFragment"
+        android:name="com.prod.evergreen.fragments.TaskFragment"
+        android:label="fragment_task"
+        tools:layout="@layout/fragment_task" />
+    <fragment
+        android:id="@+id/createManagerFragment"
+        android:name="com.prod.evergreen.fragments.CreateManagerFragment"
+        android:label="fragment_create_manager"
+        tools:layout="@layout/fragment_create_manager" />
+    <fragment
+        android:id="@+id/createTechnisionFragment"
+        android:name="com.prod.evergreen.fragments.CreateTechnisionFragment"
+        android:label="fragment_create_technision"
+        tools:layout="@layout/fragment_create_technision" />
+    <fragment
+        android:id="@+id/createAmcFragment"
+        android:name="com.prod.evergreen.fragments.CreateAmcFragment"
+        android:label="fragment_create_amc"
+        tools:layout="@layout/fragment_create_amc" />
+<!--    <fragment-->
+<!--        android:id="@+id/notificationsFragment"-->
+<!--        android:name="com.prod.evergreen.fragments.NotificationsFragment"-->
+<!--        android:label="fragment_notifications"-->
+<!--        tools:layout="@layout/fragment_notifications" />-->
+    <fragment
+        android:id="@+id/equipmentFragment"
+        android:name="com.prod.evergreen.fragments.EquipmentFragment"
+        android:label="fragment_equipment"
+        tools:layout="@layout/fragment_equipment" />
+    <fragment
+        android:id="@+id/createTaskFragment"
+        android:name="com.prod.evergreen.fragments.CreateTaskFragment"
+        android:label="fragment_create_task"
+        tools:layout="@layout/fragment_create_task" />
+    <fragment
+        android:id="@+id/amc_mangers"
+        android:name="com.prod.evergreen.fragments.ListAllAMCTechniciansFragment"
+        android:label="fragment_create_task"
+        tools:layout="@layout/fragment_list_all_a_m_c_technicians" />
+    <fragment
+        android:id="@+id/uploadEqpmntExcelData"
+        android:name="com.prod.evergreen.fragments.UploadEqpmntExcelData"
+        android:label="fragment_upload_eqpmnt_excel_data"
+        tools:layout="@layout/fragment_upload_eqpmnt_excel_data" />
+    <fragment
+        android:id="@+id/addEquipmentFragment"
+        android:name="com.prod.evergreen.fragments.AddEquipmentFragment"
+        android:label="fragment_add_equipment"
+        tools:layout="@layout/fragment_add_equipment" />
+
+
+    <fragment
+        android:id="@+id/downloadQrFragment"
+        android:name="com.prod.evergreen.fragments.DownloadQrFragment"
+        android:label="fragment_download_qr"
+        tools:layout="@layout/fragment_download_qr" />
+</navigation>

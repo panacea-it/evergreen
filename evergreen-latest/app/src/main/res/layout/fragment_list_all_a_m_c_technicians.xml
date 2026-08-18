@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragments.ListAllAMCTechniciansFragment">
+
+
+    <include
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_marginHorizontal="@dimen/_10sdp"
+        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/buttons"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_55sdp"
+        layout="@layout/amc_buttons"/>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tabLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        app:tabTextAppearance="@style/CustomTabTextAppearance"
+        app:tabIndicatorAnimationMode="elastic"
+        app:tabIndicatorFullWidth="false"
+        app:tabTextColor="@color/gray1"
+        app:tabBackground="@color/white"
+        android:layout_marginTop="@dimen/_15sdp"
+        android:contentDescription="@string/menu"
+        app:tabSelectedTextColor="@color/black_blue1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/buttons"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tabMode="fixed"
+        app:tabGravity="fill"/>
+    <androidx.appcompat.widget.AppCompatButton
+        android:textColor="@color/white"
+        android:id="@+id/adduser"
+        android:minWidth="@dimen/_150sdp"
+        android:backgroundTint="@color/black_blue"
+        android:fontFamily="@font/roboto_medium"
+        android:background="@drawable/shape_rectangle_radius"
+        android:textAllCaps="false"
+        android:text="Add new user"
+       android:layout_marginVertical="@dimen/_15sdp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

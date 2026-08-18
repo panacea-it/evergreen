@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:background="@color/white"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
+        <ImageView
+            android:id="@+id/close"
+            android:padding="@dimen/_10sdp"
+            android:layout_gravity="end"
+            android:src="@drawable/close"
+            android:layout_width="@dimen/_40sdp"
+            android:layout_height="@dimen/_40sdp"/>
+        <!-- Company Details -->
+        <LinearLayout
+            android:layout_margin="@dimen/_10sdp"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <TextView
+            android:fontFamily="@font/roboto_medium"
+            android:id="@+id/text_company_details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Company Details"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black1" />
+
+        <!-- Company Name -->
+        <LinearLayout
+            android:layout_marginTop="@dimen/_4sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Company Name: " />
+
+            <TextView
+                android:id="@+id/tv_company_name"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Company Location -->
+        <LinearLayout
+            android:layout_marginTop="@dimen/_4sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Location: " />
+
+            <TextView
+                android:id="@+id/tv_company_location"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Point of Contact Details -->
+        <TextView
+            android:layout_marginTop="@dimen/_8sdp"
+            android:fontFamily="@font/roboto_medium"
+            android:id="@+id/text_poc_details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Point of Contact Details"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black1" />
+
+        <!-- POC Name -->
+        <LinearLayout
+            android:layout_marginTop="@dimen/_4sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Name: " />
+
+            <TextView
+                android:id="@+id/tv_poc_name"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- POC Phone -->
+        <LinearLayout
+            android:layout_marginTop="@dimen/_4sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Phone: " />
+
+            <TextView
+                android:id="@+id/tv_poc_phone"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Task Details -->
+        <TextView
+            android:layout_marginTop="@dimen/_8sdp"
+            android:includeFontPadding="false"
+            android:fontFamily="@font/roboto_medium"
+            android:id="@+id/text_task_details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Task Details"
+            android:textSize="20sp"
+            android:textColor="@color/black1" />
+<ImageView
+    android:contentDescription="@string/desc"
+    android:layout_marginVertical="@dimen/_10sdp"
+    android:id="@+id/image_issue"
+    android:scaleType="centerCrop"
+    android:layout_width="@dimen/_100sdp"
+    android:layout_height="@dimen/_100sdp"/>
+        <!-- Task Name -->
+        <LinearLayout
+            android:layout_marginTop="@dimen/_4sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Title: " />
+
+            <TextView
+                android:id="@+id/tv_task_name"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Some Title" />
+        </LinearLayout>
+
+        <!-- Task Description -->
+        <LinearLayout
+            android:layout_marginTop="@dimen/_4sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Description: " />
+
+            <TextView
+                android:id="@+id/tv_task_description"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Some Description" />
+        </LinearLayout>
+
+        <!-- Task Technician -->
+        <LinearLayout
+            android:layout_marginTop="@dimen/_4sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Technician: " />
+
+            <TextView
+                android:id="@+id/tv_task_technician"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Charan" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_marginTop="@dimen/_4sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Technician Phone: " />
+
+            <TextView
+                android:id="@+id/tv_task_technician_phone"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+91" />
+        </LinearLayout>
+
+        <!-- Task Created -->
+        <LinearLayout
+            android:layout_marginTop="@dimen/_4sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Created: " />
+
+            <TextView
+                android:id="@+id/tv_task_created"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="10-04-24" />
+        </LinearLayout>
+
+        <!-- Task Last Update -->
+        <LinearLayout
+            android:layout_marginTop="@dimen/_4sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Last Update: " />
+
+            <TextView
+                android:id="@+id/tv_task_last_update"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black_blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="10-04-24" />
+        </LinearLayout>
+
+        <!-- Task Status -->
+        <LinearLayout
+            android:layout_marginTop="@dimen/_10sdp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="@color/black2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Status: " />
+
+            <TextView
+                android:id="@+id/tv_status"
+                android:paddingHorizontal="@dimen/_15sdp"
+                android:paddingVertical="@dimen/_8sdp"
+                android:textSize="@dimen/_14ssp"
+                android:backgroundTint="#FCEDE8"
+                android:background="@drawable/rounded_corners"
+                android:fontFamily="@font/roboto_regular"
+                android:textColor="#D02B14"
+                android:text="Not Started"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+    </LinearLayout>
+    </LinearLayout>
+
+</ScrollView>

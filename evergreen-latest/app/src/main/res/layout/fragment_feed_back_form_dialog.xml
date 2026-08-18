@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:fitsSystemWindows="true"
+    android:background="@color/black_blue"
+    android:id="@+id/main"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".dialogs.FeedBackFormFragmentDialog">
+    <LinearLayout
+        android:background="@color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Toolbar
+            android:background="@color/black_blue"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:id="@+id/close"
+                    android:src="@drawable/back"
+                    android:layout_width="@dimen/_40sdp"
+                    android:layout_height="@dimen/_40sdp"/>
+
+                <TextView
+                    android:layout_centerVertical="true"
+                    android:gravity="left|center"
+                    android:layout_marginLeft="@dimen/_50sdp"
+                    android:text="@string/registration"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/_18ssp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+            </RelativeLayout>
+        </Toolbar>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_marginHorizontal="@dimen/_15sdp"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_marginTop="@dimen/_2sdp"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <TextView
+                    android:textColor="@color/gray1"
+                    android:fontFamily="@font/roboto_regular"
+                    android:textSize="@dimen/_16ssp"
+                    android:layout_marginTop="@dimen/_20sdp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:text="Call Type"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <TextView
+                    android:drawableEnd="@drawable/arrow_down"
+                    android:gravity="center_vertical"
+                    android:id="@+id/et_calltype"
+                    android:textColorHint="@color/gray2"
+                    android:fontFamily="@font/roboto_medium"
+                    android:textSize="@dimen/_14ssp"
+                    android:textColor="@color/black_blue"
+                    android:layout_marginTop="@dimen/_2sdp"
+                    android:paddingHorizontal="@dimen/_10sdp"
+                    android:hint="Select Call Type"
+                    android:background="@drawable/edit_text_background"
+                    app:layout_constraintTop_toBottomOf="@+id/text_email"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_50sdp"
+                    android:inputType="text"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <TextView
+                    android:textColor="@color/gray1"
+                    android:fontFamily="@font/roboto_regular"
+                    android:textSize="@dimen/_16ssp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:text="Action Taken"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <EditText
+                    android:paddingVertical="@dimen/_5sdp"
+                    android:minHeight="@dimen/_100sdp"
+                    android:gravity="top"
+                    android:id="@+id/tv_action_description"
+                    android:textColorHint="@color/gray1"
+                    android:fontFamily="@font/roboto_medium"
+                    android:textSize="@dimen/_14ssp"
+                    android:textColor="@color/black_blue"
+                    android:layout_marginTop="@dimen/_2sdp"
+                    android:paddingHorizontal="@dimen/_10sdp"
+                    android:hint="Enter Action Description"
+                    android:background="@drawable/edit_text_background"
+                    app:layout_constraintTop_toBottomOf="@+id/text_email"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:inputType="textMultiLine"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+
+                <TextView
+                    android:textColor="@color/gray1"
+                    android:fontFamily="@font/roboto_regular"
+                    android:textSize="@dimen/_16ssp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:text="Requirement Datails"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <EditText
+                    android:paddingVertical="@dimen/_5sdp"
+                    android:minHeight="@dimen/_100sdp"
+                    android:gravity="top"
+                    android:id="@+id/et_req_details"
+                    android:textColorHint="@color/gray1"
+                    android:fontFamily="@font/roboto_medium"
+                    android:autofillHints="emailAddress"
+                    android:textSize="@dimen/_14ssp"
+                    android:textColor="@color/black_blue"
+                    android:layout_marginTop="@dimen/_2sdp"
+                    android:paddingHorizontal="@dimen/_10sdp"
+                    android:hint="Enter Requirement Datails"
+                    android:background="@drawable/edit_text_background"
+                    app:layout_constraintTop_toBottomOf="@+id/text_email"
+                    android:layout_width="match_parent"
+
+                    android:layout_height="match_parent"
+                    android:inputType="textMultiLine"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+<RelativeLayout
+    android:layout_marginVertical="@dimen/_20sdp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <TextView
+        android:layout_centerVertical="true"
+        android:textSize="@dimen/_14ssp"
+        android:textColor="@color/gray1"
+        android:fontFamily="@font/roboto_medium"
+        android:text=" Follow Up Action Required (Yes/No)"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+<RadioGroup
+    android:id="@+id/rg_action_required"
+    android:layout_centerVertical="true"
+    android:layout_alignParentEnd="true"
+    android:orientation="horizontal"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    <RadioButton
+        android:checked="true"
+        app:buttonTint="@color/radio_button_color"
+        android:fontFamily="@font/roboto_medium"
+        android:id="@+id/action_yes"
+        android:text="yes"
+        android:textColor="@color/black1"
+        android:layout_marginEnd="@dimen/_5sdp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+    <RadioButton
+        app:buttonTint="@color/radio_button_color"
+        android:textColor="@color/black1"
+        android:fontFamily="@font/roboto_medium"
+        android:id="@+id/action_no"
+        android:text="No"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+</RadioGroup>
+
+</RelativeLayout>
+                <EditText
+                    android:paddingVertical="@dimen/_6sdp"
+                    android:minHeight="@dimen/_100sdp"
+                    android:gravity="top"
+                    android:id="@+id/action_req_details"
+                    android:fontFamily="@font/roboto_medium"
+                    android:textSize="@dimen/_14ssp"
+                    android:textColorHint="@color/gray1"
+                    android:textColor="@color/black_blue"
+                    android:layout_marginTop="@dimen/_2sdp"
+                    android:paddingHorizontal="@dimen/_10sdp"
+                    android:hint="If Click the Yes Button  Enter The Action Required Details "
+                    android:background="@drawable/edit_text_background"
+                    app:layout_constraintTop_toBottomOf="@+id/text_email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textMultiLine"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <RelativeLayout
+                    android:id="@+id/rl1"
+                    android:layout_marginVertical="@dimen/_20sdp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+
+                        android:layout_toStartOf="@id/rd_repair"
+                        android:id="@+id/tv_repair_title"
+                        android:layout_centerVertical="true"
+                        android:textSize="@dimen/_14ssp"
+                        android:textColor="@color/gray1"
+                        android:fontFamily="@font/roboto_regular"
+                        android:text="The machine has been services/ repaired to my satisfaction"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                    <RadioGroup
+                        android:id="@+id/rd_repair"
+                        android:layout_centerVertical="true"
+                        android:layout_alignParentEnd="true"
+                        android:orientation="horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+                        <RadioButton
+                            android:checked="true"
+                            app:buttonTint="@color/radio_button_color"
+                            android:textColor="@color/black1"
+                            android:fontFamily="@font/roboto_medium"
+                            android:id="@+id/repaired_yes"
+                            android:text="yes"
+                            android:layout_marginEnd="@dimen/_5sdp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <RadioButton
+                            app:buttonTint="@color/radio_button_color"
+                            android:textColor="@color/black1"
+                            android:fontFamily="@font/roboto_medium"
+                            android:id="@+id/repaired_no"
+                            android:text="No"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                    </RadioGroup>
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/rl2"
+                    android:layout_marginVertical="@dimen/_20sdp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_toStartOf="@id/rd_smoothly"
+                        android:id="@+id/tv_running_title"
+                        android:layout_centerVertical="true"
+                        android:textSize="@dimen/_14ssp"
+                        android:textColor="@color/gray1"
+                        android:fontFamily="@font/roboto_regular"
+                        android:text=" The machine is running smoothly and satisfactorily"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                    <RadioGroup
+                        android:id="@+id/rd_smoothly"
+                        android:layout_centerVertical="true"
+                        android:layout_alignParentEnd="true"
+                        android:orientation="horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+                        <RadioButton
+                            android:checked="true"
+                            app:buttonTint="@color/radio_button_color"
+                            android:textColor="@color/black1"
+                            android:fontFamily="@font/roboto_medium"
+                            android:id="@+id/smoothly_yes"
+                            android:text="yes"
+                            android:layout_marginEnd="@dimen/_5sdp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <RadioButton
+                            app:buttonTint="@color/radio_button_color"
+                            android:textColor="@color/black1"
+                            android:fontFamily="@font/roboto_medium"
+                            android:id="@+id/smoothly_no"
+                            android:text="No"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                    </RadioGroup>
+
+                </RelativeLayout>
+
+
+
+
+                <TextView
+                    android:id="@+id/tv1"
+                    android:textColor="@color/gray1"
+                    android:fontFamily="@font/roboto_regular"
+                    android:textSize="@dimen/_16ssp"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:text="Any other comments "
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <LinearLayout
+                    android:id="@+id/desc_layout"
+                    android:minHeight="@dimen/_150sdp"
+                    android:background="@drawable/edit_text_background"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <EditText
+                        android:paddingVertical="@dimen/_5sdp"
+                        android:gravity="top"
+                        android:hint="please type comment"
+                        android:id="@+id/desc"
+                        android:textColorHint="@color/gray1"
+                        android:background="@null"
+                        android:fontFamily="@font/roboto_medium"
+                        android:textSize="@dimen/_14ssp"
+                        android:textColor="@color/black_blue"
+                        android:layout_marginTop="@dimen/_8sdp"
+                        android:paddingHorizontal="@dimen/_10sdp"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:inputType="textMultiLine"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent" />
+
+
+
+
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/tv2"
+                    android:textColor="@color/gray1"
+                    android:fontFamily="@font/roboto_regular"
+                    android:textSize="@dimen/_16ssp"
+                    android:layout_marginTop="@dimen/_20sdp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:text=" Please rate your experience below "
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <RelativeLayout
+                    android:id="@+id/rl3"
+                    android:layout_marginTop="@dimen/_4sdp"
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                <androidx.appcompat.widget.AppCompatRatingBar
+                    android:layout_width="wrap_content"
+                    android:numStars="5"
+
+                    android:id="@+id/rating"
+                    android:progressBackgroundTint="@color/gray1"
+                    android:stepSize="1"
+                    android:progressTint="#ffff8800"
+                    android:layout_centerVertical="true"
+                    android:layout_height="wrap_content"/>
+                    <TextView
+                        android:id="@+id/tv_rating"
+                        android:layout_marginEnd="@dimen/_10sdp"
+                        android:layout_centerVertical="true"
+                        android:layout_alignParentEnd="true"
+                        android:textColor="@color/gray1"
+                        android:fontFamily="@font/roboto_regular"
+                        android:textSize="@dimen/_16ssp"
+                        android:layout_marginTop="@dimen/_20sdp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        android:text="4/5 stats"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:id="@+id/uploadimage_rl_sig"
+                    android:background="@drawable/sidestroke"
+                    android:layout_width="match_parent"
+                    android:orientation="horizontal"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:layout_centerVertical="true"
+                        android:id="@+id/password_icon2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:padding="@dimen/_10sdp"
+                        android:src="@drawable/baseline_image_24" />
+                    <TextView
+                        android:inputType="text"
+                        android:id="@+id/addachment_text_sig"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/_48sdp"
+                        android:layout_toEndOf="@id/password_icon2"
+                        android:layout_toStartOf="@+id/hide_icon2"
+                        android:layout_centerVertical="true"
+                        android:gravity="center_vertical"
+                        android:hint="Attach signature"
+                        android:textColor="@color/black_blue"
+                        android:textColorHint="@color/gray2"
+
+                        android:background="@android:color/transparent" />
+
+                    <ImageView
+                        android:id="@+id/hide_icon2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerInParent="true"
+                        android:padding="@dimen/_10sdp"
+                        android:src="@drawable/baseline_attach_file_24" />
+
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:id="@+id/uploadimage_rl"
+                    android:background="@drawable/sidestroke"
+                    android:layout_width="match_parent"
+                    android:orientation="horizontal"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:layout_centerVertical="true"
+                        android:id="@+id/password_icon1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:padding="@dimen/_10sdp"
+                        android:src="@drawable/baseline_image_24" />
+                    <TextView
+                        android:inputType="text"
+                        android:id="@+id/addachment_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/_48sdp"
+                        android:layout_toEndOf="@id/password_icon1"
+                        android:layout_centerVertical="true"
+                        android:gravity="center_vertical"
+                        android:text="Attach File"
+                        android:textColor="@color/black_blue"
+                        android:textColorHint="@color/gray2"
+                        android:background="@android:color/transparent" />
+
+                    <ImageView
+                        android:id="@+id/hide_icon1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerInParent="true"
+                        android:padding="@dimen/_10sdp"
+                        android:src="@drawable/baseline_attach_file_24" />
+
+
+                </RelativeLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/attachments"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <com.google.android.material.card.MaterialCardView
+                        app:cardBackgroundColor="@color/btn_back"
+                        android:id="@+id/creat_eq"
+                        app:cardCornerRadius="@dimen/_8sdp"
+                        android:layout_marginHorizontal="@dimen/_2sdp"
+                        android:layout_marginTop="@dimen/_20sdp"
+                        android:textSize="@dimen/_14ssp"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/_50sdp">
+                        <TextView
+                            android:id="@+id/submit"
+                            android:fontFamily="@font/roboto_regular"
+                            android:gravity="center"
+                            android:textSize="@dimen/_14ssp"
+                            android:layout_gravity="center"
+                            android:textColor="@color/white"
+                            android:text="Submit"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"/>
+                    </com.google.android.material.card.MaterialCardView>
+
+
+                </LinearLayout>
+                <TextView
+                    android:layout_margin="@dimen/_20sdp"
+                    android:fontFamily="@font/roboto_regular"
+                    android:gravity="center"
+                    android:visibility="gone"
+                    android:layout_marginTop="@dimen/_10sdp"
+                    android:textSize="@dimen/_14ssp"
+                    android:layout_gravity="center"
+                    android:textColor="@color/black1"
+                    android:text="After submitting this form, Client will be able to see OTP. So he will tell him"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_15sdp"/>
+
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

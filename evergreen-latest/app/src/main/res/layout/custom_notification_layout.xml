@@ -1,0 +1,31 @@
+<!-- custom_notification_layout.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:background="@color/gray1">
+
+    <Button
+        android:id="@+id/buttonAccept"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Open"
+        android:textColor="@android:color/white"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center"/>
+
+    <Button
+        android:id="@+id/buttonDismiss"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Dismiss"
+        android:textColor="@android:color/white"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:layout_marginStart="8dp"
+        android:gravity="center"/>
+
+</LinearLayout>

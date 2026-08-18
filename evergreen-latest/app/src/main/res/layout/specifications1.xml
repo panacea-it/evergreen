@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/view"
+    android:layout_marginHorizontal="@dimen/_10sdp"
+    android:layout_height="wrap_content">
+    <TextView
+        android:layout_marginTop="@dimen/_10sdp"
+        android:textSize="@dimen/_16ssp"
+        android:fontFamily="@font/roboto_medium"
+        android:textColor="@color/black_blue"
+        android:text="Specifications"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <LinearLayout
+        android:layout_marginTop="@dimen/_10sdp"
+        android:weightSum="2"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/black_blue"
+                android:text="Model Number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tv_model_num"
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/gray2"
+                android:text="G4866"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/black_blue"
+                android:text="Serial Number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tv_s_number"
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/gray2"
+                android:text="G4866"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="@dimen/_10sdp"
+        android:weightSum="2"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/black_blue"
+                android:text="Location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tv_location"
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/gray2"
+                android:text="Kitchen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/black_blue"
+                android:text="Manufacturer Date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tv_mfd"
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/gray2"
+                android:text="2019-01"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_marginTop="@dimen/_10sdp"
+        android:weightSum="2"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/black_blue"
+                android:text="Maintenance Frequency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tv_freqency"
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/gray2"
+                android:text="Monthly"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/black_blue"
+                android:text="EG Serial Number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/tv_descr"
+                android:textSize="@dimen/_14ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:textColor="@color/gray2"
+                android:text="Blender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

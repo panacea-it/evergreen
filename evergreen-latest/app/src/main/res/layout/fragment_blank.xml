@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".dialogs.BlankFragment">
+    <RelativeLayout
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    <TextView
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center"
+        android:id="@+id/tvBSign"
+        android:fontFamily="@font/roboto_bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="My Signature"
+        android:textColor="@color/black_blue"
+        android:textSize="18sp" />
+        <ImageView
+            android:layout_marginStart="@dimen/_15sdp"
+            android:src="@drawable/close"
+            android:id="@+id/close"
+            android:padding="@dimen/_5sdp"
+            android:layout_width="@dimen/_30sdp"
+            android:layout_height="@dimen/_30sdp"/>
+    </RelativeLayout>
+    <com.github.gcacace.signaturepad.views.SignaturePad
+        android:id="@+id/signaturePad"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_margin="24dp"
+        android:background="@drawable/bg_signature_pad"
+        app:penColor="@color/black_blue" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnClear"
+            android:textAllCaps="false"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:background="#C4C4C4"
+            android:gravity="center"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="8dp"
+            android:text="Clear"
+            android:textColor="@color/black1"
+            android:textSize="14sp" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnComplete"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:background="@color/black_blue"
+            android:gravity="center"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="8dp"
+            android:text="Submit"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+<!--    <TextView-->
+<!--        android:id="@+id/tvASign"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="12dp"-->
+<!--        android:text="Your Signature"-->
+<!--        android:textColor="@color/black1"-->
+<!--        android:textSize="16sp" />-->
+
+<!--    <ImageView-->
+<!--        android:id="@+id/ivSignature"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="180dp"-->
+<!--        android:layout_margin="24dp" />-->
+
+</LinearLayout>

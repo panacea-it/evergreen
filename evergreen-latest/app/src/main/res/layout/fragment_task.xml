@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragments.TaskFragment">
+
+    <TextView
+        android:visibility="gone"
+        app:drawableEndCompat="@drawable/drp_down1"
+        app:drawableStartCompat="@drawable/breafcase"
+        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/company_search"
+        android:hint="Search company..."
+        android:textSize="@dimen/_14ssp"
+        android:drawablePadding="@dimen/_5sdp"
+        android:paddingHorizontal="@dimen/_10sdp"
+        android:elevation="@dimen/_10sdp"
+        android:paddingVertical="@dimen/_14sdp"
+        android:layout_marginHorizontal="@dimen/_15sdp"
+        android:layout_marginTop="@dimen/_10sdp"
+
+        android:background="@drawable/rectangler_searc_back"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+    <include
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_marginHorizontal="@dimen/_10sdp"
+        app:layout_constraintTop_toBottomOf="@+id/company_search"
+        android:id="@+id/buttons"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_55sdp"
+        layout="@layout/task_status_buttons"/>
+
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tabLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        app:tabTextAppearance="@style/CustomTabTextAppearance"
+        app:tabIndicatorFullWidth="false"
+        app:tabTextColor="@color/gray1"
+        app:tabBackground="@color/white"
+        android:layout_marginTop="@dimen/_15sdp"
+        android:contentDescription="@string/menu"
+        app:tabSelectedTextColor="@color/black_blue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+       app:layout_constraintTop_toBottomOf="@+id/buttons"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tabMode="fixed"
+       app:tabGravity="fill"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

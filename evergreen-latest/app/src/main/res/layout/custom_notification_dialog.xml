@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="@dimen/_10sdp"
+    android:layout_margin="@dimen/_10sdp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+    <LinearLayout
+        android:padding="@dimen/_15sdp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+    <TextView
+        android:layout_marginTop="@dimen/_10sdp"
+        android:fontFamily="@font/roboto_medium"
+       android:text="Machine Details"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:textColor="@color/black_blue"
+        android:gravity="center_horizontal"
+       />
+        <TextView android:layout_marginTop="@dimen/_15sdp"
+        android:id="@+id/textViewTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:fontFamily="@font/roboto_medium"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp"/>
+
+
+    <TextView
+        android:fontFamily="@font/roboto_medium"
+        android:id="@+id/textViewBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textColor="@color/black_blue1"
+        android:layout_marginBottom="16dp"/>
+        <TextView
+            android:layout_marginTop="@dimen/_10sdp"
+            android:id="@+id/tv_sn"
+            android:fontFamily="@font/roboto_regular"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/black_blue" />
+
+        <TextView
+            android:id="@+id/location"
+            android:fontFamily="@font/roboto_regular"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/black_blue"
+            android:layout_marginBottom="8dp"/>
+
+
+    <LinearLayout
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:textColor="@color/white"
+            android:fontFamily="@font/roboto_medium"
+            android:id="@+id/buttonAccept"
+            android:textSize="@dimen/_14sdp"
+            android:minWidth="@dimen/_120sdp"
+            android:textAllCaps="false"
+            android:background="@color/btn_back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/_38sdp"
+            android:text="Accept"
+            android:layout_margin="8dp"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:minWidth="@dimen/_120sdp"
+            android:textAllCaps="false"
+            android:background="@color/btn_back"
+            android:textColor="@color/white"
+            android:textSize="@dimen/_14sdp"
+            android:fontFamily="@font/roboto_medium"
+            android:id="@+id/buttonDismiss"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/_38sdp"
+            android:text="Dismiss"
+            android:layout_margin="8dp"/>
+
+    </LinearLayout>
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

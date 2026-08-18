@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/rounded_corners"
+    android:layout_margin="@dimen/_2sdp"
+    android:layout_height="wrap_content">
+    <RelativeLayout
+       android:padding="@dimen/_6sdp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <RelativeLayout
+            android:id="@+id/relative12"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <ImageView
+            android:visibility="gone"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/desc"
+            android:id="@+id/profile"
+            android:src="@drawable/admin"
+            android:layout_width="@dimen/_35sdp"
+            android:layout_height="@dimen/_35sdp"/>
+        <TextView
+            android:visibility="gone"
+            android:layout_marginStart="@dimen/_5sdp"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@+id/profile"
+            android:id="@+id/createdby"
+            android:textSize="@dimen/_16ssp"
+            android:textColor="@color/black_blue"
+            android:fontFamily="@font/roboto_medium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        </RelativeLayout>
+        <LinearLayout
+            android:layout_margin="@dimen/_5sdp"
+            android:layout_below="@+id/relative12"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+
+            <TextView
+                android:layout_marginTop="@dimen/_5sdp"
+                android:id="@+id/title"
+                android:textSize="@dimen/_14ssp"
+                android:textColor="@color/black_blue"
+                android:fontFamily="@font/roboto_medium"
+                android:text="New Ticket Created: Issue Reported by KFC"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/desc"
+                android:layout_marginTop="@dimen/_5sdp"
+                android:textSize="@dimen/_12ssp"
+                android:textColor="@color/gray2"
+                android:fontFamily="@font/roboto_regular"
+                android:text="A new ticket has been created for Blender Repair. You can view the ticket details and track its progress here"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+<!--            <TextView-->
+<!--                android:id="@+id/s.no"-->
+<!--                android:layout_marginTop="@dimen/_10sdp"-->
+<!--                android:textSize="@dimen/_12ssp"-->
+<!--                android:textColor="@color/gray2"-->
+<!--                android:fontFamily="@font/roboto_regular"-->
+<!--                android:text="12345"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"/>-->
+<!--            <TextView-->
+<!--                android:id="@+id/location"-->
+<!--                android:layout_marginTop="@dimen/_2sdp"-->
+<!--                android:textSize="@dimen/_12ssp"-->
+<!--                android:textColor="@color/gray2"-->
+<!--                android:fontFamily="@font/roboto_regular"-->
+<!--                android:text="12345"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"/>-->
+
+
+            <TextView
+                android:id="@+id/technician"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:textSize="@dimen/_12ssp"
+                android:textColor="@color/colorRed"
+                android:fontFamily="@font/roboto_regular"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <ImageView
+                android:visibility="gone"
+                android:minWidth="@dimen/_100sdp"
+                android:minHeight="@dimen/_100sdp"
+                android:id="@+id/image"
+                android:layout_marginVertical="@dimen/_10sdp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:layout_gravity="end"
+                android:id="@+id/date"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:textSize="@dimen/_12ssp"
+                android:textColor="@color/gray2"
+                android:fontFamily="@font/roboto_regular"
+                android:text="Today at 08.00 AM"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</LinearLayout>

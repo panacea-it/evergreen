@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_content"
+    android:background="@color/white"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appbar"
+        android:overScrollMode="ifContentScrolls"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_320sdp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:fitsSystemWindows="true">
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:id="@+id/collapsing_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fontFamily="@font/roboto_bold"
+            android:textColor="@color/black_blue"
+            android:textSize="@dimen/_20ssp"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:statusBarScrim="@android:color/white"
+            app:contentScrim="@android:color/white">
+            <ImageView
+                android:contentDescription="@string/desc"
+                android:src="@drawable/place_holder1"
+                android:id="@+id/backdrop"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:fitsSystemWindows="true"
+                app:layout_collapseMode="parallax" />
+            <ImageView
+                android:id="@+id/back"
+                android:layout_margin="@dimen/_10sdp"
+                android:src="@drawable/back"
+                app:layout_collapseMode="parallax"
+                android:layout_width="@dimen/_40sdp"
+                android:layout_height="@dimen/_40sdp"/>
+            <LinearLayout
+                app:layout_collapseMode="pin"
+                android:layout_margin="@dimen/_10sdp"
+                android:layout_gravity="end"
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+            <ImageView
+                android:layout_marginTop="@dimen/_4sdp"
+                android:id="@+id/edit_eqip"
+               android:layout_marginHorizontal="@dimen/_5sdp"
+                android:src="@drawable/edit_equipemtdata"
+                android:layout_width="@dimen/_33sdp"
+                android:layout_height="@dimen/_33sdp"/>
+            <ImageView
+                android:id="@+id/createtask"
+                android:layout_gravity="end"
+                android:src="@drawable/task_square"
+                android:layout_width="@dimen/_40sdp"
+                android:layout_height="@dimen/_40sdp"/>
+            </LinearLayout>
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_gravity="bottom"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@android:color/transparent"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                app:layout_collapseMode="pin">
+
+
+                <TextView
+        android:visibility="invisible"
+                    android:id="@+id/eq_name"
+                    android:gravity="center_vertical"
+                    android:textColor="@color/black_blue"
+                    android:layout_marginBottom="@dimen/_5sdp"
+                    android:fontFamily="@font/roboto_bold"
+                    android:textSize="@dimen/_20ssp"
+                    android:contentDescription="@string/desc"
+                    android:src="@drawable/place_holder1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:fitsSystemWindows="true"
+                    app:layout_collapseMode="parallax" />
+            </androidx.appcompat.widget.Toolbar>
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_marginHorizontal="@dimen/_5sdp"
+            android:orientation="vertical"
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+    <include layout="@layout/specifications"
+    android:id="@+id/specification_layout"
+        android:layout_marginHorizontal="@dimen/_5sdp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"/>
+            <TextView
+                android:layout_marginHorizontal="@dimen/_5sdp"
+                android:layout_marginTop="@dimen/_15sdp"
+                android:layout_marginBottom="@dimen/_8sdp"
+                android:fontFamily="@font/roboto_bold"
+                android:textColor="@color/black_blue"
+                android:textSize="@dimen/_16ssp"
+                android:text="Repair History"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+<LinearLayout
+    android:layout_marginTop="@dimen/_10sdp"
+    android:layout_marginHorizontal="@dimen/_5sdp"
+    android:orientation="vertical"
+    android:background="@drawable/rounded_corners_strokes"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:weightSum="4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:gravity="center"
+            android:layout_weight="1"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:textColor="@color/black1"
+            android:fontFamily="@font/roboto_medium"
+            android:textSize="@dimen/_12ssp"
+            android:text="Date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:gravity="center"
+            android:layout_weight="1"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:textColor="@color/black1"
+            android:fontFamily="@font/roboto_medium"
+            android:textSize="@dimen/_12ssp"
+            android:text="Technician"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:gravity="center"
+            android:layout_weight="1"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:textColor="@color/black1"
+            android:fontFamily="@font/roboto_medium"
+            android:textSize="@dimen/_12ssp"
+            android:text="Description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:gravity="center"
+            android:layout_weight="1"
+            android:layout_marginTop="@dimen/_10sdp"
+            android:textColor="@color/black1"
+            android:fontFamily="@font/roboto_medium"
+            android:textSize="@dimen/_12ssp"
+            android:text="Status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <View
+        android:layout_marginTop="@dimen/_10sdp"
+        android:background="#DBDEE5"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_1sdp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_marginTop="@dimen/_5sdp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:id="@+id/recyclerview_histroy"
+        android:layout_height="match_parent"/>
+    <TextView
+        android:visibility="gone"
+        android:layout_marginVertical="@dimen/_5sdp"
+        android:textColor="@color/black_blue"
+        android:fontFamily="@font/roboto_medium"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:id="@+id/tv_no_task"
+        android:text="No task Found"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+</LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Equipment Details -->
+        <TextView
+            android:id="@+id/tv_equipment_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Industrial Mixer"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:fontFamily="@font/roboto_medium"
+            android:id="@+id/tv_equipment_make_model"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="KitchenAid - KAO123"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tv_equipment_serial"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Serial Number: DAK98765421K"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tv_equipment_specifications"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Specifications: Dimensions: 60x60x90 cm, Power: 2200W"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tv_equipment_manufacture_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Manufacture Date: 2023-03-10"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tv_equipment_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Location: Main Kitchen"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tv_equipment_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Description: Used for baking and roasting"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tv_equipment_tm_frequency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TM Frequency: Weekly"
+            android:paddingBottom="16dp" />
+
+        <!-- Company Details -->
+        <TextView
+            android:id="@+id/tv_company_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Company: TCS - DLF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tv_company_email"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Email: tcs1@gmail.com"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tv_company_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Location: Gachi bowly"
+            android:paddingBottom="4dp" />
+
+        <ImageView
+            android:id="@+id/iv_company_logo"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:paddingBottom="16dp"
+            android:contentDescription="Company Logo" />
+
+    </LinearLayout>
+</ScrollView>

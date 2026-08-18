@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_height="match_parent"
+    tools:context=".fragments.DownloadQrFragment">
+
+    <TextView
+        android:textColor="@color/black1"
+        android:includeFontPadding="false"
+        android:fontFamily="@font/roboto_medium"
+        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/company_searc"
+        android:drawableStart="@drawable/breafcase"
+        android:hint="Search company"
+        android:drawableEnd="@drawable/drp_down1"
+        android:textSize="@dimen/_16ssp"
+        android:drawablePadding="@dimen/_5sdp"
+        android:paddingHorizontal="@dimen/_15sdp"
+        android:elevation="@dimen/_10sdp"
+        android:paddingVertical="@dimen/_14sdp"
+        android:layout_marginHorizontal="@dimen/_15sdp"
+        android:layout_marginTop="@dimen/_30sdp"
+        android:background="@drawable/rectangler_searc_back"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+
+    <TextView
+        android:includeFontPadding="false"
+        android:fontFamily="@font/roboto_medium"
+        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/branch_searc"
+        android:drawableStart="@drawable/breafcase"
+        android:hint="Search branch"
+        android:drawableEnd="@drawable/drp_down1"
+        android:textSize="@dimen/_16ssp"
+        android:drawablePadding="@dimen/_5sdp"
+        android:paddingHorizontal="@dimen/_15sdp"
+        android:elevation="@dimen/_10sdp"
+        android:paddingVertical="@dimen/_14sdp"
+        android:layout_marginHorizontal="@dimen/_15sdp"
+        android:layout_marginTop="@dimen/_30sdp"
+        android:background="@drawable/rectangler_searc_back"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+
+
+
+    <com.google.android.material.card.MaterialCardView
+        app:cardBackgroundColor="@color/btn_back"
+        android:id="@+id/downloadDocument"
+        android:layout_marginHorizontal="@dimen/_15sdp"
+        android:layout_marginTop="@dimen/_50sdp"
+        android:textSize="@dimen/_14ssp"
+        app:cardCornerRadius="@dimen/_6sdp"
+        app:layout_constraintTop_toBottomOf="@+id/relative"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:padding="@dimen/_14sdp"
+            android:fontFamily="@font/roboto_medium"
+            android:gravity="center"
+            android:textSize="@dimen/_18ssp"
+            android:layout_gravity="center"
+            android:textColor="@color/white"
+            android:text="Download File"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </com.google.android.material.card.MaterialCardView>
+    <com.google.android.material.card.MaterialCardView
+        app:cardBackgroundColor="@color/btn_back"
+        android:id="@+id/viewfile"
+        android:visibility="gone"
+        android:layout_marginHorizontal="@dimen/_15sdp"
+        android:layout_marginTop="@dimen/_20sdp"
+        android:textSize="@dimen/_14ssp"
+        app:cardCornerRadius="@dimen/_6sdp"
+        app:layout_constraintTop_toBottomOf="@+id/relative"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:padding="@dimen/_14sdp"
+            android:fontFamily="@font/roboto_medium"
+            android:gravity="center"
+            android:textSize="@dimen/_18ssp"
+            android:layout_gravity="center"
+            android:textColor="@color/white"
+            android:text="View File"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </com.google.android.material.card.MaterialCardView>
+
+</LinearLayout>

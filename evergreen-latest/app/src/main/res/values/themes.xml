@@ -1,0 +1,66 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Base.Theme.Evergreen" parent="Theme.Material3.Light.NoActionBar">
+
+<!--        <item name="android:forceDarkAllowed" tools:ignore="NewApi">false</item>-->
+<!--        <item name="android:windowBackground">@android:color/white</item>-->
+<!--        <item name="android:windowContentTransitions">true</item>-->
+<!--        <item name="android:textColor">@android:color/black</item>-->
+<!--        <item name="android:navigationBarColor">@color/white</item>-->
+<!--        <item name="colorPrimary">@color/white</item>-->
+        <item name="android:statusBarColor">@color/black_blue</item>
+
+
+    </style>
+
+    <style name="Theme.Evergreen" parent="Base.Theme.Evergreen" />
+
+
+    <style name="Theme.Evergreen.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="RoundedImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item> <!-- Adjust the corner radius as needed -->
+    </style>
+
+    <style name="CustomTabTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">14sp</item> <!-- Adjust the text size here -->
+        <item name="textAllCaps">false</item>
+        <!-- You can add more customizations here if needed -->
+    </style>
+
+    <style name="NoBackgroundDialogTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:windowBackground">@null</item>
+    </style>
+
+    <style name="FullScreenDialog" parent="Theme.AppCompat.Dialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <style name="MyTabLayoutTextAppearance" parent="TextAppearance.AppCompat.Widget.ActionBar.Title.Inverse">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="DialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/slide_up</item>
+        <item name="android:windowExitAnimation">@anim/slide_down</item>
+    </style>
+
+    <style name="FullScreenDialogStyle" parent="Theme.MaterialComponents.Light.Dialog">
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowMinWidthMajor">90%</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+    </style>
+</resources>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+   android:background="@drawable/shape_rectangle_radius"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="@dimen/_10sdp"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:background="@android:color/transparent"
+        android:paddingVertical="@dimen/_30sdp"
+        android:paddingHorizontal="@dimen/_25sdp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="You have done 20min of workout,\nYour total Carbon Offset for your activity is"
+        android:fontFamily="@font/roboto_regular"
+        android:textSize="@dimen/_14ssp"
+        android:textColor="@color/black1"
+        android:gravity="center"/>
+        <RelativeLayout
+            android:layout_marginTop="@dimen/_20sdp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/offset"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/roboto_medium"
+                android:gravity="center_horizontal"
+                android:paddingHorizontal="@dimen/_5sdp"
+                android:text="0.0029"
+                android:textColor="@color/green1"
+                android:textSize="@dimen/_22ssp" />
+
+            <TextView
+                android:id="@+id/units"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@+id/offset"
+                android:fontFamily="@font/roboto_regular"
+                android:gravity="center_horizontal"
+                android:text="KgCO2e"
+                android:textColor="@color/green1"
+                android:textSize="@dimen/_14ssp" />
+        </RelativeLayout>
+
+    </LinearLayout>
+</FrameLayout>

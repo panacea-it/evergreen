@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="white">#FFFFFFFF</color>
+    <color name="gray1">#C1C7D0</color>
+    <color name="gray2">#637587</color>
+    <color name="black1">#0D121C</color>
+    <color name="edit_text1">#E8EDF2</color>
+    <color name="btn_back">#2057A6</color>
+    <color name="text_blue1">#4F6B94</color>
+    <color name="black_blue">#022352</color>
+    <color name="black_blue1">#4F6B94</color>
+    <color name="colorLightGrey">#E6E6E6</color>
+    <color name="ash">#66393C66</color>
+    <color name="green1">#4CB528</color>
+    <color name="black2">#121417</color>
+
+
+    <color name="colorBlue">#226DFF</color>
+    <color name="colorGreen">#00FF7F</color>
+    <color name="colorTransparentGreen">#7500FF7F</color>
+    <color name="colorOrange">#FF9246</color>
+    <color name="colorYellow">#FFEE4D</color>
+    <color name="colorRed">#FF0000</color>
+    <color name="gray3">#6D6869</color>
+    <color name="background">#dddddd</color>
+</resources>
