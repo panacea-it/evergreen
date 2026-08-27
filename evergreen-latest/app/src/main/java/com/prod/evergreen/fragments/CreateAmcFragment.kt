@@ -34,7 +34,6 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.gson.JsonObject
 import com.prod.evergreen.XApplication
 import com.prod.evergreen.R
-import com.prod.evergreen.activities.MainActivity
 import com.prod.evergreen.api.MainRepository
 import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
@@ -78,6 +77,7 @@ class CreateAmcFragment : Fragment() {
 
 
 private var file_name:String?=null
+    private var isSubmitting = false
     private var param1: String? = null
     private var param2: String? = null
 lateinit var binding:FragmentCreateAmcBinding
@@ -246,6 +246,7 @@ lateinit var binding:FragmentCreateAmcBinding
 
 
         binding.createAmc.setOnClickListener {
+            if (isSubmitting) return@setOnClickListener
             if (compressedImage != null) {
                 val endDate = binding.endDate.text?.toString()
                 val startDate = binding.startDate.text?.toString() ?: ""
@@ -258,6 +259,18 @@ lateinit var binding:FragmentCreateAmcBinding
                 val pocName = binding.poc.pocName.text?.toString() ?: ""
                 val pocMail = binding.poc.pocMail.text?.toString() ?: ""
 
+                if (sitename.isEmpty()) {
+                    Toast.makeText(requireActivity(), "Enter site name", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                if (startDate.isEmpty()) {
+                    Toast.makeText(requireActivity(), "Select start date", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                if (endDate.isNullOrEmpty()) {
+                    Toast.makeText(requireActivity(), "Select end date", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
 
                 val object1 = JsonObject()
                 object1.addProperty("company_name", sitename)
@@ -274,6 +287,8 @@ lateinit var binding:FragmentCreateAmcBinding
                 object1.addProperty("logo", file_name)
 
                 val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
+                isSubmitting = true
+                binding.createAmc.isEnabled = false
                 viewModel.createAMC(object1, token!!)
             }
             else{
@@ -476,8 +491,12 @@ private fun setViewmodel() {
                 override fun onPositiveClicked(dialog: Dialog?) {
                     super.onPositiveClicked(dialog)
                     if (status){
-                        findNavController().navigate(R.id.companiesFragment)
-                        (activity as MainActivity).setTitleTextView("Company's List")
+                        if (!findNavController().popBackStack()) {
+                            requireActivity().onBackPressedDispatcher.onBackPressed()
+                        }
+                    } else {
+                        isSubmitting = false
+                        binding.createAmc.isEnabled = true
                     }
 
                 }

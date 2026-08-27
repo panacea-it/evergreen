@@ -3,7 +3,7 @@ package com.prod.evergreen.api
 class Constants {
 
     companion object{
-        const val BASE_URL = "https://api.testverse.site/"
+        const val BASE_URL = "http://127.0.0.1:3000/"
         const val LOGIN = "auth/signIn"
         const val GETLIST = "products"
         const val FORGOT_PASSWORD = "user/forgetPassword"

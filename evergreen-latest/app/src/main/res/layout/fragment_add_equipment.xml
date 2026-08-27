@@ -30,7 +30,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_20sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="Equipment name"
+                    android:text="Equipment name *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <EditText
@@ -57,7 +57,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_10sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="Make"
+                    android:text="Make *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <EditText
@@ -85,7 +85,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_10sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="Model"
+                    android:text="Model *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <EditText
@@ -113,7 +113,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_10sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="Serial number"
+                    android:text="Serial number *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <EditText
@@ -140,7 +140,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_20sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="Manufacturer date"
+                    android:text="Manufacturer year *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <TextView
@@ -152,7 +152,7 @@
                     android:textColor="@color/black_blue"
                     android:layout_marginTop="@dimen/_2sdp"
                     android:paddingHorizontal="@dimen/_10sdp"
-                    android:hint="Enter Manufacturer date"
+                    android:hint="Select manufacture year"
                     android:background="@drawable/edit_text_background"
                     app:layout_constraintTop_toBottomOf="@+id/text_email"
                     android:layout_width="match_parent"
@@ -168,7 +168,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_20sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="Location"
+                    android:text="Location *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <EditText
@@ -195,7 +195,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_20sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="PM frequency"
+                    android:text="PM frequency *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <TextView
@@ -258,7 +258,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_20sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="Add Photo"
+                    android:text="Add Photo *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
 
@@ -338,7 +338,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_20sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="Company Name"
+                    android:text="Company Name *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <TextView

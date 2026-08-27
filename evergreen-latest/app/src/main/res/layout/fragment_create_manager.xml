@@ -55,7 +55,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/_20sdp"
                     android:fontFamily="@font/roboto_regular"
-                    android:text="@string/name"
+                    android:text="Name *"
                     android:textColor="@color/gray1"
                     android:textSize="@dimen/_16ssp"
                     app:layout_constraintStart_toStartOf="parent" />
@@ -81,7 +81,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_10sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="@string/mobile_number"
+                    android:text="Mobile number *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <EditText
@@ -108,7 +108,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_10sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="@string/email"
+                    android:text="Email *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <EditText
@@ -135,7 +135,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_20sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="@string/password"
+                    android:text="Password *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <EditText
@@ -161,7 +161,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_20sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="Access Type"
+                    android:text="Access Type *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <LinearLayout
@@ -193,7 +193,7 @@
                     android:textSize="@dimen/_16ssp"
                     android:layout_marginTop="@dimen/_20sdp"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:text="@string/assign_to_amc"
+                    android:text="Assign to AMC *"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
                 <TextView

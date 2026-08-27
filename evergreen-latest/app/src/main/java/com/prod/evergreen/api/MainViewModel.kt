@@ -70,9 +70,31 @@ class MainViewModel(private val mainRepository: MainRepository) : ViewModel() {
         get() = _errorMessage
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        onError("Exception handled: ${throwable.localizedMessage}")
+        Log.e("MainViewModel", "coroutine failed", throwable)
+        val detail = throwable.localizedMessage
+            ?: throwable.message
+            ?: throwable.javaClass.simpleName
+        onError(
+            if (detail.isBlank() || detail == "null") {
+                "Unable to complete request. Please try again."
+            } else {
+                detail
+            }
+        )
     }
      val loading = MutableLiveData<Boolean>()
+
+    private fun handleApiError(response: NetworkState.Error<*>) {
+        loading.value = false
+        val code = response.statusCode
+        val message = when {
+            code != null && code >= 500 -> "Internal Server Error: Please try again later."
+            code == 404 -> "Some thing went wrong please try again"
+            !response.message.isNullOrBlank() && response.message != "null" -> response.message
+            else -> "Unable to connect. Please check your internet and try again."
+        }
+        onError(message)
+    }
 
     fun getAllMovies() {
         loading.value = true
@@ -89,7 +111,7 @@ class MainViewModel(private val mainRepository: MainRepository) : ViewModel() {
                 is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                    if (response.statusCode!! >= 500) {
+                    if ((response.statusCode ?: 0) >= 500) {
                         onError("Internal Server Error: Please try again later.")
                     }
                     else if (response.statusCode == 404) {
@@ -118,7 +140,7 @@ if (response.data.status==200) {
                 is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                    if (response.statusCode!! >= 500) {
+                    if ((response.statusCode ?: 0) >= 500) {
                         onError("Internal Server Error: Please try again later.")
                     }
                     else if (response.statusCode == 404) {
@@ -146,7 +168,7 @@ if (response.data.status==200) {
                 is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                    if (response.statusCode!! >= 500) {
+                    if ((response.statusCode ?: 0) >= 500) {
                         onError("Internal Server Error: Please try again later.")
                     }
                     else if (response.statusCode == 404) {
@@ -175,7 +197,7 @@ if (response.data.status==200) {
                 is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                    if (response.statusCode!! >= 500) {
+                    if ((response.statusCode ?: 0) >= 500) {
                         onError("Internal Server Error: Please try again later.")
                     }
                     else if (response.statusCode == 404) {
@@ -205,7 +227,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -234,7 +256,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -263,19 +285,8 @@ if (response.data.status==200) {
                     loading.value = false
                 }
                 is NetworkState.Error -> {
-                    Log.d("errors",response.message.toString())
-                    loading.value = false
-                    if (response.statusCode!! >= 500) {
-                        onError("Internal Server Error: Please try again later.")
-                    }
-                   else if (response.statusCode == 404) {
-                        onError("Some thing went wrong please try again")
-                    }
-
-                    else {
-                        onError(response.message ?: "Unknown error")
-                    }
-
+                    Log.e("userLogin", "error code=${response.statusCode} msg=${response.message}")
+                    handleApiError(response)
                 }
             }
         }
@@ -294,7 +305,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -323,7 +334,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -351,7 +362,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -380,7 +391,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -409,7 +420,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -438,7 +449,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -468,7 +479,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -498,7 +509,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -527,7 +538,7 @@ if (response.data.status==200) {
                 is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                    if (response.statusCode!! >= 500) {
+                    if ((response.statusCode ?: 0) >= 500) {
                         onError("Internal Server Error: Please try again later.")
                     }
                     else if (response.statusCode == 404) {
@@ -556,7 +567,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -585,7 +596,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -615,7 +626,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -644,7 +655,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -673,7 +684,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -700,7 +711,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -729,7 +740,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -762,7 +773,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -836,7 +847,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {
@@ -865,7 +876,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if (response.statusCode!! >= 500) {
+                   if ((response.statusCode ?: 0) >= 500) {
                        onError("Internal Server Error: Please try again later.")
                    }
                     else if (response.statusCode == 404) {

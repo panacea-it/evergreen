@@ -26,11 +26,11 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.gson.GsonBuilder
 import com.prod.evergreen.activities.AddEquipment
 import com.prod.evergreen.XApplication
@@ -44,6 +44,7 @@ import com.prod.evergreen.databinding.FragmentAddEquipmentBinding
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import com.prod.evergreen.helper.YearPickerHelper
 import com.prod.evergreen.helper.compressor.Compressor
 import com.prod.evergreen.helper.compressor.FileUtil
 import com.prod.evergreen.helper.customdialog.PopupDialog
@@ -82,6 +83,7 @@ class AddEquipmentFragment : Fragment() {
     private var file_name: String? = null
     private var token: String? = ""
     private var company_link: Int? = null
+    private var isSubmitting = false
 
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private lateinit var viewModel: MainViewModel
@@ -158,28 +160,14 @@ class AddEquipmentFragment : Fragment() {
             .showDialog(object : OnDialogButtonClickListener() {
                 override fun onPositiveClicked(dialog: Dialog?) {
                     super.onPositiveClicked(dialog)
-if (status){
-    binding.apply {
-        tvEqName.text.clear()
-        tvMake.text.clear()
-        tvModelNum.text.clear()
-        // Clear other fields as needed
-        tvSpecifications.text.clear()
-        tvDate.text=null
-        location.text.clear()
-        desc.text.clear()
-        tmFrequency.text=null
-        binding.rl3.visibility = View.GONE
-        binding.rl2.visibility=View.VISIBLE
-        // Clear any other views or variables that need resetting
-        file_name = null // Assuming file_name is a variable used to store an image file
-
-        // Reset any selections or states
-        company_link = null // Assuming company_link is a variable for company selection
-    }
-}
-
-
+                    if (status) {
+                        if (!findNavController().popBackStack()) {
+                            requireActivity().onBackPressedDispatcher.onBackPressed()
+                        }
+                    } else {
+                        isSubmitting = false
+                        binding.creatEq.isEnabled = true
+                    }
                 }
             }, true)
     }
@@ -352,13 +340,19 @@ binding.close.setOnClickListener {
         }
 
         binding.tvDate.setOnClickListener {
-            showDatePicker { date ->
-                binding.tvDate.text = date
+            YearPickerHelper.show(
+                requireActivity(),
+                YearPickerHelper.yearFromStoredDate(binding.tvDate.text?.toString())
+            ) { year ->
+                binding.tvDate.text = year.toString()
             }
         }
         binding.creatEq.setOnClickListener {
 
+            if (isSubmitting) return@setOnClickListener
             if (validateFields()) {
+                isSubmitting = true
+                binding.creatEq.isEnabled = false
                 val equipment = AddEquipment.Equipment(
                     company_link = company_link!!,
                     name = binding.tvEqName.text.toString(),
@@ -366,7 +360,7 @@ binding.close.setOnClickListener {
                     model = binding.tvModelNum.text.toString(),
                     image_url = file_name!!,
                     serial_number = binding.tvSpecifications.text.toString(),
-                    manufacturer_date = binding.tvDate.text.toString(),
+                    manufacturer_date = YearPickerHelper.apiDateFromYear(binding.tvDate.text.toString()),
                     location = binding.location.text.toString(),
                     description = binding.desc.text.toString(),
                     tm_frequency = backendIssueValue!!
@@ -535,19 +529,6 @@ binding.close.setOnClickListener {
 
         dialog.setContentView(view)
         dialog.show()
-    }
-    private fun showDatePicker(onDateSelected: (String) -> Unit) {
-        val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setTitleText("Select a date")
-            .build()
-
-        datePicker.showNow(childFragmentManager, "DATE_PICKER") // Use showNow() instead of show()
-
-        datePicker.addOnPositiveButtonClickListener {
-            val date = Date(it)
-            val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            onDateSelected(format.format(date))
-        }
     }
 
     private fun showFrequencyDialog() {

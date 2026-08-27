@@ -87,6 +87,7 @@ class CreateTask : AppCompatActivity() {
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private lateinit var viewModel: MainViewModel
     private var token: String? = null
+    private var isSubmitting = false
     private var company_link: Int? = null
 
 
@@ -281,7 +282,8 @@ class CreateTask : AppCompatActivity() {
         }
 
         viewModel.createTaskDataResponse.observe(this) { data ->
-            showDialog(data.message!!)
+            val success = data.status_code == 200
+            showDialog(data.message!!, goBackOnOk = success)
         }
         viewModel.imageUploadDataResponse.observe(this) { data ->
             if (data.status_code == 200) {
@@ -297,7 +299,7 @@ class CreateTask : AppCompatActivity() {
             builder.show()
         }
         bindning.creatTask.setOnClickListener {
-
+            if (isSubmitting) return@setOnClickListener
             val siteBranch = bindning.siteBranch.text.toString()
             val sitename = bindning.siteName.text.toString()
 //            val siteemail = bindning.siteEmail.text.toString()
@@ -318,6 +320,8 @@ class CreateTask : AppCompatActivity() {
                 Toast.makeText(this, "Please Enter Subject", Toast.LENGTH_SHORT).show()
             }
             else {
+                isSubmitting = true
+                bindning.creatTask.isEnabled = false
                 viewModel.createTask(createJsonObject(title,desc,equipment_id!!,User_ID!!,issu_type, imagarrya), token!!)
             }
         }
@@ -653,7 +657,7 @@ class CreateTask : AppCompatActivity() {
         Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
     }
 
-    fun showDialog(message: String) {
+    fun showDialog(message: String, goBackOnOk: Boolean = false) {
         PopupDialog.getInstance(this)!!
             .setStyle(Styles.IOS)!!
             .setHeading("Message")!!
@@ -663,8 +667,12 @@ class CreateTask : AppCompatActivity() {
             .showDialog(object : OnDialogButtonClickListener() {
                 override fun onPositiveClicked(dialog: Dialog?) {
                     super.onPositiveClicked(dialog)
-startActivity(Intent(this@CreateTask,MainActivity::class.java))
-                    finishAffinity()
+                    if (goBackOnOk) {
+                        finish()
+                    } else {
+                        isSubmitting = false
+                        bindning.creatTask.isEnabled = true
+                    }
                 }
             }, true)
     }

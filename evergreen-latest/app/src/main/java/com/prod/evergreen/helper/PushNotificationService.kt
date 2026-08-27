@@ -16,12 +16,14 @@ class PushNotificationService : FirebaseMessagingService() {
             val taskLink = remoteMessage.data["task_link"]
             val description = remoteMessage.data["description"]
             val imageUrl: String? = remoteMessage.data["image_url"]
-            val sno: String? = remoteMessage.data["Serial_number"]
+            val sno: String? = remoteMessage.data["serial_number"]
+                ?: remoteMessage.data["Serial_number"]
             val location: String? = remoteMessage.data["location"]
             val channel_id: String? = remoteMessage.data["channel_id"]
+            val action: String? = remoteMessage.data["action"]
 
           //  Log.d("NotificationExtractedData", "Title: $title, Body: $body, Task Link: $taskLink, Description: $description, Image URL: $imageUrl")
-            showNotification(applicationContext,title, body, taskLink, description, imageUrl,sno,location,channel_id)
+            showNotification(applicationContext,title, body, taskLink, description, imageUrl,sno,location,channel_id, action)
         }
     }
 

@@ -65,7 +65,7 @@
                         android:textSize="@dimen/_16ssp"
                         android:layout_marginTop="@dimen/_20sdp"
                         app:layout_constraintStart_toStartOf="parent"
-                        android:text="Company Name"
+                        android:text="Company Name *"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                     <TextView
@@ -150,7 +150,7 @@
                         android:textSize="@dimen/_16ssp"
                         android:layout_marginTop="@dimen/_20sdp"
                         app:layout_constraintStart_toStartOf="parent"
-                        android:text="Equipments List"
+                        android:text="Equipments List *"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                     <TextView
@@ -208,7 +208,7 @@
                         android:textSize="@dimen/_16ssp"
                         android:layout_marginTop="@dimen/_10sdp"
                         app:layout_constraintStart_toStartOf="parent"
-                        android:text="Issue Type"
+                        android:text="Issue Type *"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                     <TextView
@@ -236,7 +236,7 @@
                         android:textSize="@dimen/_16ssp"
                         android:layout_marginTop="@dimen/_10sdp"
                         app:layout_constraintStart_toStartOf="parent"
-                        android:text="Subject"
+                        android:text="Subject *"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                     <EditText

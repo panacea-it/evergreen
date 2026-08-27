@@ -89,6 +89,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnAssign"
+                android:visibility="gone"
+                android:layout_marginTop="@dimen/_8sdp"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/_32sdp"
+                android:minWidth="@dimen/_110sdp"
+                android:text="Assign to me"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="@dimen/_12ssp"
+                android:fontFamily="@font/roboto_medium"
+                android:background="@color/btn_back"/>
+
             <ImageView
                 android:visibility="gone"
                 android:minWidth="@dimen/_100sdp"

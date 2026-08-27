@@ -114,7 +114,17 @@ class MainRepository(private val retrofitService: RetrofitService, private val n
             response.parseResponse()
 
         } catch (e: Exception) {
-            NetworkState.Error(e.message)
+            android.util.Log.e("userLogin", "request failed", e)
+            val message = when (e) {
+                is java.net.UnknownHostException,
+                is java.net.ConnectException ->
+                    "Unable to reach server. Check your internet connection."
+                is java.net.SocketTimeoutException ->
+                    "Connection timed out. Please try again."
+                else -> e.message?.takeIf { it.isNotBlank() && it != "null" }
+                    ?: e.javaClass.simpleName
+            }
+            NetworkState.Error(message)
         }
     }
     suspend fun forgotPassword(body: JsonObject): NetworkState<ForgotPasswordData> {

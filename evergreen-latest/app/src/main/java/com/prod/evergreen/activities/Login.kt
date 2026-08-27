@@ -115,7 +115,7 @@ class Login : AppCompatActivity() {
         }
 
 
-        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID.toString())
+        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
 //        Firebase.messaging.isAutoInitEnabled = true
        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (!task.isSuccessful) {
@@ -161,34 +161,30 @@ class Login : AppCompatActivity() {
 
         viewModel.userloginresponse.observe(this) { data ->
             if (data.status == 200) {
+                    val user = data.data
+                    if (user == null) {
+                        Toast.makeText(
+                            this@Login,
+                            data.message ?: "Login failed. Please try again.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@observe
+                    }
                     sharedPreferencesHelper.save(ConstantValues.AuthToken, data.access_token)
-                    sharedPreferencesHelper.save(ConstantValues.PREF_USERNAME, data.data!!.name)
-                    sharedPreferencesHelper.save(ConstantValues.PREF_EMAIL, data.data.email)
-                    sharedPreferencesHelper.save(ConstantValues.TYPE_ROLE, data.data.access_level)
-                    sharedPreferencesHelper.save(ConstantValues.PREF_MOBILE, data.data.phone)
-                    sharedPreferencesHelper.saveInt(ConstantValues.USER_ID, data.data.id!!)
-                    if (data.data.company_user!!.isNotEmpty()) {
-                        sharedPreferencesHelper.saveInt(
-                            ConstantValues.COMAPNY_LINK,
-                            data.data.company_user[0].company?.id!!
-                        )
-                        sharedPreferencesHelper.save(
-                            ConstantValues.BRANCH_NAME,
-                            data.data.company_user[0].company!!.branch_name!!
-                        )
-                        sharedPreferencesHelper.save(
-                            ConstantValues.COMPANYNAME,
-                            data.data.company_user[0].company!!.name!!
-                        )
-                        sharedPreferencesHelper.save(
-                            ConstantValues.LOCATION,
-                            data.data.company_user[0].company!!.location!!
-                        )
-                        sharedPreferencesHelper.save(
-                            ConstantValues.COMPANY_EMAIL,
-                            data.data.company_user[0].company!!.email!!
-                        )
-
+                    sharedPreferencesHelper.save(ConstantValues.PREF_USERNAME, user.name)
+                    sharedPreferencesHelper.save(ConstantValues.PREF_EMAIL, user.email)
+                    sharedPreferencesHelper.save(ConstantValues.TYPE_ROLE, user.access_level)
+                    sharedPreferencesHelper.save(ConstantValues.PREF_MOBILE, user.phone)
+                    user.id?.let { sharedPreferencesHelper.saveInt(ConstantValues.USER_ID, it) }
+                    val company = user.company_user?.firstOrNull()?.company
+                    if (company != null) {
+                        company.id?.let {
+                            sharedPreferencesHelper.saveInt(ConstantValues.COMAPNY_LINK, it)
+                        }
+                        sharedPreferencesHelper.save(ConstantValues.BRANCH_NAME, company.branch_name)
+                        sharedPreferencesHelper.save(ConstantValues.COMPANYNAME, company.name)
+                        sharedPreferencesHelper.save(ConstantValues.LOCATION, company.location)
+                        sharedPreferencesHelper.save(ConstantValues.COMPANY_EMAIL, company.email)
                     }
                     startActivity(Intent(this@Login, MainActivity::class.java))
                     finish()
@@ -196,7 +192,7 @@ class Login : AppCompatActivity() {
 
             }
             else{
-                Toast.makeText(this@Login, data.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@Login, data.message ?: "Login failed", Toast.LENGTH_SHORT).show()
             }
 
 
@@ -234,8 +230,13 @@ class Login : AppCompatActivity() {
                 val object1 = JsonObject()
                 object1.addProperty("phone", email)
                 object1.addProperty("password", password)
-                object1.addProperty("fcm_id", fcmToken)
-                object1.addProperty("device_id", androidId)
+                if (fcmToken.isNotBlank()) {
+                    object1.addProperty("fcm_id", fcmToken)
+                }
+                if (!androidId.isNullOrBlank()) {
+                    object1.addProperty("device_id", androidId)
+                }
+                Log.d("Login", "signIn phone=$email fcm=${fcmToken.isNotBlank()} device=${!androidId.isNullOrBlank()}")
                 viewModel.userLogin(object1)
 
 

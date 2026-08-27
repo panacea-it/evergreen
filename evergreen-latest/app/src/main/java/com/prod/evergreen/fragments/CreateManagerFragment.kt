@@ -1,6 +1,7 @@
 package com.prod.evergreen.fragments
 
 
+import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -12,6 +13,7 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -27,6 +29,10 @@ import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.FragmentCreateManagerBinding
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import com.prod.evergreen.helper.Validator
+import com.prod.evergreen.helper.customdialog.PopupDialog
+import com.prod.evergreen.helper.customdialog.Styles
+import com.prod.evergreen.helper.customdialog.listener.OnDialogButtonClickListener
 import com.prod.evergreen.models.AMCData
 
 
@@ -43,6 +49,7 @@ class CreateManagerFragment : Fragment() {
     private var param2: String? = null
     private var amc_id: String? = null
     private var selected_accessleve:String?=null
+    private var isSubmitting = false
 
    // val spinnerItems = listOf("eg_admin", "client_admin", "client", "technician")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -131,8 +138,9 @@ class CreateManagerFragment : Fragment() {
 
         viewModel.changePasswordDataResponse.observe(viewLifecycleOwner) { data ->
             if (data.status_code == 200) {
-                Toast.makeText(requireActivity(), data.message, Toast.LENGTH_SHORT).show()
-
+                showCreateResultDialog(data.message ?: "Created successfully", true)
+            } else {
+                showCreateResultDialog(data.message ?: "Something went wrong", false)
             }
         }
 
@@ -144,11 +152,39 @@ class CreateManagerFragment : Fragment() {
         }
 
         binding.verifyBtn.setOnClickListener {
-
+            if (isSubmitting) return@setOnClickListener
             val name = binding.name.text.toString()
             val email = binding.email.text.toString()
             val password = binding.password.text.toString()
             val mobile = binding.mobile.text.toString()
+            if (name.isEmpty()) {
+                Toast.makeText(requireActivity(), "Enter name", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (mobile.isEmpty()) {
+                Toast.makeText(requireActivity(), "Enter mobile number", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (!Validator.isMobileValid(mobile)) {
+                Toast.makeText(requireActivity(), "Enter valid mobile number", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (email.isEmpty()) {
+                Toast.makeText(requireActivity(), "Enter email address", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (!Validator.isEmailValid(email)) {
+                Toast.makeText(requireActivity(), "Enter valid email address", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (password.isEmpty()) {
+                Toast.makeText(requireActivity(), "Enter password", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (amc_id == null) {
+                Toast.makeText(requireActivity(), "Select company", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             val companyLinks = listOf(amc_id!!.toInt())
 
             val companyLinksArray = JsonArray().apply {
@@ -171,6 +207,8 @@ class CreateManagerFragment : Fragment() {
 
 
             Log.d("output", jsondata.toString())
+            isSubmitting = true
+            binding.verifyBtn.isEnabled = false
             viewModel.createTechnician(jsondata, token)
 
 
@@ -230,6 +268,28 @@ class CreateManagerFragment : Fragment() {
         view.layoutParams = layoutParams
         dialog.show()
 
+    }
+
+    private fun showCreateResultDialog(message: String, success: Boolean) {
+        PopupDialog.getInstance(requireActivity())!!
+            .setStyle(Styles.IOS)!!
+            .setHeading("Message")!!
+            .setDescription(message)!!
+            .setCancelable(false)!!
+            .setPositiveButtonText(getString(R.string.positive))!!
+            .showDialog(object : OnDialogButtonClickListener() {
+                override fun onPositiveClicked(dialog: Dialog?) {
+                    super.onPositiveClicked(dialog)
+                    if (success) {
+                        if (!findNavController().popBackStack()) {
+                            requireActivity().onBackPressedDispatcher.onBackPressed()
+                        }
+                    } else {
+                        isSubmitting = false
+                        binding.verifyBtn.isEnabled = true
+                    }
+                }
+            }, true)
     }
 
     fun createJsonObject(

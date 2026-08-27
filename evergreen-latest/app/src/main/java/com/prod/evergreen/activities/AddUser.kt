@@ -38,6 +38,7 @@ class AddUser : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private var amc_id: String? = null
     private var selected_accessleve: String? = null
+    private var isSubmitting = false
     lateinit var binding: ActivityAddUserBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -139,6 +140,7 @@ class AddUser : AppCompatActivity() {
         }
 
         binding.verifyBtn.setOnClickListener {
+            if (isSubmitting) return@setOnClickListener
             val name = binding.name.text.toString()
             val email = binding.email.text.toString()
             val password = binding.password.text.toString()
@@ -185,6 +187,8 @@ class AddUser : AppCompatActivity() {
             }
             // val jsonObject = createJsonObject(email, password, name, mobile, amc, companyLinks)
             Log.d("output", jsondata.toString())
+            isSubmitting = true
+            binding.verifyBtn.isEnabled = false
             viewModel.createTechnician(jsondata, token)
         }
     }
@@ -246,6 +250,10 @@ class AddUser : AppCompatActivity() {
                     super.onPositiveClicked(dialog)
                     if (code == 200)
                         onBackPressedDispatcher.onBackPressed()
+                    else {
+                        isSubmitting = false
+                        binding.verifyBtn.isEnabled = true
+                    }
                 }
             }, true)
     }

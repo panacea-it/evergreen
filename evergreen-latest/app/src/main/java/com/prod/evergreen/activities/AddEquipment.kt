@@ -29,9 +29,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.prod.evergreen.XApplication
 import com.prod.evergreen.R
 import com.prod.evergreen.adapters.UserCompaniesAdapter
@@ -44,6 +42,7 @@ import com.prod.evergreen.databinding.ActivityAddEquipmentBinding
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import com.prod.evergreen.helper.YearPickerHelper
 import com.prod.evergreen.helper.compressor.Compressor
 import com.prod.evergreen.helper.compressor.FileUtil
 import com.prod.evergreen.helper.customdialog.PopupDialog
@@ -82,6 +81,7 @@ class AddEquipment : AppCompatActivity() {
     private var file_name: String? = ""
     private var token: String? = ""
     private var company_link: Int? = null
+    private var isSubmitting = false
 
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private lateinit var viewModel: MainViewModel
@@ -153,7 +153,7 @@ class AddEquipment : AppCompatActivity() {
         Toast.makeText(this@AddEquipment, errorMessage, Toast.LENGTH_SHORT).show()
     }
 
-    fun showDialog(message: String) {
+    fun showDialog(message: String, goBackOnOk: Boolean = false) {
         PopupDialog.getInstance(this@AddEquipment)!!
             .setStyle(Styles.IOS)!!
             .setHeading("Message")!!
@@ -163,7 +163,12 @@ class AddEquipment : AppCompatActivity() {
             .showDialog(object : OnDialogButtonClickListener() {
                 override fun onPositiveClicked(dialog: Dialog?) {
                     super.onPositiveClicked(dialog)
-
+                    if (goBackOnOk) {
+                        finish()
+                    } else {
+                        isSubmitting = false
+                        binding.creatEq.isEnabled = true
+                    }
                 }
             }, true)
     }
@@ -254,7 +259,7 @@ class AddEquipment : AppCompatActivity() {
                     binding.tvMake.setText(EqData.make)
                 }
                 binding.tvModelNum.setText(EqData.model)
-                binding.tvDate.text = EqData.manufacturerDate
+                binding.tvDate.text = YearPickerHelper.displayYear(EqData.manufacturerDate)
                 binding.location.setText(EqData.location)
                 backendIssueValue=EqData.tmFrequency
                 binding.tmFrequency.text = EqData.tmFrequency
@@ -355,14 +360,13 @@ class AddEquipment : AppCompatActivity() {
         }
 
         binding.tvDate.setOnClickListener {
-            showDatePicker { date ->
-                binding.tvDate.text = date
-            }
+            showYearPicker()
         }
 binding.creatEq.setOnClickListener {
-
+    if (isSubmitting) return@setOnClickListener
     if (validateFields()) {
-
+        isSubmitting = true
+        binding.creatEq.isEnabled = false
       if (binding.tvUpdate.text!="Update"){
           val equipment = Equipment(
               company_link = company_link!!,
@@ -371,7 +375,7 @@ binding.creatEq.setOnClickListener {
               model = binding.tvModelNum.text.toString(),
               image_url = file_name,
               serial_number = binding.tvSpecifications.text.toString(),
-              manufacturer_date = binding.tvDate.text.toString(),
+              manufacturer_date = YearPickerHelper.apiDateFromYear(binding.tvDate.text.toString()),
               location = binding.location.text.toString(),
               description = binding.desc.text.toString(),
               tm_frequency = backendIssueValue!!
@@ -386,7 +390,7 @@ binding.creatEq.setOnClickListener {
               model = binding.tvModelNum.text.toString(),
               image_url = file_name,
               specifications = binding.tvSpecifications.text.toString(),
-              manufacturer_date = binding.tvDate.text.toString(),
+              manufacturer_date = YearPickerHelper.apiDateFromYear(binding.tvDate.text.toString()),
               location = binding.location.text.toString(),
               description = binding.desc.text.toString(),
               tm_frequency = backendIssueValue!!
@@ -406,10 +410,11 @@ binding.creatEq.setOnClickListener {
             }
         }
         viewModel.errorMessage.observe(this) { data ->
-            showDialog(data)
+            showDialog(data, goBackOnOk = false)
         }
         viewModel.changePasswordDataResponse.observe(this) { data ->
-            showDialog(data.message!!)
+            val success = data.status_code == 200
+            showDialog(data.message!!, goBackOnOk = success)
         }
         viewModel.loading.observe(this) { data ->
             if (data){
@@ -550,17 +555,12 @@ binding.creatEq.setOnClickListener {
         dialog.setContentView(view)
         dialog.show()
     }
-    private fun showDatePicker(onDateSelected: (String) -> Unit) {
-        val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setTitleText("Select a date")
-            .build()
-
-        datePicker.showNow(supportFragmentManager, "DATE_PICKER") // Use showNow() instead of show()
-
-        datePicker.addOnPositiveButtonClickListener {
-            val date = Date(it)
-            val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            onDateSelected(format.format(date))
+    private fun showYearPicker() {
+        YearPickerHelper.show(
+            this,
+            YearPickerHelper.yearFromStoredDate(binding.tvDate.text?.toString())
+        ) { year ->
+            binding.tvDate.text = year.toString()
         }
     }
 
@@ -608,11 +608,15 @@ binding.creatEq.setOnClickListener {
             showMsg("Please enter model number")
             return false
         }
+        if (binding.tvSpecifications.text.isNullOrEmpty()) {
+            showMsg("Please enter serial number")
+            return false
+        }
         if (company_link==null) {
             showMsg("Please Select Company")
             return false
         }
-        if (file_name == null) {
+        if (file_name.isNullOrBlank()) {
             showMsg("Please select an image")
             // Assuming there's a TextView to show an error for the image
             return false

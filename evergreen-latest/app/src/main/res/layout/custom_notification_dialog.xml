@@ -77,7 +77,7 @@
             android:background="@color/btn_back"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/_38sdp"
-            android:text="Accept"
+            android:text="Assign to me"
             android:layout_margin="8dp"/>
 
         <androidx.appcompat.widget.AppCompatButton

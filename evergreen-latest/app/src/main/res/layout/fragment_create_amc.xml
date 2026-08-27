@@ -57,7 +57,7 @@
                         android:textSize="@dimen/_14ssp"
                         android:layout_marginTop="@dimen/_20sdp"
                         app:layout_constraintStart_toStartOf="parent"
-                        android:text="site name"
+                        android:text="Site name *"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                     <EditText
@@ -152,7 +152,7 @@ android:id="@+id/sitename"
                                 android:fontFamily="@font/roboto_regular"
                                 android:textSize="@dimen/_14ssp"
                                 app:layout_constraintStart_toStartOf="parent"
-                                android:text="Start Date"
+                                android:text="Start Date *"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"/>
                             <TextView
@@ -187,7 +187,7 @@ android:id="@+id/sitename"
                                 android:fontFamily="@font/roboto_regular"
                                 android:textSize="@dimen/_14ssp"
                                 app:layout_constraintStart_toStartOf="parent"
-                                android:text="End Date"
+                                android:text="End Date *"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"/>
                             <TextView
@@ -246,7 +246,7 @@ android:id="@+id/sitename"
                         android:textSize="@dimen/_14ssp"
                         android:layout_marginTop="@dimen/_10sdp"
                         app:layout_constraintStart_toStartOf="parent"
-                        android:text="Site Location"
+                        android:text="Add Photo *"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
 

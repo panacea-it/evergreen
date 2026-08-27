@@ -20,7 +20,12 @@ import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.models.DataItem
 
 
-class NotificationsAdapter(val sharedPreferencesHelper: SharedPreferencesHelper,private  var data: List<DataItem>,private  var tmpData:(DataItem)->Unit ) : RecyclerView.Adapter<NotificationsAdapter.ViewHolder>() {
+class NotificationsAdapter(
+    val sharedPreferencesHelper: SharedPreferencesHelper,
+    private  var data: List<DataItem>,
+    private  var tmpData:(DataItem)->Unit,
+    private  var onAssign:(DataItem)->Unit = {}
+) : RecyclerView.Adapter<NotificationsAdapter.ViewHolder>() {
 
     class ViewHolder(val binding: NotificationlistItemsBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -30,27 +35,34 @@ class NotificationsAdapter(val sharedPreferencesHelper: SharedPreferencesHelper,
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val item = data[position]
+        val role = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        val canAssign = role.equals("technician", ignoreCase = true) &&
+            item.taskLink != null &&
+            item.acceptedBy == null &&
+            item.title?.contains("New task", ignoreCase = true) == true
+
         holder.itemView.setOnClickListener {
-            if (data[position].acceptedBy==null){
-                tmpData(data[position])
+            if (item.acceptedBy==null){
+                tmpData(item)
             }
-
-
         }
 
 holder.binding.apply {
-    if (data[position].acceptedBy!=null){
-        technician.text="Technician : ${data[position].acceptedBy!!.name}"
+    btnAssign.visibility = if (canAssign) View.VISIBLE else View.GONE
+    btnAssign.setOnClickListener {
+        onAssign(item)
+    }
+    if (item.acceptedBy!=null){
+        technician.text="Technician : ${item.acceptedBy!!.name}"
     }
     else{
         technician.text="Status : Open"
-       // technician.textColors="Status : Open"
     }
-//    sNo.text="S.NO : ${data[position].}"
-title.text=data[position].title
-desc.text=data[position].description
-date.text=DateConverter.getTimeAgo(data[position].createdAt!!)
-    createdby.text=data[position].createdBy
+title.text=item.title
+desc.text=item.description
+date.text=DateConverter.getTimeAgo(item.createdAt!!)
+    createdby.text=item.createdBy
     if (data[position].imageUrl!=null||data[position].imageUrl!="") {
         Glide.with(image.context)
             .load(Constants.BASE_URL+data[position].imageUrl)

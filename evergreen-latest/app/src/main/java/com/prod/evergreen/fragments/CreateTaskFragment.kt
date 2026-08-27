@@ -35,7 +35,6 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.prod.evergreen.XApplication
 import com.prod.evergreen.R
-import com.prod.evergreen.activities.MainActivity
 import com.prod.evergreen.adapters.AtachmentAdapter
 import com.prod.evergreen.adapters.EquipmentsDialogAdapter
 import com.prod.evergreen.adapters.UserCompaniesAdapter
@@ -87,6 +86,7 @@ class CreateTaskFragment : Fragment() {
     private var actualImage: File? = null
     private var file_name: String? = ""
     private var User_ID: Int? = null
+    private var isSubmitting = false
     private var equipment_id: Int? = null
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private lateinit var viewModel: MainViewModel
@@ -305,6 +305,7 @@ class CreateTaskFragment : Fragment() {
         }
         bindning.creatTask.setOnClickListener {
 
+            if (isSubmitting) return@setOnClickListener
             val siteBranch = bindning.siteBranch.text.toString()
             val sitename = bindning.siteName.text.toString()
             val siteemail = bindning.siteEmail.text.toString()
@@ -330,6 +331,8 @@ class CreateTaskFragment : Fragment() {
 
             }
             else {
+                isSubmitting = true
+                bindning.creatTask.isEnabled = false
                 viewModel.createTask(
                     createJsonObject(
                         title,
@@ -664,8 +667,12 @@ class CreateTaskFragment : Fragment() {
                     super.onPositiveClicked(dialog)
 
                     if (issuucessBoolean){
-                        findNavController().navigate(R.id.taskFragment)
-                        (activity as MainActivity).setTitleTextView("Tasks List")
+                        if (!findNavController().popBackStack()) {
+                            requireActivity().onBackPressedDispatcher.onBackPressed()
+                        }
+                    } else {
+                        isSubmitting = false
+                        bindning.creatTask.isEnabled = true
                     }
 
                 }

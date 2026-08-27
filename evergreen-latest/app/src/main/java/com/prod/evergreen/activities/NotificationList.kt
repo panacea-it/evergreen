@@ -85,10 +85,15 @@ class NotificationList : AppCompatActivity() {
                 }
                 else{
                     binding.noDataLayout.visibility=View.GONE
-                    notificationsAdapter=NotificationsAdapter(sharedPreferencesHelper,responseData.data) { responseData ->
-
-                        showNotificationDialog(responseData.title,responseData.description,responseData.taskLink,responseData.title,responseData.title,userid)
-
+                    notificationsAdapter=NotificationsAdapter(sharedPreferencesHelper,responseData.data, { item ->
+                        showNotificationDialog(item.title,item.description,item.taskLink,item.title,item.title,userid)
+                    }) { item ->
+                        if (item.taskLink != null && userid != null) {
+                            val body = JsonObject()
+                            body.addProperty("task_link", item.taskLink)
+                            body.addProperty("technician_link", userid)
+                            viewModel.assignTechnician(body, token!!)
+                        }
                     }
                     binding.rvNotification.adapter= notificationsAdapter
                 }
