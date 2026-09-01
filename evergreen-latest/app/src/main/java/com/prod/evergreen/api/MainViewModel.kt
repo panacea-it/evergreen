@@ -840,17 +840,13 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if ((response.statusCode ?: 0) >= 500) {
-                       onError("Internal Server Error: Please try again later.")
-                   }
-                    else if (response.statusCode == 404) {
-                        onError("Some thing went wrong please try again")
-                    }
-
-                    else {
-                        onError(response.message ?: "Unknown error")
-                    }
-
+                    // Report generation is best-effort after approval/close; surface a result so UI can continue.
+                    genaratepdffile.postValue(
+                        ChangePasswordData(
+                            status_code = response.statusCode,
+                            message = response.message
+                        )
+                    )
                 }
             }
         }

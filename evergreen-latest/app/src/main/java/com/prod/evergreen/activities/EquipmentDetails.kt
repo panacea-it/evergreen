@@ -86,7 +86,7 @@ class EquipmentDetails : AppCompatActivity() {
 
         viewModel.downloadpdf.observe(this) { response ->
             if (response.status_code == 200 && !response.url.isNullOrBlank()) {
-                val pdfUrl = Constants.BASE_URL.trimEnd('/') + "/" + response.url.trimStart('/')
+                val pdfUrl = com.prod.evergreen.helper.MediaUrl.resolve(response.url)
                 androidx.appcompat.app.AlertDialog.Builder(this)
                     .setTitle("Service Report")
                     .setMessage("The report is ready. You can open or share the PDF.")
@@ -169,7 +169,7 @@ class EquipmentDetails : AppCompatActivity() {
                 binding.specificationLayout.tvFreqency.text = equipmentData.tmFrequency
                 binding.specificationLayout.tvDescr.text = equipmentData.egserialnumber
                 if (equipmentData.imageUrl != null) {
-                    Glide.with(this).load(Constants.BASE_URL + equipmentData.imageUrl)
+                    Glide.with(this).load(com.prod.evergreen.helper.MediaUrl.resolve(equipmentData.imageUrl))
                         .into(binding.backdrop)
                 }
                 if (equipmentData.tasks!!.isEmpty()) {

@@ -169,6 +169,7 @@ class AddUser : AppCompatActivity() {
                 }
             }
         }
+        applyCompanyPickerForRole(selected_accessleve, accessType)
 
         binding.verifyBtn.setOnClickListener {
             if (isSubmitting) return@setOnClickListener

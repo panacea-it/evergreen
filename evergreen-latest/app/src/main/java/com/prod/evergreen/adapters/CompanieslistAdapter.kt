@@ -52,7 +52,7 @@ class CompanieslistAdapter(
         val item = filteredCompanyList[position]
         holder.bind(item)
         Glide.with(holder.itemView.context)
-            .load(Constants.BASE_URL + item.logo)
+            .load(com.prod.evergreen.helper.MediaUrl.resolve(item.logo))
             .error(R.drawable.place_holder1)
             .placeholder(R.drawable.place_holder1)
             .into(holder.binding.image)

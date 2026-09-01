@@ -15,7 +15,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.prod.evergreen.XApplication
 import com.prod.evergreen.R
@@ -26,7 +25,6 @@ import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.FragmentCreateTechnisionBinding
 import com.prod.evergreen.helper.ConstantValues
-import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.Validator
 import com.prod.evergreen.helper.customdialog.PopupDialog

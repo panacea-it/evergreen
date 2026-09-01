@@ -65,7 +65,7 @@ date.text=DateConverter.getTimeAgo(item.createdAt!!)
     createdby.text=item.createdBy
     if (data[position].imageUrl!=null||data[position].imageUrl!="") {
         Glide.with(image.context)
-            .load(Constants.BASE_URL+data[position].imageUrl)
+            .load(com.prod.evergreen.helper.MediaUrl.resolve(data[position].imageUrl))
             .listener(object : RequestListener<Drawable> {
                 override fun onResourceReady(
                     resource: Drawable,

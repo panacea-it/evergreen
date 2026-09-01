@@ -107,7 +107,7 @@ class MoreEqInfoFragment : DialogFragment() {
         binding.tvPocPhone.text = clientPhone ?: "-"
         if (!imageUrl.isNullOrBlank()) {
             binding.imageIssue.visibility = View.VISIBLE
-            Glide.with(requireActivity()).load(Constants.BASE_URL + imageUrl).into(binding.imageIssue)
+            Glide.with(requireActivity()).load(com.prod.evergreen.helper.MediaUrl.resolve(imageUrl)).into(binding.imageIssue)
         } else {
             binding.imageIssue.visibility = View.GONE
         }

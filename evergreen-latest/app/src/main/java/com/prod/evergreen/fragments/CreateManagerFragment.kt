@@ -127,7 +127,7 @@ class CreateManagerFragment : Fragment() {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 val selectedItemPair = filteredItemsFirst[position] // assuming allItems is your list of pairs
                 selected_accessleve = selectedItemPair
-
+                applyCompanyPickerForRole(selectedItemPair, accessType)
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {
@@ -163,6 +163,7 @@ class CreateManagerFragment : Fragment() {
                 }
             }
         }
+        applyCompanyPickerForRole(selected_accessleve, accessType)
 
         binding.verifyBtn.setOnClickListener {
             if (isSubmitting) return@setOnClickListener
@@ -190,17 +191,14 @@ class CreateManagerFragment : Fragment() {
                         binding.password, "Please enter password", password.isNotBlank()
                     ),
                     com.prod.evergreen.helper.FormValidator.Check(
-                        binding.chooseAmc, "Please select company", amc_id != null
+                        binding.chooseAmc, "Please select company",
+                        selected_accessleve.equals("technician", ignoreCase = true) || amc_id != null
                     )
                 ) != null
             ) {
                 return@setOnClickListener
             }
-            val companyLinks = listOf(amc_id!!.toInt())
-
-            val companyLinksArray = JsonArray().apply {
-                companyLinks.forEach { add(it) }
-            }
+            val technicianSelected = selected_accessleve.equals("technician", ignoreCase = true)
             var jsondata= JsonObject().apply {
                 addProperty("email", email)
                 addProperty("location", "")
@@ -211,7 +209,12 @@ class CreateManagerFragment : Fragment() {
                 addProperty("password", password)
                 addProperty("name", name)
                 addProperty("phone", mobile)
-                add("company_link", companyLinksArray) // Correct way to add JsonArray
+                if (!technicianSelected && amc_id != null) {
+                    val companyLinksArray = JsonArray().apply {
+                        add(amc_id!!.toInt())
+                    }
+                    add("company_link", companyLinksArray)
+                }
                 addProperty("access_level", selected_accessleve)
             }
            // val jsonObject = createJsonObject(email, password, name, mobile, amc, companyLinks)
@@ -301,6 +304,23 @@ class CreateManagerFragment : Fragment() {
                     }
                 }
             }, true)
+    }
+
+    private fun applyCompanyPickerForRole(role: String?, creatorAccessType: String?) {
+        val technicianSelected = role.equals("technician", ignoreCase = true)
+        val visibility = if (technicianSelected) View.GONE else View.VISIBLE
+        binding.chooseAmc.visibility = visibility
+        binding.chooseAmcLabel.visibility = visibility
+        if (technicianSelected) {
+            amc_id = null
+        } else if (RoleAccess.lockToAttachedCompany(creatorAccessType)) {
+            val attachedId = sharedPreferencesHelper.getValueInt(ConstantValues.COMAPNY_LINK)
+            val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
+            if (attachedId != 0) {
+                amc_id = attachedId.toString()
+                binding.chooseAmc.text = attachedName
+            }
+        }
     }
 
     fun createJsonObject(

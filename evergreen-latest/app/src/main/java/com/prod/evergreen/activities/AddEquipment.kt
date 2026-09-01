@@ -289,7 +289,7 @@ class AddEquipment : AppCompatActivity() {
                     binding.rl3.visibility=View.VISIBLE
                     binding.rl2.visibility=View.GONE
                     file_name=EqData.imageUrl
-                    Glide.with(this).load(Constants.BASE_URL+EqData.imageUrl).into(binding.selectedimage)
+                    Glide.with(this).load(com.prod.evergreen.helper.MediaUrl.resolve(EqData.imageUrl)).into(binding.selectedimage)
                 }
             }
             else{

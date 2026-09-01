@@ -244,7 +244,7 @@ lateinit var bindin:FragmentTaskStatusBinding
             if (response.status_code == 200 && !response.pdf_base64.isNullOrBlank()) {
                 offerLocalServiceReport(response.pdf_base64)
             } else if (response.status_code == 200 && !response.url.isNullOrBlank()) {
-                offerServiceReport(Constants.BASE_URL.trimEnd('/') + "/" + response.url.trimStart('/'))
+                offerServiceReport(com.prod.evergreen.helper.MediaUrl.resolve(response.url))
             } else {
                 showDialog(response.message ?: "Unable to download report")
             }

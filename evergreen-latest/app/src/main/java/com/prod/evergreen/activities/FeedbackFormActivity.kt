@@ -88,6 +88,7 @@ class FeedbackFormActivity : AppCompatActivity(), BlankFragment.SignatureDialogL
     private var sinature: String? = null
     private var accesstype: String? = null
     private var follow_up: Boolean? = false
+    private var clientApprovalSaved = false
 
     lateinit var binding: FragmentFeedBackFormDialogBinding
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -262,24 +263,25 @@ class FeedbackFormActivity : AppCompatActivity(), BlankFragment.SignatureDialogL
         }
 
 
-        viewModel.genaratepdffile.observe(this){resources->
-            if (resources.status_code==200){
-                showDialog(resources.message ?: "Client approval saved",true)
-            }
-            else{
-                showDialog(resources.message ?: "Approval saved. Report will be available shortly",true)
-            }
+        viewModel.genaratepdffile.observe(this){
+            showDialog("Approval saved", true)
+        }
 
+        viewModel.errorMessage.observe(this) { message ->
+            if (clientApprovalSaved) {
+                showDialog("Approval saved", true)
+            } else if (!message.isNullOrBlank()) {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            }
         }
 
         viewModel.upDateTaskStatusDataResponse.observe(this) { response ->
 
             if (response.status_code==200){
-               val object2 = JsonObject()
-               object2.addProperty("task_link", taskFromJson.taskLink)
-               object2.addProperty("task_user_link", taskFromJson.id)
-               object2.addProperty("sign_url", sinature)
-                viewModel.generateServiceReport(object2, token!!)
+               if (accesstype != "technician") {
+                   clientApprovalSaved = true
+                   viewModel.generateServiceReport(clientReportPayload(taskFromJson), token!!)
+               }
            } else if (accesstype != "technician") {
                showDialog(response.message ?: "Unable to close task", false)
            }
@@ -339,15 +341,7 @@ class FeedbackFormActivity : AppCompatActivity(), BlankFragment.SignatureDialogL
                     Toast.makeText(this@FeedbackFormActivity,"Please add your signature",Toast.LENGTH_SHORT).show()
                 }
                 else {
-                    val object1 = JsonObject()
-                    object1.addProperty("task_link", taskFromJson.taskLink)
-                    object1.addProperty("task_user_link", taskFromJson.id)
-                    object1.addProperty("sign_url", sinature)
-                    object1.addProperty("service_satisfactory", binding.repairedYes.isChecked)
-                    object1.addProperty("is_running_smoothly", binding.smoothlyYes.isChecked)
-                    object1.addProperty("feedback", binding.desc.text.toString())
-                    object1.addProperty("rating", Math.round(binding.rating.rating))
-                    viewModel.generateServiceReport(object1, token!!)
+                    viewModel.taskUpDateFeedback(clientApprovalPayload(taskFromJson), token!!)
                 }
                 // Log.d("objectdata",object1.toString())
 
@@ -355,6 +349,32 @@ class FeedbackFormActivity : AppCompatActivity(), BlankFragment.SignatureDialogL
 
         }
 
+    }
+
+    private fun roundedRating(): Int {
+        return Math.round(binding.rating.rating).toInt()
+    }
+
+    private fun clientApprovalPayload(taskFromJson: TaskCreated): JsonObject {
+        return JsonObject().apply {
+            addProperty("task_link", taskFromJson.taskLink)
+            addProperty("service_satisfactory", binding.repairedYes.isChecked)
+            addProperty("is_running_smoothly", binding.smoothlyYes.isChecked)
+            addProperty("feedback", binding.desc.text.toString())
+            addProperty("rating", roundedRating())
+        }
+    }
+
+    private fun clientReportPayload(taskFromJson: TaskCreated): JsonObject {
+        return JsonObject().apply {
+            addProperty("task_link", taskFromJson.taskLink)
+            addProperty("task_user_link", taskFromJson.id)
+            addProperty("sign_url", sinature)
+            addProperty("service_satisfactory", binding.repairedYes.isChecked)
+            addProperty("is_running_smoothly", binding.smoothlyYes.isChecked)
+            addProperty("feedback", binding.desc.text.toString())
+            addProperty("rating", roundedRating())
+        }
     }
 
     private fun setViewmodel() {

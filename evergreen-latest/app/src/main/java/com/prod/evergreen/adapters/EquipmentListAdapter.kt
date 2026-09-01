@@ -39,7 +39,7 @@ class EquipmentListAdapter(
         holder.bind(item, onViewClick, onActionClick)
         if (!item.image_url.isNullOrBlank()) {
             Glide.with(holder.binding.image.context)
-                .load(Constants.BASE_URL + item.image_url)
+                .load(com.prod.evergreen.helper.MediaUrl.resolve(item.image_url))
                 .into(holder.binding.image)
         }
     }

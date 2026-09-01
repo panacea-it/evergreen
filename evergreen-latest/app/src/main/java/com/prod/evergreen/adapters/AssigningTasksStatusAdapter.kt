@@ -68,7 +68,7 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
         val imageUrl = datum.task?.image?.firstOrNull()
         if (!imageUrl.isNullOrBlank()) {
             Glide.with(holder.binding.image.context)
-                .load(Constants.BASE_URL + imageUrl)
+                .load(com.prod.evergreen.helper.MediaUrl.resolve(imageUrl))
                 .into(holder.binding.image)
         }
 
