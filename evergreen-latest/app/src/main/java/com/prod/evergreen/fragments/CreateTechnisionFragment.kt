@@ -70,7 +70,6 @@ class CreateTechnisionFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val token=sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
-       viewModel.getAllAmc(token!!)
 //        viewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
 //            Toast.makeText(requireActivity(), errorMessage.toString(), Toast.LENGTH_SHORT).show()
 //        }
@@ -83,24 +82,9 @@ class CreateTechnisionFragment : Fragment() {
             }
         }
 
-        val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
-        if (RoleAccess.lockToAttachedCompany(accessType)) {
-            val attachedId = sharedPreferencesHelper.getValueInt(ConstantValues.COMAPNY_LINK)
-            val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
-            if (attachedId != 0) {
-                amc_id = attachedId.toString()
-                binding.chooseAmc.text = attachedName
-                binding.chooseAmc.isEnabled = false
-                binding.chooseAmc.isClickable = false
-            }
-        } else {
-            binding.chooseAmc.setOnClickListener {
-                showBottomSheetDialog(token) { selectedItem ->
-                    binding.chooseAmc.text = selectedItem.name
-                    amc_id=selectedItem.id.toString()
-                }
-            }
-        }
+        // Technicians are a public pool — no company assignment
+        binding.chooseAmc.visibility = View.GONE
+        binding.chooseAmcLabel.visibility = View.GONE
 
         binding.verifyBtn.setOnClickListener {
             if (isSubmitting) return@setOnClickListener
@@ -108,7 +92,6 @@ class CreateTechnisionFragment : Fragment() {
             val email=binding.email.text.toString().trim()
             val password=binding.password.text.toString()
             val mobile=binding.mobile.text.toString().trim()
-            val amc=binding.chooseAmc.text.toString()
 
             if (com.prod.evergreen.helper.FormValidator.firstInvalid(
                     com.prod.evergreen.helper.FormValidator.Check(
@@ -128,17 +111,13 @@ class CreateTechnisionFragment : Fragment() {
                     ),
                     com.prod.evergreen.helper.FormValidator.Check(
                         binding.password, "Please enter password", password.isNotBlank()
-                    ),
-                    com.prod.evergreen.helper.FormValidator.Check(
-                        binding.chooseAmc, "Please select company", amc_id != null
                     )
                 ) != null
             ) {
                 return@setOnClickListener
             }
 
-            val companyLinks = listOf(amc_id!!.toInt())
-            val jsonObject = createJsonObject(email, password, name, mobile, amc, companyLinks)
+            val jsonObject = createJsonObject(email, password, name, mobile)
 
 
             Log.d("output",jsonObject.toString())
@@ -228,13 +207,7 @@ class CreateTechnisionFragment : Fragment() {
 }
 
 
-fun createJsonObject(email: String, password: String, name: String, mobile: String, amc: String, companyLinks: List<Int>): JsonObject {
-    // Create a JsonArray from the list
-    val companyLinkArray = JsonArray().apply {
-        companyLinks.forEach { add(it) }
-    }
-
-    // Create and return the JsonObject
+fun createJsonObject(email: String, password: String, name: String, mobile: String): JsonObject {
     return JsonObject().apply {
         addProperty("email", email)
         addProperty("location", "")
@@ -245,8 +218,6 @@ fun createJsonObject(email: String, password: String, name: String, mobile: Stri
         addProperty("password", password)
         addProperty("name", name)
         addProperty("phone", mobile)
-        addProperty("amc", amc)
-        add("company_link", companyLinkArray) // Correct way to add JsonArray
         addProperty("access_level", "technician")
     }
 }

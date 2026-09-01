@@ -443,6 +443,22 @@ class MainRepository(private val retrofitService: RetrofitService, private val n
         }
     }
 
+  suspend fun uploadAmcExcelFile(body: MultipartBody.Part, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            retrofitService.uploadAmcExcelFile(body, "Bearer $authenticator").parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun uploadTechnicianExcelFile(body: MultipartBody.Part, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            retrofitService.uploadTechnicianExcelFile(body, "Bearer $authenticator").parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
 
     suspend fun saveProducts(products: List<Movie>) {
         newsDao.insertNews(products)

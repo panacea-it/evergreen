@@ -103,42 +103,23 @@ lateinit var bindin:FragmentTaskStatusBinding
                 object1.addProperty("status", "in_progress")
                 viewModel.upDateTaskStatus(object1, authToken)
             } else if (taskData.status == "in_progress") {
-
-
- if (taskData.task?.rating==null) {
-
-     if (currentAccessType.equals("technician"))
-     {
-         if(taskData.task?.followUp == null) {
-
-             val gson = Gson()
-             val json = gson.toJson(taskData)
-             val feedbackFormIntent = Intent(requireActivity(), FeedbackFormActivity::class.java)
-             // Pass any necessary data using extras
-             feedbackFormIntent.putExtra("jsonData", json)
-             feedbackFormLauncher.launch(feedbackFormIntent)
-
-         }
-
-     }else{
-         val gson = Gson()
-         val json = gson.toJson(taskData)
-         val feedbackFormIntent = Intent(requireActivity(), FeedbackFormActivity::class.java)
-         // Pass any necessary data using extras
-         feedbackFormIntent.putExtra("jsonData", json)
-         feedbackFormLauncher.launch(feedbackFormIntent)
-//         FeedBackFormFragmentDialog.newInstance(json, this)
-//             .show(childFragmentManager, "")
-     }
-
-
-     }
- else{
-     if (currentAccessType.equals("technician")){
-         showCustomDialog(taskData.task?.otp.orEmpty(), taskData.id)
-     }
+                if (currentAccessType.equals("technician")) {
+                    if (taskData.task?.followUp == null) {
+                        val gson = Gson()
+                        val json = gson.toJson(taskData)
+                        val feedbackFormIntent = Intent(requireActivity(), FeedbackFormActivity::class.java)
+                        feedbackFormIntent.putExtra("jsonData", json)
+                        feedbackFormLauncher.launch(feedbackFormIntent)
+                    } else if (taskData.task?.rating != null) {
+                        showCustomDialog(taskData.task?.otp.orEmpty(), taskData.id)
+                    }
+                } else {
+                    val gson = Gson()
+                    val json = gson.toJson(taskData)
+                    val feedbackFormIntent = Intent(requireActivity(), FeedbackFormActivity::class.java)
+                    feedbackFormIntent.putExtra("jsonData", json)
+                    feedbackFormLauncher.launch(feedbackFormIntent)
                 }
-
             }
             else{
                 if (taskData.status=="hold"){

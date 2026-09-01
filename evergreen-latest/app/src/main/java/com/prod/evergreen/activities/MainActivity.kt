@@ -198,6 +198,8 @@ class MainActivity : AppCompatActivity() {
        //     ListItem("Create  Manager", R.drawable.ic_create_manager_icon, R.id.amc_mangers),
             ListItem("Create AMC", R.drawable.ic_create_amc_icon, R.id.createAmcFragment),
             ListItem("Upload Equipments Excel Data", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadEqpmntExcelData),
+            ListItem("Upload AMCs Excel Data", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadAmcExcelData),
+            ListItem("Upload Technicians Excel Data", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadTechnicianExcelData),
             ListItem("Download QR", R.drawable.ic_pending_task_list_icon, R.id.downloadQrFragment),
          //   ListItem("Notifications", R.drawable.ic_notifications_icon, R.id.uploadEqpmntExcelData),
             ListItem("Add Equipment", R.drawable.ic_add_equipment_icon, R.id.addEquipmentFragment)

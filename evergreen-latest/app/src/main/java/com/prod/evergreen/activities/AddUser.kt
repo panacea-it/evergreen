@@ -112,6 +112,11 @@ class AddUser : AppCompatActivity() {
                     val selectedItemPair =
                         filteredItemsFirst[position] // assuming allItems is your list of pairs
                     selected_accessleve = selectedItemPair
+                    val technicianSelected = selectedItemPair.equals("technician", ignoreCase = true)
+                    binding.chooseAmc.visibility = if (technicianSelected) View.GONE else View.VISIBLE
+                    if (technicianSelected) {
+                        amc_id = null
+                    }
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>) {
@@ -199,7 +204,9 @@ class AddUser : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            if (amc_id != null) {
+            val technicianSelected = selected_accessleve.equals("technician", ignoreCase = true)
+            companyLinksArray = JsonArray()
+            if (!technicianSelected && amc_id != null) {
                 val companyLinks = listOf(amc_id!!.toInt())
                 companyLinksArray = JsonArray().apply {
                     companyLinks.forEach { add(it) }
@@ -215,7 +222,9 @@ class AddUser : AppCompatActivity() {
                 addProperty("password", password)
                 addProperty("name", name)
                 addProperty("phone", mobile)
-                add("company_link", companyLinksArray)
+                if (!technicianSelected) {
+                    add("company_link", companyLinksArray)
+                }
                 addProperty("access_level", selected_accessleve)
             }
             // val jsonObject = createJsonObject(email, password, name, mobile, amc, companyLinks)

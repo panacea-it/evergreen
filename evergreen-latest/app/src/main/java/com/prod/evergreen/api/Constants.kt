@@ -10,6 +10,8 @@ class Constants {
         const val FORGOT_PASSWORD = "user/forgetPassword"
         const val VERIFYOTP = "verify"
         const val UPLOAD_EXCEL_DATA = "user/uploadEquipmentData"
+        const val UPLOAD_AMC_EXCEL_DATA = "user/uploadCompanyData"
+        const val UPLOAD_TECHNICIAN_EXCEL_DATA = "user/uploadTechnicianData"
         const val UPDATE_PASSWORD = "update-password"
         const val CREATE_TECHNICIAN = "user/createUser"
         const val CREATE_TASK = "user/createTask"

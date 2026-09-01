@@ -195,6 +195,14 @@ interface RetrofitService {
     @POST(Constants.UPLOAD_EXCEL_DATA)
     suspend fun uploadExcelFile(@Part file: MultipartBody.Part,@Header("Authorization") authorization: String?,@Part("company_link")type: RequestBody): Response<ChangePasswordData>
 
+    @Multipart
+    @POST(Constants.UPLOAD_AMC_EXCEL_DATA)
+    suspend fun uploadAmcExcelFile(@Part file: MultipartBody.Part,@Header("Authorization") authorization: String?): Response<ChangePasswordData>
+
+    @Multipart
+    @POST(Constants.UPLOAD_TECHNICIAN_EXCEL_DATA)
+    suspend fun uploadTechnicianExcelFile(@Part file: MultipartBody.Part,@Header("Authorization") authorization: String?): Response<ChangePasswordData>
+
 
 
     companion object {

@@ -1011,10 +1011,26 @@ if (response.data.status==200) {
 
 
     fun upLoadFile(body:MultipartBody.Part,authenticator: String,destination: RequestBody) {
+        uploadExcel(body, authenticator) { mainRepository.uploadExcelFile(it, authenticator, destination) }
+    }
+
+    fun uploadAmcExcel(body: MultipartBody.Part, authenticator: String) {
+        uploadExcel(body, authenticator) { mainRepository.uploadAmcExcelFile(it, authenticator) }
+    }
+
+    fun uploadTechnicianExcel(body: MultipartBody.Part, authenticator: String) {
+        uploadExcel(body, authenticator) { mainRepository.uploadTechnicianExcelFile(it, authenticator) }
+    }
+
+    private fun uploadExcel(
+        body: MultipartBody.Part,
+        authenticator: String,
+        request: suspend (MultipartBody.Part) -> NetworkState<ChangePasswordData>
+    ) {
         loading.value = true
         viewModelScope.launch(exceptionHandler) {
 
-            when (val response = mainRepository.uploadExcelFile(body,authenticator,destination)) {
+            when (val response = request(body)) {
                 is NetworkState.Success -> {
                     imageUploadDataResponse.postValue(response.data)
                     loading.value = false

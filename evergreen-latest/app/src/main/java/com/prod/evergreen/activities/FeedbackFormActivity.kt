@@ -264,10 +264,10 @@ class FeedbackFormActivity : AppCompatActivity(), BlankFragment.SignatureDialogL
 
         viewModel.genaratepdffile.observe(this){resources->
             if (resources.status_code==200){
-                showDialog(resources.message!!,true)
+                showDialog(resources.message ?: "Client approval saved",true)
             }
             else{
-                showDialog(resources.message!!,false)
+                showDialog(resources.message ?: "Approval saved. Report will be available shortly",true)
             }
 
         }
@@ -277,8 +277,11 @@ class FeedbackFormActivity : AppCompatActivity(), BlankFragment.SignatureDialogL
             if (response.status_code==200){
                val object2 = JsonObject()
                object2.addProperty("task_link", taskFromJson.taskLink)
+               object2.addProperty("task_user_link", taskFromJson.id)
                object2.addProperty("sign_url", sinature)
                 viewModel.generateServiceReport(object2, token!!)
+           } else if (accesstype != "technician") {
+               showDialog(response.message ?: "Unable to close task", false)
            }
 
         }
@@ -332,17 +335,19 @@ class FeedbackFormActivity : AppCompatActivity(), BlankFragment.SignatureDialogL
 
             }
             else{
-                if (binding.addachmentTextSig.text.isEmpty()){
+                if (binding.addachmentTextSig.text.isEmpty() || sinature.isNullOrBlank()){
                     Toast.makeText(this@FeedbackFormActivity,"Please add your signature",Toast.LENGTH_SHORT).show()
                 }
                 else {
                     val object1 = JsonObject()
                     object1.addProperty("task_link", taskFromJson.taskLink)
+                    object1.addProperty("task_user_link", taskFromJson.id)
+                    object1.addProperty("sign_url", sinature)
                     object1.addProperty("service_satisfactory", binding.repairedYes.isChecked)
                     object1.addProperty("is_running_smoothly", binding.smoothlyYes.isChecked)
                     object1.addProperty("feedback", binding.desc.text.toString())
-                    object1.addProperty("rating", binding.rating.rating)
-                    viewModel.taskUpDateFeedback(object1, token!!)
+                    object1.addProperty("rating", Math.round(binding.rating.rating))
+                    viewModel.generateServiceReport(object1, token!!)
                 }
                 // Log.d("objectdata",object1.toString())
 

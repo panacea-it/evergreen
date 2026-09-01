@@ -59,7 +59,32 @@
         android:id="@+id/uploadEqpmntExcelData"
         android:name="com.prod.evergreen.fragments.UploadEqpmntExcelData"
         android:label="fragment_upload_eqpmnt_excel_data"
-        tools:layout="@layout/fragment_upload_eqpmnt_excel_data" />
+        tools:layout="@layout/fragment_upload_eqpmnt_excel_data">
+        <argument
+            android:name="uploadType"
+            app:argType="string"
+            android:defaultValue="equipment" />
+    </fragment>
+    <fragment
+        android:id="@+id/uploadAmcExcelData"
+        android:name="com.prod.evergreen.fragments.UploadEqpmntExcelData"
+        android:label="fragment_upload_amc_excel_data"
+        tools:layout="@layout/fragment_upload_eqpmnt_excel_data">
+        <argument
+            android:name="uploadType"
+            app:argType="string"
+            android:defaultValue="amc" />
+    </fragment>
+    <fragment
+        android:id="@+id/uploadTechnicianExcelData"
+        android:name="com.prod.evergreen.fragments.UploadEqpmntExcelData"
+        android:label="fragment_upload_technician_excel_data"
+        tools:layout="@layout/fragment_upload_eqpmnt_excel_data">
+        <argument
+            android:name="uploadType"
+            app:argType="string"
+            android:defaultValue="technician" />
+    </fragment>
     <fragment
         android:id="@+id/addEquipmentFragment"
         android:name="com.prod.evergreen.fragments.AddEquipmentFragment"

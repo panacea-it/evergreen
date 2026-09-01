@@ -53,6 +53,7 @@ class UploadEqpmntExcelData : Fragment() {
      var fileName: String? =null
      var uri_document: Uri? =null
      var company_link_id: Int? =null
+     private var uploadType: String = "equipment"
 
     private var token: String? = null
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
@@ -75,6 +76,7 @@ class UploadEqpmntExcelData : Fragment() {
         arguments?.let {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
+            uploadType = it.getString("uploadType") ?: uploadType
         }
     }
 
@@ -94,9 +96,12 @@ class UploadEqpmntExcelData : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setViewmodel()
 
+        uploadType = arguments?.getString("uploadType") ?: uploadType
+        if (needsCompany()) {
         viewModel.getAllAmc(token!!)
+        }
         val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
-        if (RoleAccess.lockToAttachedCompany(accessType)) {
+        if (needsCompany() && RoleAccess.lockToAttachedCompany(accessType)) {
             val attachedId = sharedPreferencesHelper.getValueInt(ConstantValues.COMAPNY_LINK)
             val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
             if (attachedId != 0) {
@@ -126,9 +131,18 @@ class UploadEqpmntExcelData : Fragment() {
             }
             showDialog(message, if (data.status_code == 200 && errors.isEmpty()) Styles.SUCCESS else Styles.FAILED)
         }
+        if (!needsCompany()) {
+            binding.companySearc.visibility = View.GONE
+            binding.branchSearc.visibility = View.GONE
+        }
+        binding.downloadTemplate.text = when (uploadType) {
+            "amc" -> "Download AMC Excel template"
+            "technician" -> "Download technician Excel template"
+            else -> "Download Excel template"
+        }
         binding.downloadTemplate.setOnClickListener { copyExcelTemplate() }
         binding.uploadDocument.setOnClickListener {
-            if (company_link_id == null) {
+            if (needsCompany() && company_link_id == null) {
                 Toast.makeText(requireActivity(), "Please select company", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -138,7 +152,7 @@ class UploadEqpmntExcelData : Fragment() {
             }
             uploadFile(uri_document!!,fileName, company_link_id);
         }
-        if (!RoleAccess.lockToAttachedCompany(accessType)) {
+        if (needsCompany() && !RoleAccess.lockToAttachedCompany(accessType)) {
             binding.companySearc.setOnClickListener {
                 showBottomSheetDialog { selectedItem ->
                     binding.companySearc.setText(selectedItem.name)
@@ -179,13 +193,21 @@ class UploadEqpmntExcelData : Fragment() {
 
 
     }
+    private fun needsCompany(): Boolean = uploadType == "equipment"
+
+    private fun templateFileName(): String = when (uploadType) {
+        "amc" -> "evergreen_amc_template.xlsx"
+        "technician" -> "evergreen_technician_template.xlsx"
+        else -> "evergreen_equipment_template.xlsx"
+    }
+
     private fun copyExcelTemplate() {
         try {
             val file = java.io.File(
                 android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS),
-                "evergreen_equipment_template.xlsx"
+                templateFileName()
             )
-            requireActivity().assets.open("evergreen_equipment_template.xlsx").use { input ->
+            requireActivity().assets.open(templateFileName()).use { input ->
                 java.io.FileOutputStream(file).use { output -> input.copyTo(output) }
             }
             Toast.makeText(requireActivity(), "Template saved to ${file.absolutePath}", Toast.LENGTH_LONG).show()
@@ -250,9 +272,14 @@ class UploadEqpmntExcelData : Fragment() {
             fileBytes?.let { bytes ->
                 val requestFile = RequestBody.create("application/octet-stream".toMediaTypeOrNull(), bytes)
                 val body = MultipartBody.Part.createFormData("file", fileName, requestFile)
-                val companyLink = RequestBody.create("text/plain".toMediaTypeOrNull(), id.toString()) // Replace with actual value
-                // Replace with actual token
-                 viewModel.upLoadFile(body,token!!,companyLink)
+                when (uploadType) {
+                    "amc" -> viewModel.uploadAmcExcel(body, token!!)
+                    "technician" -> viewModel.uploadTechnicianExcel(body, token!!)
+                    else -> {
+                        val companyLink = RequestBody.create("text/plain".toMediaTypeOrNull(), id.toString())
+                        viewModel.upLoadFile(body, token!!, companyLink)
+                    }
+                }
 
             }
         }
