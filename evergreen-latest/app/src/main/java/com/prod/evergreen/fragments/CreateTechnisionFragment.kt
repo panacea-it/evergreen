@@ -118,10 +118,14 @@ class CreateTechnisionFragment : Fragment() {
             val jsonObject = createJsonObject(email, password, name, mobile)
 
 
+            if (token.isNullOrBlank()) {
+                Toast.makeText(requireActivity(), "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             Log.d("output",jsonObject.toString())
             isSubmitting = true
             binding.verifyBtn.isEnabled = false
-            viewModel.createTechnician(jsonObject,token)
+            viewModel.createTechnician(jsonObject, token)
 
 
         }

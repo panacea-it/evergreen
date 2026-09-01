@@ -129,7 +129,10 @@ class UploadEqpmntExcelData : Fragment() {
                     append(errors.joinToString("\n"))
                 }
             }
-            showDialog(message, if (data.status_code == 200 && errors.isEmpty()) Styles.SUCCESS else Styles.FAILED)
+            showDialog(
+                message,
+                if (data.status_code == 200) Styles.SUCCESS else Styles.FAILED
+            )
         }
         if (!needsCompany()) {
             binding.companySearc.visibility = View.GONE

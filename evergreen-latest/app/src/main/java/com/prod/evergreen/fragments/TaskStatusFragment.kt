@@ -58,6 +58,7 @@ lateinit var bindin:FragmentTaskStatusBinding
 
     private var accessType: String? = null
     private var pendingTaskMutation = false
+    private var pendingAssignTask: com.prod.evergreen.models.TaskCreated? = null
 
     private fun resolveTaskId(task: com.prod.evergreen.models.TaskCreated): Int {
         return listOfNotNull(task.task?.id, task.taskLink).firstOrNull { it != 0 } ?: task.id
@@ -203,7 +204,8 @@ lateinit var bindin:FragmentTaskStatusBinding
                     feedbackFormLauncher.launch(feedbackFormIntent)
                 }
             },
-            onActionClick = { task -> showTaskActions(task) }
+            onActionClick = { task -> showTaskActions(task) },
+            assignTechnician = { task -> showTechnicianPicker(task) }
             )
 
         bindin.etSearc.addTextChangedListener(object : TextWatcher {
@@ -232,6 +234,38 @@ lateinit var bindin:FragmentTaskStatusBinding
                 showDialog(response.message ?: "Unable to assign technician")
             }
 
+        }
+
+        viewModel.allUsersDataResponse.observe(viewLifecycleOwner) { data ->
+            val task = pendingAssignTask ?: return@observe
+            pendingAssignTask = null
+            val technicians = data.data.orEmpty().filter {
+                it.access_level.equals("technician", ignoreCase = true)
+            }
+            if (technicians.isEmpty()) {
+                Toast.makeText(requireActivity(), "No technicians available to assign", Toast.LENGTH_SHORT).show()
+                return@observe
+            }
+            val labels = technicians.map { tech ->
+                val phone = tech.phone.orEmpty()
+                if (phone.isBlank()) tech.name.orEmpty() else "${tech.name} ($phone)"
+            }.toTypedArray()
+            androidx.appcompat.app.AlertDialog.Builder(requireActivity())
+                .setTitle("Assign Technician")
+                .setItems(labels) { _, which ->
+                    val chosen = technicians[which]
+                    val taskId = resolveTaskId(task)
+                    if (taskId == 0 || chosen.id == null) {
+                        Toast.makeText(requireActivity(), "Unable to assign this task", Toast.LENGTH_SHORT).show()
+                        return@setItems
+                    }
+                    val body = JsonObject()
+                    body.addProperty("task_link", taskId)
+                    body.addProperty("technician_link", chosen.id)
+                    viewModel.assignTechnician(body, authToken)
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
 
 
@@ -316,12 +350,21 @@ lateinit var bindin:FragmentTaskStatusBinding
             return
         }
         try {
+            val canAssign = com.prod.evergreen.helper.RoleAccess.canAssignTechnician(role) &&
+                task.status != "closed"
+            val options = if (canAssign) {
+                arrayOf("Assign Technician", "Edit Task", "Delete Task", "Cancel")
+            } else {
+                arrayOf("Edit Task", "Delete Task", "Cancel")
+            }
             androidx.appcompat.app.AlertDialog.Builder(requireActivity())
                 .setTitle(task.task?.name ?: "Task")
-                .setItems(arrayOf("Edit Task", "Delete Task", "Cancel")) { dialog, which ->
-                    when (which) {
-                        0 -> showEditTaskDialog(task)
-                        1 -> confirmDeleteTask(task)
+                .setItems(options) { dialog, which ->
+                    val selected = options[which]
+                    when (selected) {
+                        "Assign Technician" -> showTechnicianPicker(task)
+                        "Edit Task" -> showEditTaskDialog(task)
+                        "Delete Task" -> confirmDeleteTask(task)
                         else -> dialog.dismiss()
                     }
                 }
@@ -329,6 +372,19 @@ lateinit var bindin:FragmentTaskStatusBinding
         } catch (error: Exception) {
             Toast.makeText(requireActivity(), "Unable to open task actions", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun showTechnicianPicker(task: com.prod.evergreen.models.TaskCreated) {
+        if (!isAdded) return
+        val tokenValue = token
+        if (tokenValue.isNullOrBlank()) {
+            Toast.makeText(requireActivity(), "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        pendingAssignTask = task
+        val body = JsonObject()
+        body.addProperty("access_level", "technician")
+        viewModel.getAllUsers(tokenValue, body)
     }
 
     private fun showEditTaskDialog(task: com.prod.evergreen.models.TaskCreated) {

@@ -21,7 +21,8 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
     val taskDataMore: (TaskCreated) -> Unit,
     val settohold: (TaskCreated) -> Unit,
     val downloadfile: (TaskCreated) -> Unit, val editReson: (TaskCreated) -> Unit,
-    val onActionClick: (TaskCreated) -> Unit = {}
+    val onActionClick: (TaskCreated) -> Unit = {},
+    val assignTechnician: (TaskCreated) -> Unit = {}
 ) : RecyclerView.Adapter<AssigningTasksStatusAdapter.ViewHolder>(), Filterable {
 
     private var filteredTaskList: List<TaskCreated> = listOf()
@@ -45,7 +46,7 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
                 else -> datum.status.orEmpty()
             }
 
-            if (datum.technicianLink == null || datum.technician == null) {
+            if (com.prod.evergreen.helper.RoleAccess.isUnassigned(datum.technicianLink) || datum.technician == null) {
                 binding.llTechnician.visibility = View.GONE
             } else {
                 binding.llTechnician.visibility = View.VISIBLE
@@ -96,7 +97,7 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
                     }
                 }
                 holder.binding.taskStatusUpdater.text = when {
-                    datum.technicianLink == null -> "Accept"
+                    com.prod.evergreen.helper.RoleAccess.isUnassigned(datum.technicianLink) -> "Accept"
                     datum.status == "open" -> "Move to InProgress"
                     datum.status == "in_progress" && datum.task?.followUp == null -> "Move to Done"
                     datum.status == "in_progress" && datum.task?.followUp != null -> "Move to Done"
@@ -122,23 +123,21 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
             }
         } else {
             if (datum.status != "closed") {
-//                holder.binding.taskStatusUpdater.visibility = View.VISIBLE
                 if(datum.status == "in_progress" && datum.task?.followUp != null){
                     holder.binding.tvHold.visibility = View.INVISIBLE
                 }
-//
-                // Set the visibility first
+                val canAssign = com.prod.evergreen.helper.RoleAccess.canAssignTechnician(accessType)
+                val unassigned = com.prod.evergreen.helper.RoleAccess.isUnassigned(datum.technicianLink)
+                val awaitingApproval = datum.status == "in_progress" && datum.task?.followUp != null
                 holder.binding.taskStatusUpdater.visibility = when {
-                    datum.technicianLink == null -> View.GONE
-                    datum.status == "open" -> View.GONE
-                    datum.status == "hold" -> View.GONE
-                    datum.status == "in_progress" && datum.task?.followUp == null -> View.GONE
-                    else -> View.VISIBLE
+                    awaitingApproval -> View.VISIBLE
+                    canAssign -> View.VISIBLE
+                    else -> View.GONE
                 }
-
-
                 holder.binding.taskStatusUpdater.text = when {
-                    datum.status == "in_progress" && datum.task?.followUp != null -> "Approval"
+                    awaitingApproval -> "Approval"
+                    canAssign && unassigned -> "Assign Technician"
+                    canAssign -> "Reassign Technician"
                     else -> ""
                 }
 
@@ -164,8 +163,13 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
         }
 
         holder.binding.taskStatusUpdater.setOnClickListener {
-            taskData(datum)
-
+            val canAssign = com.prod.evergreen.helper.RoleAccess.canAssignTechnician(accessType)
+            val awaitingApproval = datum.status == "in_progress" && datum.task?.followUp != null
+            if (canAssign && datum.status != "closed" && !awaitingApproval) {
+                assignTechnician(datum)
+            } else {
+                taskData(datum)
+            }
         }
 
         holder.binding.download.setOnClickListener {

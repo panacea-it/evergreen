@@ -36,6 +36,16 @@ object RoleAccess {
         }
     }
 
+    fun isUnassigned(technicianLink: Any?): Boolean {
+        if (technicianLink == null) return true
+        return when (technicianLink) {
+            is Number -> technicianLink.toInt() == 0
+            else -> technicianLink.toString().isBlank() ||
+                technicianLink.toString() == "null" ||
+                technicianLink.toString() == "0"
+        }
+    }
+
     fun canAcceptTask(role: String?): Boolean {
         return role.equals("technician", ignoreCase = true)
     }
