@@ -157,6 +157,7 @@
                         app:layout_constraintStart_toStartOf="parent" />
 
                     <TextView
+                        android:id="@+id/choose_amc_label"
                         android:textColor="@color/gray1"
                         android:fontFamily="@font/roboto_regular"
                         android:textSize="@dimen/_16ssp"

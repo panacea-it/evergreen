@@ -112,11 +112,7 @@ class AddUser : AppCompatActivity() {
                     val selectedItemPair =
                         filteredItemsFirst[position] // assuming allItems is your list of pairs
                     selected_accessleve = selectedItemPair
-                    val technicianSelected = selectedItemPair.equals("technician", ignoreCase = true)
-                    binding.chooseAmc.visibility = if (technicianSelected) View.GONE else View.VISIBLE
-                    if (technicianSelected) {
-                        amc_id = null
-                    }
+                    applyCompanyPickerForRole(selectedItemPair, accessType)
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>) {
@@ -205,6 +201,14 @@ class AddUser : AppCompatActivity() {
             }
 
             val technicianSelected = selected_accessleve.equals("technician", ignoreCase = true)
+            if (!technicianSelected && com.prod.evergreen.helper.FormValidator.firstInvalid(
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        binding.chooseAmc, "Please select company", amc_id != null
+                    )
+                ) != null
+            ) {
+                return@setOnClickListener
+            }
             companyLinksArray = JsonArray()
             if (!technicianSelected && amc_id != null) {
                 val companyLinks = listOf(amc_id!!.toInt())
@@ -305,5 +309,22 @@ class AddUser : AppCompatActivity() {
                     }
                 }
             }, true)
+    }
+
+    private fun applyCompanyPickerForRole(role: String?, creatorAccessType: String?) {
+        val technicianSelected = role.equals("technician", ignoreCase = true)
+        val visibility = if (technicianSelected) View.GONE else View.VISIBLE
+        binding.chooseAmc.visibility = visibility
+        binding.chooseAmcLabel.visibility = visibility
+        if (technicianSelected) {
+            amc_id = null
+        } else if (RoleAccess.lockToAttachedCompany(creatorAccessType)) {
+            val attachedId = sharedPreferencesHelper.getValueInt(ConstantValues.COMAPNY_LINK)
+            val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
+            if (attachedId != 0) {
+                amc_id = attachedId.toString()
+                binding.chooseAmc.text = attachedName
+            }
+        }
     }
 }
