@@ -18,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
@@ -41,7 +42,9 @@ import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.FragmentAddEquipmentBinding
+import com.prod.evergreen.helper.CameraCaptureHelper
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.YearPickerHelper
@@ -51,6 +54,7 @@ import com.prod.evergreen.helper.customdialog.PopupDialog
 import com.prod.evergreen.helper.customdialog.Styles
 import com.prod.evergreen.helper.customdialog.listener.OnDialogButtonClickListener
 import com.prod.evergreen.models.AMCData
+import com.prod.evergreen.models.activeCompanies
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -171,17 +175,28 @@ class AddEquipmentFragment : Fragment() {
                 }
             }, true)
     }
-    private fun openCamera() {
-        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        photoFile = createImageFile()
-        val photoURI: Uri = FileProvider.getUriForFile(
-            requireActivity(),
-            "com.prod.evergreen.fileprovider",
-            photoFile
-        )
-        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+    private val cameraPermissionRequestLauncher: ActivityResultLauncher<String> =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                openCamera()
+            } else if (isAdded) {
+                Toast.makeText(requireActivity(), "Camera permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
 
-        takeImageResult.launch(cameraIntent)
+    private fun openCameraAndRequestIfNeeded() {
+        val context = context ?: return
+        if (CameraCaptureHelper.hasCameraPermission(context)) {
+            openCamera()
+        } else {
+            cameraPermissionRequestLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    private fun openCamera() {
+        val host = activity ?: return
+        photoFile = createImageFile()
+        takeImageResult.launch(CameraCaptureHelper.createCaptureIntent(host, photoFile))
     }
 
     @Throws(IOException::class)
@@ -278,53 +293,14 @@ class AddEquipmentFragment : Fragment() {
 
         viewModel.getAllAmc(token!!)
 
-        val listItems = arrayOf("Camera", "Gallery", "Cancel")
-        val builder = AlertDialog.Builder(requireActivity())
-        builder.setTitle("Choose One")
-        // val dialog = builder.create()
-        builder.setItems(listItems) { _, which ->
-            when (which) {
-                0 -> {
-                    if (checkPermission(cameraPermission)) {
-                        openCamera()
-
-                    } else {
-                        requestCameraPermission()
-
-                    }
-                }
-
-                1 -> {
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        pickImageFromGalleryForResult.launch(
-                            Intent(
-                                MediaStore.ACTION_PICK_IMAGES
-                            ).apply {
-                                type = "image/*"
-                            })
-                    } else {
-                        if (checkPermission(galleryPermission)) {
-                            openGallery()
-
-                        } else {
-                            requestGaleryPermission()
-
-                        }
-                    }
-
-
-                }
-
-                2 -> {
-
-                }
-            }
-
-        }
-
         binding.rl2.setOnClickListener {
-            builder.show()
+            showImageSourceDialog()
+        }
+        binding.selectedimage.setOnClickListener {
+            showImageSourceDialog()
+        }
+        binding.changePhoto.setOnClickListener {
+            showImageSourceDialog()
         }
 
 
@@ -372,11 +348,22 @@ binding.close.setOnClickListener {
             }
         }
 
-        binding.siteName.setOnClickListener {
-            showBottomSheetDialog { selectedItem ->
-                binding.siteName.text = selectedItem.name
-                company_link = selectedItem.id
-
+        val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        if (RoleAccess.lockToAttachedCompany(accessType)) {
+            val attachedId = sharedPreferencesHelper.getValueInt(ConstantValues.COMAPNY_LINK)
+            val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
+            if (attachedId != 0) {
+                company_link = attachedId
+                binding.siteName.text = attachedName
+                binding.siteName.isEnabled = false
+                binding.siteName.isClickable = false
+            }
+        } else {
+            binding.siteName.setOnClickListener {
+                showBottomSheetDialog { selectedItem ->
+                    binding.siteName.text = selectedItem.name
+                    company_link = selectedItem.id
+                }
             }
         }
         viewModel.changePasswordDataResponse.observe(viewLifecycleOwner) { data ->
@@ -454,12 +441,27 @@ binding.close.setOnClickListener {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun requestCameraPermission() {
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            arrayOf(cameraPermission),
-            cameraRequestCode
-        )
+    private fun showImageSourceDialog() {
+        if (!isAdded) return
+        AlertDialog.Builder(requireActivity())
+            .setTitle("Choose One")
+            .setItems(arrayOf("Camera", "Gallery", "Cancel")) { _, which ->
+                when (which) {
+                    0 -> openCameraAndRequestIfNeeded()
+                    1 -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            pickImageFromGalleryForResult.launch(
+                                Intent(MediaStore.ACTION_PICK_IMAGES).apply { type = "image/*" }
+                            )
+                        } else if (checkPermission(galleryPermission)) {
+                            openGallery()
+                        } else {
+                            requestGaleryPermission()
+                        }
+                    }
+                }
+            }
+            .show()
     }
 
     private fun requestGaleryPermission() {
@@ -468,39 +470,6 @@ binding.close.setOnClickListener {
             arrayOf(galleryPermission),
             galleryRequestCode
         )
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            cameraRequestCode -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    openCamera()
-                } else {
-                    Toast.makeText(
-                        requireActivity(),
-                        "Camera permission denied",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-
-            galleryRequestCode -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    openGallery()
-                } else {
-                    Toast.makeText(
-                        requireActivity(),
-                        "Gallery permission denied",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
     }
     private fun openGallery() {
         val pickIntent = Intent(Intent.ACTION_PICK)
@@ -517,7 +486,7 @@ binding.close.setOnClickListener {
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
         viewModel.allAmcDataResponse.observe(viewLifecycleOwner) { data ->
 
-            val adapter = UserCompaniesAdapter(data.data!!) { selectedItem ->
+            val adapter = UserCompaniesAdapter(data.data.activeCompanies()) { selectedItem ->
                 onItemSelected(selectedItem)
                 dialog.dismiss()
             }
@@ -567,48 +536,37 @@ binding.close.setOnClickListener {
     }
 
     private fun validateFields(): Boolean {
-        if (binding.tvEqName.text.isNullOrEmpty()) {
-            showMsg("Please enter name")
-            return false
-        }
-        if (binding.tvMake.text.isNullOrEmpty()) {
-            showMsg("Please enter make")
-            return false
-        }
-        if (binding.tvModelNum.text.isNullOrEmpty()) {
-            showMsg("Please enter model number")
-            return false
-        }
-        if (file_name == null) {
-            showMsg("Please select an image")
-            // Assuming there's a TextView to show an error for the image
-            return false
-        }
-        if (binding.tvSpecifications.text.isNullOrEmpty()) {
-            showMsg("Please enter specifications")
-            return false
-        }
-        if (company_link==null) {
-            showMsg("Please Select Company")
-            return false
-        }
-        if (binding.tvDate.text.isNullOrEmpty()) {
-            showMsg("Please enter manufacturing date")
-            return false
-        }
-        if (binding.location.text.isNullOrEmpty()) {
-            showMsg("Please enter location")
-            return false
-        }
-//        if (binding.desc.text.isNullOrEmpty()) {
-//            showMsg("Please enter description")
-//            return false
-//        }
-        if (backendIssueValue.isNullOrEmpty()) {
-            showMsg("Please select frequency")
-            return false
-        }
-        return true
+        return com.prod.evergreen.helper.FormValidator.firstInvalid(
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tvEqName, "Please enter name", !binding.tvEqName.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tvMake, "Please enter make", !binding.tvMake.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tvModelNum, "Please enter model number", !binding.tvModelNum.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tvSpecifications, "Please enter serial number", !binding.tvSpecifications.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tvDate, "Please enter manufacturing year", !binding.tvDate.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.location, "Please enter location", !binding.location.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tmFrequency, "Please select frequency", !backendIssueValue.isNullOrEmpty()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.eqImg, "Please select an image", !file_name.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.siteName,
+                "Please select company",
+                company_link != null && company_link != 0
+            )
+        ) == null
     }
 
     private fun showMsg(msg:String) {

@@ -186,7 +186,10 @@ class Login : AppCompatActivity() {
                         sharedPreferencesHelper.save(ConstantValues.LOCATION, company.location)
                         sharedPreferencesHelper.save(ConstantValues.COMPANY_EMAIL, company.email)
                     }
-                    startActivity(Intent(this@Login, MainActivity::class.java))
+                    startActivity(
+                        Intent(this@Login, MainActivity::class.java)
+                            .putExtra("company_inactive", data.company_inactive == true)
+                    )
                     finish()
 
 

@@ -17,7 +17,7 @@
             android:textSize="@dimen/_14ssp"
             android:layout_marginTop="@dimen/_20sdp"
             app:layout_constraintStart_toStartOf="parent"
-            android:text="Client Detals"
+            android:text="Client Admin Details (optional — fill all or leave empty)"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <TextView

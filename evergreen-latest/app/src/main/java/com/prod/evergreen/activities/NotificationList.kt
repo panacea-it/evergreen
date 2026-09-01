@@ -144,6 +144,11 @@ binding.back.setOnClickListener {
 
 
         val buttonAccept = dialog.findViewById<Button>(R.id.buttonAccept)
+        val canAccept = com.prod.evergreen.helper.RoleAccess.canAcceptTask(
+            sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        ) && taskLink != null
+        buttonAccept.visibility = if (canAccept) View.VISIBLE else View.GONE
+        buttonAccept.text = "Accept"
         buttonAccept.setOnClickListener {
             val object1 = JsonObject()
             object1.addProperty("task_link", taskLink!!.toInt())

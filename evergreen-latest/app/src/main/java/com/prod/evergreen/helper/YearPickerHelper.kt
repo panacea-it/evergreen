@@ -42,6 +42,15 @@ object YearPickerHelper {
     }
 
     fun displayYear(value: String?): String {
+        if (value.isNullOrBlank()) return ""
+        val datePart = value.take(10)
+        if (datePart.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) {
+            val year = datePart.take(4).toIntOrNull() ?: return ""
+            val month = datePart.substring(5, 7).toIntOrNull() ?: return year.toString()
+            val day = datePart.substring(8, 10).toIntOrNull() ?: return year.toString()
+            // Stored as Jan 1; UTC shift can show as 31 Dec of the previous year.
+            return if (month == 12 && day >= 30) (year + 1).toString() else year.toString()
+        }
         return yearFromStoredDate(value)?.toString().orEmpty()
     }
 

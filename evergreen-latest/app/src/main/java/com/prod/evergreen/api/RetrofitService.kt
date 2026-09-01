@@ -36,6 +36,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Path
+import retrofit2.http.PUT
 import retrofit2.http.Query
 
 interface RetrofitService {
@@ -96,6 +97,12 @@ interface RetrofitService {
     @POST(Constants.CREATE_AMC)
     suspend fun createAMC(@Body body: JsonObject, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
 
+    @PUT(Constants.UPDATE_AMC + "/{id}")
+    suspend fun updateAMC(@Path("id") companyId: Int, @Body body: JsonObject, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
+
+    @POST(Constants.DELETE_AMC)
+    suspend fun deleteAMC(@Body body: JsonObject, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
+
 
     @POST(Constants.ADD_EQUIPMENT)
     suspend fun addEquipment(@Body equipment: AddEquipment.Equipment, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
@@ -103,6 +110,21 @@ interface RetrofitService {
 
     @POST(Constants.updateEquipment)
     suspend fun updateEquipment(@Body equipment: AddEquipment.EquipmentUpdate, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
+
+    @POST(Constants.DELETE_EQUIPMENT)
+    suspend fun deleteEquipment(@Body body: JsonObject, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
+
+    @POST(Constants.UPDATE_TASK)
+    suspend fun updateTask(@Body body: JsonObject, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
+
+    @POST(Constants.DELETE_TASK)
+    suspend fun deleteTask(@Body body: JsonObject, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
+
+    @PUT(Constants.UPDATE_USER + "/{id}")
+    suspend fun updateUser(@Path("id") userId: Int, @Body body: JsonObject, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
+
+    @POST(Constants.DELETE_USER)
+    suspend fun deleteUser(@Body body: JsonObject, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
 
     @POST(Constants.updateHoldReasons)
     suspend fun updateHoldReasons(@Body equipment: JsonObject, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
@@ -143,6 +165,9 @@ interface RetrofitService {
 
     @POST(Constants.NOTIFICATIONS_LIST)
     suspend fun getNotifications(@Header("Authorization") authorization: String?,): Response<NotificationsListResponse>
+
+    @POST(Constants.UPSERT_TOKEN)
+    suspend fun upsertToken(@Body body: JsonObject, @Header("Authorization") authorization: String?): Response<ChangePasswordData>
 
 
 

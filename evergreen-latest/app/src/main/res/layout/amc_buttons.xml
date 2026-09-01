@@ -28,7 +28,7 @@
             android:layout_gravity="center"
             android:fontFamily="@font/roboto_medium"
             android:textColor="@color/black_blue"
-            android:text="Clients"
+            android:text="Client Admins"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </LinearLayout>
@@ -56,7 +56,7 @@
             android:layout_gravity="center"
             android:fontFamily="@font/roboto_medium"
             android:textColor="@color/black_blue"
-            android:text="Pocs"
+            android:text="Clients"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </LinearLayout>

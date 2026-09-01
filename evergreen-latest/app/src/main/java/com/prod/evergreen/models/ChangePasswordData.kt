@@ -9,5 +9,6 @@ data class ChangePasswordData (
     val message: String? = null,
     val image_url: String? = null,
     val url: String? = null,
-
+    val pdf_base64: String? = null,
+    val errors: List<String>? = null,
 )

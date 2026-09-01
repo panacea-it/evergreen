@@ -110,7 +110,7 @@ class MainRepository(private val retrofitService: RetrofitService, private val n
 
     suspend fun userLogin(body: JsonObject): NetworkState<LoginData> {
         return try {
-            val response = retrofitService.userLogin("123456",body)
+            val response = retrofitService.userLogin(Constants.API_KEY,body)
             response.parseResponse()
 
         } catch (e: Exception) {
@@ -129,7 +129,7 @@ class MainRepository(private val retrofitService: RetrofitService, private val n
     }
     suspend fun forgotPassword(body: JsonObject): NetworkState<ForgotPasswordData> {
         return try {
-            val response = retrofitService.forgotPassword("123456",body)
+            val response = retrofitService.forgotPassword(Constants.API_KEY,body)
             response.parseResponse()
 
         } catch (e: Exception) {
@@ -192,6 +192,23 @@ class MainRepository(private val retrofitService: RetrofitService, private val n
         }
     }
 
+    suspend fun updateAMC(companyId: Int, body: JsonObject, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            val response = retrofitService.updateAMC(companyId, body, "Bearer " + authenticator)
+            response.parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+    suspend fun deleteAMC(body: JsonObject, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            retrofitService.deleteAMC(body, "Bearer " + authenticator).parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
 
   suspend fun addEquipment(body: AddEquipment.Equipment, authenticator: String): NetworkState<ChangePasswordData> {
         return try {
@@ -203,6 +220,46 @@ class MainRepository(private val retrofitService: RetrofitService, private val n
         }
     }
 
+
+  suspend fun deleteEquipment(body: JsonObject, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            retrofitService.deleteEquipment(body,"Bearer "+authenticator).parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun updateTask(body: JsonObject, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            retrofitService.updateTask(body,"Bearer "+authenticator).parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun deleteTask(body: JsonObject, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            retrofitService.deleteTask(body,"Bearer "+authenticator).parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun updateUser(userId: Int, body: JsonObject, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            retrofitService.updateUser(userId, body,"Bearer "+authenticator).parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun deleteUser(body: JsonObject, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            retrofitService.deleteUser(body,"Bearer "+authenticator).parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
 
   suspend fun updateEquipment(body: AddEquipment.EquipmentUpdate, authenticator: String): NetworkState<ChangePasswordData> {
         return try {
@@ -310,6 +367,15 @@ class MainRepository(private val retrofitService: RetrofitService, private val n
             val response = retrofitService.getNotifications("Bearer "+authenticator)
             response.parseResponse()
 
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun upsertToken(body: JsonObject, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            val response = retrofitService.upsertToken(body, "Bearer $authenticator")
+            response.parseResponse()
         } catch (e: Exception) {
             NetworkState.Error(e.message)
         }

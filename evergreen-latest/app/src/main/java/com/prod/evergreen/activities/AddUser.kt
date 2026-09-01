@@ -25,12 +25,14 @@ import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.ActivityAddUserBinding
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.Validator
 import com.prod.evergreen.helper.customdialog.PopupDialog
 import com.prod.evergreen.helper.customdialog.Styles
 import com.prod.evergreen.helper.customdialog.listener.OnDialogButtonClickListener
 import com.prod.evergreen.models.AMCData
+import com.prod.evergreen.models.activeCompanies
 
 class AddUser : AppCompatActivity() {
     private var companyLinksArray: JsonArray = JsonArray()
@@ -39,6 +41,7 @@ class AddUser : AppCompatActivity() {
     private var amc_id: String? = null
     private var selected_accessleve: String? = null
     private var isSubmitting = false
+    private var editUserId: Int? = null
     lateinit var binding: ActivityAddUserBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -132,37 +135,67 @@ class AddUser : AppCompatActivity() {
             }
         }
 
-        binding.chooseAmc.setOnClickListener {
-            showBottomSheetDialog(token) { selectedItem ->
-                binding.chooseAmc.text = selectedItem.name
-                amc_id = selectedItem.id.toString()
+        val editJson = intent.getStringExtra("user_data")
+        if (!editJson.isNullOrBlank()) {
+            val existing = com.google.gson.Gson().fromJson(editJson, com.prod.evergreen.models.Users::class.java)
+            editUserId = existing.id
+            binding.tvHeader.text = "Update User"
+            binding.name.setText(existing.name)
+            binding.email.setText(existing.email)
+            binding.mobile.setText(existing.phone)
+            binding.password.hint = "Leave blank to keep password"
+            val roleIndex = filteredItemsFirst.indexOfFirst { it.equals(existing.access_level, true) }
+            if (roleIndex >= 0) {
+                binding.chooseAccessType.setSelection(roleIndex)
+                selected_accessleve = filteredItemsFirst[roleIndex]
+            }
+        }
+
+        if (RoleAccess.lockToAttachedCompany(accessType)) {
+            val attachedId = sharedPreferencesHelper.getValueInt(ConstantValues.COMAPNY_LINK)
+            val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
+            if (attachedId != 0) {
+                amc_id = attachedId.toString()
+                binding.chooseAmc.text = attachedName
+                binding.chooseAmc.isEnabled = false
+                binding.chooseAmc.isClickable = false
+            }
+        } else {
+            binding.chooseAmc.setOnClickListener {
+                showBottomSheetDialog(token) { selectedItem ->
+                    binding.chooseAmc.text = selectedItem.name
+                    amc_id = selectedItem.id.toString()
+                }
             }
         }
 
         binding.verifyBtn.setOnClickListener {
             if (isSubmitting) return@setOnClickListener
-            val name = binding.name.text.toString()
-            val email = binding.email.text.toString()
+            val name = binding.name.text.toString().trim()
+            val email = binding.email.text.toString().trim()
             val password = binding.password.text.toString()
-            val mobile = binding.mobile.text.toString()
-            if (name.isEmpty()) {
-                Toast.makeText(this@AddUser, "Enter name", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            } else if (mobile.isEmpty()) {
-                Toast.makeText(this@AddUser, "Enter mobile number", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            } else if (!Validator.isMobileValid(mobile)) {
-                Toast.makeText(this@AddUser, "Enter valid  mobile number", Toast.LENGTH_SHORT)
-                    .show()
-                return@setOnClickListener
-            } else if (email.isEmpty()) {
-                Toast.makeText(this@AddUser, "Enter email address", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            } else if (!Validator.isEmailValid(email)) {
-                Toast.makeText(this@AddUser, "Enter valid email address", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            } else if (password.isEmpty()) {
-                Toast.makeText(this@AddUser, "Enter password", Toast.LENGTH_SHORT).show()
+            val mobile = binding.mobile.text.toString().trim()
+            if (com.prod.evergreen.helper.FormValidator.firstInvalid(
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        binding.name, "Please enter name", name.isNotBlank()
+                    ),
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        binding.mobile, "Please enter mobile number", mobile.isNotBlank()
+                    ),
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        binding.mobile, "Please enter valid mobile number", mobile.isBlank() || Validator.isMobileValid(mobile)
+                    ),
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        binding.email, "Please enter email address", email.isNotBlank()
+                    ),
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        binding.email, "Please enter valid email address", email.isBlank() || Validator.isEmailValid(email)
+                    ),
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        binding.password, "Please enter password", editUserId != null || password.isNotBlank()
+                    )
+                ) != null
+            ) {
                 return@setOnClickListener
             }
 
@@ -189,7 +222,14 @@ class AddUser : AppCompatActivity() {
             Log.d("output", jsondata.toString())
             isSubmitting = true
             binding.verifyBtn.isEnabled = false
-            viewModel.createTechnician(jsondata, token)
+            if (editUserId != null) {
+                if (password.isBlank()) {
+                    jsondata.remove("password")
+                }
+                viewModel.updateUser(editUserId!!, jsondata, token)
+            } else {
+                viewModel.createTechnician(jsondata, token)
+            }
         }
     }
 
@@ -210,7 +250,7 @@ class AddUser : AppCompatActivity() {
         val searchView: SearchView = view.findViewById(R.id.searchView)
         viewModel.allAmcDataResponse.observe(this) { data ->
 
-            val adapter = ItemAdapter(data.data!!) { selectedItem ->
+            val adapter = ItemAdapter(data.data.activeCompanies()) { selectedItem ->
                 onItemSelected(selectedItem)
                 dialog.dismiss()
             }

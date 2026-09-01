@@ -20,6 +20,7 @@ import com.prod.evergreen.databinding.FragmentAmcListBinding
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import com.prod.evergreen.models.attachedCompanyLabel
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -73,7 +74,12 @@ class AmcListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setViewmodel()
-        amcListAdapter = UsersListAdapter()
+        amcListAdapter = UsersListAdapter { user ->
+            startActivity(
+                android.content.Intent(requireActivity(), com.prod.evergreen.activities.UserDetails::class.java)
+                    .putExtra("user_data", com.google.gson.Gson().toJson(user))
+            )
+        }
         binding.recyclerView.adapter = amcListAdapter
         viewModel.allUsersDataResponse.observe(viewLifecycleOwner) { data ->
            // if (data.status == 200) {
@@ -101,6 +107,28 @@ class AmcListFragment : Fragment() {
 
     }
 
+
+    private fun showUserDetails(user: com.prod.evergreen.models.Users) {
+        val role = when (user.access_level) {
+            "client_admin" -> "Client Admin"
+            else -> user.access_level.orEmpty()
+                .replace('_', ' ')
+                .replaceFirstChar { it.uppercase() }
+        }.ifBlank { "-" }
+        val details = """
+            Name : ${user.name ?: "-"}
+            Role : $role
+            Mobile : ${user.phone ?: "-"}
+            Email : ${user.email ?: "-"}
+            Location : ${user.location ?: "-"}
+            Company : ${user.attachedCompanyLabel()}
+        """.trimIndent()
+        androidx.appcompat.app.AlertDialog.Builder(requireActivity())
+            .setTitle("User details")
+            .setMessage(details)
+            .setPositiveButton("OK", null)
+            .show()
+    }
 
     private fun setViewmodel() {
         val repository = MainRepository(

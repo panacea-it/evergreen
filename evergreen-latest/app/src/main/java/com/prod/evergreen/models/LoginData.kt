@@ -7,7 +7,8 @@ data class LoginData (
     val access_token: String? = null,
     val data: User? = null,
     val status: Int? = null,
-    val message:String?=null
+    val message:String?=null,
+    val company_inactive: Boolean? = null
 )
 
 data class User (

@@ -18,10 +18,16 @@ class NotificationActionReceiver : BroadcastReceiver() {
         when (intent?.action) {
             "ACTION_ACCEPT" -> {
                 Log.d("NotificationAction", "Accept action received")
-                val mainIntent = Intent(context, MainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                }
-                context?.startActivity(mainIntent)
+                val pendingResult = goAsync()
+                Thread {
+                    try {
+                        assignTaskFromNotification(context, intent)
+                    } catch (error: Exception) {
+                        Log.e("NotificationAction", "Accept from notification failed", error)
+                    } finally {
+                        pendingResult.finish()
+                    }
+                }.start()
             }
             "ACTION_ASSIGN" -> {
                 val pendingResult = goAsync()

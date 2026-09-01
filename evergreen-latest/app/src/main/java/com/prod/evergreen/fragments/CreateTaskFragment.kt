@@ -43,7 +43,9 @@ import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.FragmentCreateTaskBinding
+import com.prod.evergreen.helper.CameraCaptureHelper
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.compressor.Compressor
@@ -52,6 +54,7 @@ import com.prod.evergreen.helper.customdialog.PopupDialog
 import com.prod.evergreen.helper.customdialog.Styles
 import com.prod.evergreen.helper.customdialog.listener.OnDialogButtonClickListener
 import com.prod.evergreen.models.AMCData
+import com.prod.evergreen.models.activeCompanies
 import com.prod.evergreen.models.Data
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
@@ -118,7 +121,6 @@ class CreateTaskFragment : Fragment() {
 
         val companyName=sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
         val branchname=sharedPreferencesHelper.getValueString(ConstantValues.BRANCH_NAME)
-        val companymail=sharedPreferencesHelper.getValueString(ConstantValues.COMPANY_EMAIL)
         val companylocation=sharedPreferencesHelper.getValueString(ConstantValues.LOCATION)
          companyLink=sharedPreferencesHelper.getValueInt(ConstantValues.COMAPNY_LINK)
 
@@ -130,12 +132,8 @@ class CreateTaskFragment : Fragment() {
             bindning.siteBranch.text = branchname;
         }
 
-        if (companymail != null) {
-            bindning.siteEmail.text = companymail;
-        }
-
         if (companylocation != null) {
-            bindning.siteEmail.text = companylocation;
+            bindning.siteEmail.setText(companylocation)
         }
 
 
@@ -204,15 +202,21 @@ class CreateTaskFragment : Fragment() {
 
         viewModel.getAllAmc(token!!)
 
-        bindning.siteName.setOnClickListener {
-            showBottomSheetDialog { selectedItem ->
-                bindning.siteName.text = selectedItem.name
-                bindning.siteBranch.text = selectedItem.branchName
-                bindning.siteEmail.text = selectedItem.email
-                companyLink = selectedItem.id
-                val object1 = JsonObject()
-                object1.addProperty("company_link", companyLink)
-                viewModel.getAllEquipmentsByID(token!!, object1)
+        val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        if (RoleAccess.lockToAttachedCompany(accessType) && companyLink != 0) {
+            bindning.siteName.isEnabled = false
+            bindning.siteName.isClickable = false
+        } else {
+            bindning.siteName.setOnClickListener {
+                showBottomSheetDialog { selectedItem ->
+                    bindning.siteName.text = selectedItem.name
+                    bindning.siteBranch.text = selectedItem.branchName
+                    bindning.siteEmail.setText(selectedItem.location.orEmpty())
+                    companyLink = selectedItem.id
+                    val object1 = JsonObject()
+                    object1.addProperty("company_link", companyLink)
+                    viewModel.getAllEquipmentsByID(token!!, object1)
+                }
             }
         }
 
@@ -223,7 +227,9 @@ class CreateTaskFragment : Fragment() {
                 bindning.eqName.text = selectedItem.name
                 bindning.specificationLayout.view.visibility = View.VISIBLE
                 Glide.with(requireActivity()).load(selectedItem).into(bindning.eqImage)
-                bindning.specificationLayout.tvMfd.text = selectedItem.manufacturer_date
+                bindning.specificationLayout.tvMfd.text =
+                    com.prod.evergreen.helper.YearPickerHelper.displayYear(selectedItem.manufacturer_date)
+                bindning.specificationLayout.tvMake.text = selectedItem.make?.takeIf { it.isNotBlank() } ?: "-"
                 bindning.specificationLayout.tvModelNum.text = selectedItem.model
                 bindning.specificationLayout.tvSNumber.text = selectedItem.serial_number
                 bindning.specificationLayout.tvLocation.text = selectedItem.location
@@ -278,13 +284,9 @@ class CreateTaskFragment : Fragment() {
         }
 
         viewModel.createTaskDataResponse.observe(viewLifecycleOwner) { data ->
-            if (data.status_code==200){
-                showDialog(data.message!!,true)
-            }
-            else{
-                showDialog(data.message!!)
-            }
-
+            val message = data.message?.takeIf { it.isNotBlank() }
+                ?: if (data.status_code == 200) "Task created successfully" else "Unable to create task"
+            showDialog(message, data.status_code == 200)
         }
         viewModel.imageUploadDataResponse.observe(viewLifecycleOwner) { data ->
             if (data.status_code == 200) {
@@ -316,34 +318,36 @@ class CreateTaskFragment : Fragment() {
 
             val imagarrya = imageListserverimag
 
-            if (sitename.isEmpty()) {
-                Toast.makeText(requireActivity(), "Select Company Name", Toast.LENGTH_SHORT).show()
-            } else if (eq_name.isEmpty()) {
-                Toast.makeText(requireActivity(), "Select Equipment", Toast.LENGTH_SHORT).show()
+            if (com.prod.evergreen.helper.FormValidator.firstInvalid(
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        bindning.siteName, "Please select company name", sitename.isNotBlank()
+                    ),
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        bindning.eqName, "Please select equipment", eq_name.isNotBlank()
+                    ),
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        bindning.issueTye, "Please choose issue type", issu_type != null
+                    ),
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        bindning.title, "Please enter subject", title.isNotBlank()
+                    )
+                ) != null
+            ) {
+                return@setOnClickListener
             }
-            else if (issu_type==null) {
-                Toast.makeText(requireActivity(), "Choose  Issue Type", Toast.LENGTH_SHORT).show()
-
-
-            }
-            else if (title.isEmpty()) {
-                Toast.makeText(requireActivity(), "Please Enter Title", Toast.LENGTH_SHORT).show()
-
-            }
-            else {
-                isSubmitting = true
-                bindning.creatTask.isEnabled = false
-                viewModel.createTask(
-                    createJsonObject(
-                        title,
-                        desc,
-                        equipment_id!!,
-                        User_ID!!,
-                        issu_type,
-                        imagarrya
-                    ), token!!
-                )
-            }
+            val issueType = issu_type ?: return@setOnClickListener
+            isSubmitting = true
+            bindning.creatTask.isEnabled = false
+            viewModel.createTask(
+                createJsonObject(
+                    title,
+                    desc,
+                    equipment_id!!,
+                    User_ID!!,
+                    issueType,
+                    imagarrya
+                ), token!!
+            )
 
         }
 
@@ -388,7 +392,7 @@ class CreateTaskFragment : Fragment() {
         val view = layoutInflater.inflate(R.layout.bottom_sheet_amc_layout, null)
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
         viewModel.allAmcDataResponse.observe(viewLifecycleOwner) { data ->
-            val adapter = UserCompaniesAdapter(data.data!!) { selectedItem ->
+            val adapter = UserCompaniesAdapter(data.data.activeCompanies()) { selectedItem ->
                 onItemSelected(selectedItem)
                 dialog.dismiss()
             }
@@ -405,7 +409,7 @@ class CreateTaskFragment : Fragment() {
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
         viewModel.allequipmentsDataResponse.observe(viewLifecycleOwner) { data ->
 
-            val adapter = EquipmentsDialogAdapter(data.data!!) { selectedItem ->
+            val adapter = EquipmentsDialogAdapter(data.data.orEmpty().filter { it.isActive() }) { selectedItem ->
                 onItemSelected(selectedItem)
                 dialog.dismiss()
             }
@@ -536,22 +540,14 @@ class CreateTaskFragment : Fragment() {
 
 
     private fun openCamera() {
-
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        val host = activity ?: return
         try {
             actualImage = createImageFile()
         } catch (ex: IOException) {
             ex.printStackTrace()
         }
-        actualImage.let {
-            val photoURI: Uri = FileProvider.getUriForFile(
-                requireActivity(),
-                "com.prod.evergreen.fileprovider",
-                it!!
-            )
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-            takeImageResult.launch(intent)
-        }
+        val photo = actualImage ?: return
+        takeImageResult.launch(CameraCaptureHelper.createCaptureIntent(host, photo))
     }
     private fun createImageFile(): File {
         val timeStamp: String = SimpleDateFormat("MMdd_HHmm", Locale.getDefault()).format(Date())
@@ -667,8 +663,14 @@ class CreateTaskFragment : Fragment() {
                     super.onPositiveClicked(dialog)
 
                     if (issuucessBoolean){
-                        if (!findNavController().popBackStack()) {
-                            requireActivity().onBackPressedDispatcher.onBackPressed()
+                        try {
+                            val nav = findNavController()
+                            if (!nav.popBackStack(R.id.homeFragment, false)) {
+                                nav.navigate(R.id.homeFragment)
+                            }
+                        } catch (_: Exception) {
+                            isSubmitting = false
+                            bindning.creatTask.isEnabled = true
                         }
                     } else {
                         isSubmitting = false

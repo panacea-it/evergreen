@@ -41,7 +41,9 @@ import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.ActivityCreateTaskBinding
+import com.prod.evergreen.helper.CameraCaptureHelper
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.compressor.Compressor
 import com.prod.evergreen.helper.compressor.FileUtil
@@ -49,6 +51,7 @@ import com.prod.evergreen.helper.customdialog.PopupDialog
 import com.prod.evergreen.helper.customdialog.Styles
 import com.prod.evergreen.helper.customdialog.listener.OnDialogButtonClickListener
 import com.prod.evergreen.models.AMCData
+import com.prod.evergreen.models.activeCompanies
 import com.prod.evergreen.models.Data
 import com.prod.evergreen.models.ResponseData
 import kotlinx.coroutines.launch
@@ -130,12 +133,8 @@ class CreateTask : AppCompatActivity() {
             bindning.siteBranch.text = branchname;
         }
 
-        if (companymail != null) {
-            bindning.siteEmail.text = companymail;
-        }
-
         if (companylocation != null) {
-            bindning.siteEmail.text = companylocation;
+            bindning.siteEmail.setText(companylocation)
         }
         if (companyLink != null) {
             val object1 = JsonObject()
@@ -160,7 +159,9 @@ class CreateTask : AppCompatActivity() {
             bindning.siteBranch.text= data.company.branchName
             bindning.specificationLayout.view.visibility = View.VISIBLE
           //  Glide.with(this).load(data.company.logo).into(bindning.eqImage)
-            bindning.specificationLayout.tvMfd.text = data.manufacturerDate
+            bindning.specificationLayout.tvMfd.text =
+                com.prod.evergreen.helper.YearPickerHelper.displayYear(data.manufacturerDate)
+            bindning.specificationLayout.tvMake.text = data.make?.takeIf { it.isNotBlank() } ?: "-"
             bindning.specificationLayout.tvModelNum.text = data.model
             bindning.specificationLayout.tvSNumber.text = data.serialNumber
             bindning.specificationLayout.tvLocation.text = data.location
@@ -209,15 +210,22 @@ class CreateTask : AppCompatActivity() {
 
         viewModel.getAllAmc(token!!)
 
-        bindning.siteName.setOnClickListener {
-            showBottomSheetDialog { selectedItem ->
-                bindning.siteName.text = selectedItem.name
-                bindning.siteBranch.text = selectedItem.branchName
-//                bindning.siteEmail.text = selectedItem.email
-                company_link = selectedItem.id
-                val object1 = JsonObject()
-                object1.addProperty("company_link", company_link)
-                viewModel.getAllEquipmentsByID(token!!, object1)
+        val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        if (RoleAccess.lockToAttachedCompany(accessType) && companyLink != 0) {
+            company_link = companyLink
+            bindning.siteName.isEnabled = false
+            bindning.siteName.isClickable = false
+        } else {
+            bindning.siteName.setOnClickListener {
+                showBottomSheetDialog { selectedItem ->
+                    bindning.siteName.text = selectedItem.name
+                    bindning.siteBranch.text = selectedItem.branchName
+                    bindning.siteEmail.setText(selectedItem.location.orEmpty())
+                    company_link = selectedItem.id
+                    val object1 = JsonObject()
+                    object1.addProperty("company_link", company_link)
+                    viewModel.getAllEquipmentsByID(token!!, object1)
+                }
             }
         }
 
@@ -228,7 +236,9 @@ class CreateTask : AppCompatActivity() {
                 bindning.eqName.text = selectedItem.name
                 bindning.specificationLayout.view.visibility = View.VISIBLE
                 Glide.with(this).load(selectedItem).into(bindning.eqImage)
-                bindning.specificationLayout.tvMfd.text = selectedItem.manufacturer_date
+                bindning.specificationLayout.tvMfd.text =
+                    com.prod.evergreen.helper.YearPickerHelper.displayYear(selectedItem.manufacturer_date)
+                bindning.specificationLayout.tvMake.text = selectedItem.make?.takeIf { it.isNotBlank() } ?: "-"
                 bindning.specificationLayout.tvModelNum.text = selectedItem.model
                 bindning.specificationLayout.tvSNumber.text = selectedItem.serial_number
                 bindning.specificationLayout.tvLocation.text = selectedItem.location
@@ -283,7 +293,9 @@ class CreateTask : AppCompatActivity() {
 
         viewModel.createTaskDataResponse.observe(this) { data ->
             val success = data.status_code == 200
-            showDialog(data.message!!, goBackOnOk = success)
+            val message = data.message?.takeIf { it.isNotBlank() }
+                ?: if (success) "Task created successfully" else "Unable to create task"
+            showDialog(message, goBackOnOk = success)
         }
         viewModel.imageUploadDataResponse.observe(this) { data ->
             if (data.status_code == 200) {
@@ -308,21 +320,27 @@ class CreateTask : AppCompatActivity() {
             val issu_type = backendIssueValue
             val desc = bindning.desc.text.toString()
             val imagarrya = imageListserverimag
-            if (sitename.isEmpty()) {
-                Toast.makeText(this, "Select Company Name", Toast.LENGTH_SHORT).show()
-            } else if (eq_name.isEmpty()) {
-                Toast.makeText(this, "Select Equipment", Toast.LENGTH_SHORT).show()
-            }
-            else if (issu_type==null) {
-                Toast.makeText(this, "Choose  Issue Type", Toast.LENGTH_SHORT).show()
-            }
-            else if (title.isEmpty()) {
-                Toast.makeText(this, "Please Enter Subject", Toast.LENGTH_SHORT).show()
+            if (com.prod.evergreen.helper.FormValidator.firstInvalid(
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        bindning.siteName, "Please select company name", sitename.isNotBlank()
+                    ),
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        bindning.eqName, "Please select equipment", eq_name.isNotBlank()
+                    ),
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        bindning.issueTye, "Please choose issue type", issu_type != null
+                    ),
+                    com.prod.evergreen.helper.FormValidator.Check(
+                        bindning.title, "Please enter subject", title.isNotBlank()
+                    )
+                ) != null
+            ) {
+                return@setOnClickListener
             }
             else {
                 isSubmitting = true
                 bindning.creatTask.isEnabled = false
-                viewModel.createTask(createJsonObject(title,desc,equipment_id!!,User_ID!!,issu_type, imagarrya), token!!)
+                viewModel.createTask(createJsonObject(title,desc,equipment_id!!,User_ID!!,issu_type!!, imagarrya), token!!)
             }
         }
     }
@@ -368,7 +386,7 @@ class CreateTask : AppCompatActivity() {
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
         viewModel.allAmcDataResponse.observe(this) { data ->
 
-            val adapter = UserCompaniesAdapter(data.data!!) { selectedItem ->
+            val adapter = UserCompaniesAdapter(data.data.activeCompanies()) { selectedItem ->
                 onItemSelected(selectedItem)
                 dialog.dismiss()
             }
@@ -388,7 +406,7 @@ class CreateTask : AppCompatActivity() {
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
         viewModel.allequipmentsDataResponse.observe(this) { data ->
 
-            val adapter = EquipmentsDialogAdapter(data.data!!) { selectedItem ->
+            val adapter = EquipmentsDialogAdapter(data.data.orEmpty().filter { it.isActive() }) { selectedItem ->
                 onItemSelected(selectedItem)
                 dialog.dismiss()
             }
@@ -460,22 +478,13 @@ class CreateTask : AppCompatActivity() {
 
 
     private fun openCamera() {
-
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         try {
             actualImage = createImageFile()
         } catch (ex: IOException) {
             ex.printStackTrace()
         }
-        actualImage.let {
-            val photoURI: Uri = FileProvider.getUriForFile(
-                this,
-                "com.prod.evergreen.fileprovider",
-                it!!
-            )
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-            takeImageResult.launch(intent)
-        }
+        val photo = actualImage ?: return
+        takeImageResult.launch(CameraCaptureHelper.createCaptureIntent(this, photo))
     }
     private fun createImageFile(): File {
         val timeStamp: String = SimpleDateFormat("MMdd_HHmm", Locale.getDefault()).format(Date())
@@ -668,7 +677,7 @@ class CreateTask : AppCompatActivity() {
                 override fun onPositiveClicked(dialog: Dialog?) {
                     super.onPositiveClicked(dialog)
                     if (goBackOnOk) {
-                        finish()
+                        onBackPressedDispatcher.onBackPressed()
                     } else {
                         isSubmitting = false
                         bindning.creatTask.isEnabled = true

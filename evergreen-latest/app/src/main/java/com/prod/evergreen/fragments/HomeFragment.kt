@@ -188,7 +188,7 @@ class HomeFragment : Fragment() {
                                     binding.tvTechnicians.text = entry.count.toString()
                                 }
                                 "client_admin" -> {
-                                    binding.tvPocsHead.text = "POC's"
+                                    binding.tvPocsHead.text = "Client Admins"
                                     binding.tvPocs.text = entry.count.toString()
                                 }
                                 "client" -> {

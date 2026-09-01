@@ -79,7 +79,7 @@
                 android:textColor="@color/black1"
                 android:fontFamily="@font/roboto_medium"
                 android:textSize="@dimen/_12ssp"
-                android:text="Download"
+                android:text="Service Report"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
         </LinearLayout>

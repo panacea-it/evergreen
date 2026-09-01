@@ -9,14 +9,31 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <ImageView
-            android:contentDescription="@string/desc"
-            android:id="@+id/image"
-            android:scaleType="centerCrop"
-            android:adjustViewBounds="true"
-            android:src="@drawable/place_holder1"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/_140sdp"/>
+            android:layout_height="@dimen/_140sdp">
+            <ImageView
+                android:contentDescription="@string/desc"
+                android:id="@+id/image"
+                android:scaleType="centerCrop"
+                android:adjustViewBounds="true"
+                android:src="@drawable/place_holder1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+            <ImageView
+                android:id="@+id/company_menu"
+                android:layout_width="@dimen/_34sdp"
+                android:layout_height="@dimen/_34sdp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="@dimen/_8sdp"
+                android:layout_marginEnd="@dimen/_8sdp"
+                android:background="@drawable/bg_white_10"
+                android:padding="@dimen/_7sdp"
+                android:contentDescription="Company actions"
+                android:src="@drawable/ic_more_vert"
+                android:tint="@color/black_blue" />
+        </RelativeLayout>
         <TextView
             android:id="@+id/company_name"
             android:layout_marginStart="@dimen/_10sdp"
@@ -70,7 +87,7 @@
                 android:textColor="@color/text_blue1"
                 android:textSize="@dimen/_14ssp"
                 android:fontFamily="@font/roboto_bold"
-                android:text="POC Details"
+                android:text="Client Admin Details"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 

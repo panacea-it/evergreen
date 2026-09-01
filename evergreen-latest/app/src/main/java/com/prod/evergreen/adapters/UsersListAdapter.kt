@@ -5,18 +5,21 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.prod.evergreen.databinding.AmcItemsBinding
-import com.prod.evergreen.models.AMCData
 import com.prod.evergreen.models.Users
+import com.prod.evergreen.models.attachedCompanyLabel
 
-class UsersListAdapter(): RecyclerView.Adapter<UsersListAdapter.viewholder>() {
+class UsersListAdapter(
+    private val onViewMore: (Users) -> Unit = {}
+): RecyclerView.Adapter<UsersListAdapter.viewholder>() {
 
     var userdata = mutableListOf<Users>()
     class  viewholder(val binding: AmcItemsBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun binding(users: Users) {
+        fun binding(users: Users, onViewMore: (Users) -> Unit) {
 
             binding.name.text=users.name
-            binding.branch.text=users.phone
-            binding.place.text=users.location
+            binding.place.text= "Company : ${users.attachedCompanyLabel()}"
+            binding.branch.text= "Mobile : ${users.phone.orEmpty()}"
+            binding.viewMore.setOnClickListener { onViewMore(users) }
 
         }
 
@@ -28,7 +31,7 @@ class UsersListAdapter(): RecyclerView.Adapter<UsersListAdapter.viewholder>() {
     }
 
     override fun onBindViewHolder(holder: UsersListAdapter.viewholder, position: Int) {
-holder.binding(userdata[position])
+        holder.binding(userdata[position], onViewMore)
 
     }
 

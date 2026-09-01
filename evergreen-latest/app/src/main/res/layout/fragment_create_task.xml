@@ -88,22 +88,22 @@
                         android:text="Location"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
-                    <TextView
+                    <EditText
                         android:gravity="center_vertical"
                         android:id="@+id/site_email"
                         android:textColorHint="@color/gray2"
                         android:fontFamily="@font/roboto_medium"
-                        android:autofillHints="emailAddress"
                         android:textSize="@dimen/_14ssp"
                         android:textColor="@color/black_blue"
                         android:layout_marginTop="@dimen/_2sdp"
                         android:paddingHorizontal="@dimen/_10sdp"
-                        android:hint="@string/enter_email_address"
+                        android:hint="Enter Location"
                         android:background="@drawable/edit_text_background"
                         app:layout_constraintTop_toBottomOf="@+id/text_email"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/_50sdp"
-                        android:inputType="textEmailAddress"
+                        android:inputType="text"
+                        android:importantForAutofill="no"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent" />
 

@@ -74,8 +74,16 @@ data class AMCData(
 	val email: String? = null,
 
 	@field:SerializedName("start_date")
-	val startDate: String? = null
+	val startDate: String? = null,
+
+	@field:SerializedName("is_active")
+	val isActive: Boolean? = null
 )
+
+fun AMCData.isCompanyActive(): Boolean = isActive != false
+
+fun List<AMCData>?.activeCompanies(): List<AMCData> =
+	orEmpty().filter { it.isCompanyActive() }
 
 data class PocDetails(
 

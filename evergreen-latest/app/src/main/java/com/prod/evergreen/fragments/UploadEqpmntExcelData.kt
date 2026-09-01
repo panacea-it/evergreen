@@ -30,12 +30,14 @@ import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.FragmentUploadEqpmntExcelDataBinding
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.customdialog.PopupDialog
 import com.prod.evergreen.helper.customdialog.Styles
 import com.prod.evergreen.helper.customdialog.listener.OnDialogButtonClickListener
 import com.prod.evergreen.models.AMCData
+import com.prod.evergreen.models.activeCompanies
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -93,6 +95,17 @@ class UploadEqpmntExcelData : Fragment() {
         setViewmodel()
 
         viewModel.getAllAmc(token!!)
+        val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        if (RoleAccess.lockToAttachedCompany(accessType)) {
+            val attachedId = sharedPreferencesHelper.getValueInt(ConstantValues.COMAPNY_LINK)
+            val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
+            if (attachedId != 0) {
+                company_link_id = attachedId
+                binding.companySearc.setText(attachedName)
+                binding.companySearc.isEnabled = false
+                binding.companySearc.isClickable = false
+            }
+        }
         viewModel.loading.observe(viewLifecycleOwner) { data ->
             if (data){
                 ProgressDialogUtil.showProgressDialog(requireActivity(),"Loading")
@@ -103,23 +116,35 @@ class UploadEqpmntExcelData : Fragment() {
         }
 
         viewModel.imageUploadDataResponse.observe(viewLifecycleOwner) { data ->
-
-if(data.status_code==200){
-    showDialog(data.message!!,Styles.SUCCESS)
-}
-            else{
-    showDialog(data.message!!,Styles.FAILED)
-
+            val errors = data.errors.orEmpty()
+            val message = buildString {
+                append(data.message ?: if (data.status_code == 200) "Uploaded" else "Upload failed")
+                if (errors.isNotEmpty()) {
+                    append("\n\n")
+                    append(errors.joinToString("\n"))
+                }
             }
+            showDialog(message, if (data.status_code == 200 && errors.isEmpty()) Styles.SUCCESS else Styles.FAILED)
         }
+        binding.downloadTemplate.setOnClickListener { copyExcelTemplate() }
         binding.uploadDocument.setOnClickListener {
+            if (company_link_id == null) {
+                Toast.makeText(requireActivity(), "Please select company", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (uri_document == null) {
+                Toast.makeText(requireActivity(), "Please choose an Excel file", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             uploadFile(uri_document!!,fileName, company_link_id);
         }
-        binding.companySearc.setOnClickListener {
-            showBottomSheetDialog { selectedItem ->
-                binding.companySearc.setText(selectedItem.name)
-                binding.branchSearc.setText(selectedItem.branchName)
-                company_link_id=selectedItem.id
+        if (!RoleAccess.lockToAttachedCompany(accessType)) {
+            binding.companySearc.setOnClickListener {
+                showBottomSheetDialog { selectedItem ->
+                    binding.companySearc.setText(selectedItem.name)
+                    binding.branchSearc.setText(selectedItem.branchName)
+                    company_link_id=selectedItem.id
+                }
             }
         }
         binding.chooseFile.setOnClickListener {
@@ -154,6 +179,31 @@ if(data.status_code==200){
 
 
     }
+    private fun copyExcelTemplate() {
+        try {
+            val file = java.io.File(
+                android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS),
+                "evergreen_equipment_template.xlsx"
+            )
+            requireActivity().assets.open("evergreen_equipment_template.xlsx").use { input ->
+                java.io.FileOutputStream(file).use { output -> input.copyTo(output) }
+            }
+            Toast.makeText(requireActivity(), "Template saved to ${file.absolutePath}", Toast.LENGTH_LONG).show()
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                requireContext(),
+                "${requireActivity().packageName}.fileprovider",
+                file
+            )
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(android.content.Intent.createChooser(intent, "Open Excel template"))
+        } catch (error: Exception) {
+            Toast.makeText(requireActivity(), "Unable to save template: ${error.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun setViewmodel() {
         val repository = MainRepository(RetrofitService.getInstance(requireActivity()),XApplication.database.newsDao(),XApplication.database.companyDao())
         val viewModelFactory = MyViewModelFactory(repository)
@@ -214,7 +264,7 @@ if(data.status_code==200){
         val searchView: SearchView = view.findViewById(R.id.searchView)
         viewModel.allAmcDataResponse.observe(viewLifecycleOwner) { data ->
 
-            val adapter = ItemAdapter(data.data!!) { selectedItem ->
+            val adapter = ItemAdapter(data.data.activeCompanies()) { selectedItem ->
                 onItemSelected(selectedItem)
                 dialog.dismiss()
             }

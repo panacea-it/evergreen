@@ -84,7 +84,7 @@
             android:id="@+id/text_poc_details"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Point of Contact Details"
+            android:text="Client Admin Details"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@color/black1" />

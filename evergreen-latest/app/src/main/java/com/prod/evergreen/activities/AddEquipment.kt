@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -39,7 +40,9 @@ import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.ActivityAddEquipmentBinding
+import com.prod.evergreen.helper.CameraCaptureHelper
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.YearPickerHelper
@@ -49,6 +52,7 @@ import com.prod.evergreen.helper.customdialog.PopupDialog
 import com.prod.evergreen.helper.customdialog.Styles
 import com.prod.evergreen.helper.customdialog.listener.OnDialogButtonClickListener
 import com.prod.evergreen.models.AMCData
+import com.prod.evergreen.models.activeCompanies
 import com.prod.evergreen.models.ResponseData
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
@@ -172,16 +176,26 @@ class AddEquipment : AppCompatActivity() {
                 }
             }, true)
     }
+    private val cameraPermissionRequestLauncher: ActivityResultLauncher<String> =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                openCamera()
+            } else {
+                Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    private fun openCameraAndRequestIfNeeded() {
+        if (CameraCaptureHelper.hasCameraPermission(this)) {
+            openCamera()
+        } else {
+            cameraPermissionRequestLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
     private fun openCamera() {
-        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         photoFile = createImageFile()
-        val photoURI: Uri = FileProvider.getUriForFile(
-            this,
-            "com.prod.evergreen.fileprovider",
-            photoFile
-        )
-        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-        takeImageResult.launch(intent)
+        takeImageResult.launch(CameraCaptureHelper.createCaptureIntent(this, photoFile))
     }
     private val takeImageResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -263,10 +277,12 @@ class AddEquipment : AppCompatActivity() {
                 binding.location.setText(EqData.location)
                 backendIssueValue=EqData.tmFrequency
                 binding.tmFrequency.text = EqData.tmFrequency
-                binding.tvSpecifications.setText(EqData.specifications)
+                binding.tvSpecifications.setText(
+                    EqData.specifications?.takeIf { it.isNotBlank() } ?: EqData.serialNumber
+                )
                 binding.desc.setText(EqData.description)
-                binding.siteName.text = EqData.company!!.name
-                company_link = EqData.company!!.id
+                binding.siteName.text = EqData.company?.name ?: intent.getStringExtra("companyname")
+                company_link = EqData.company?.id ?: EqData.companyLink ?: intent.getIntExtra("companylink", 0).takeIf { it != 0 }
 
 
                 if (EqData.imageUrl!=null){
@@ -281,6 +297,9 @@ class AddEquipment : AppCompatActivity() {
                 val id = intent.getIntExtra("companylink",0)
                 binding.siteName.text = name
                 company_link =id
+            }
+            if (intent.getBooleanExtra("hide_company", false)) {
+                binding.companySection.visibility = View.GONE
             }
 
         }
@@ -304,53 +323,14 @@ class AddEquipment : AppCompatActivity() {
         }
             viewModel.getAllAmc(token!!)
 
-        val listItems = arrayOf("Camera", "Gallery", "Cancel")
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Choose One")
-        // val dialog = builder.create()
-        builder.setItems(listItems) { _, which ->
-            when (which) {
-                0 -> {
-                    if (checkPermission(cameraPermission)) {
-                        openCamera()
-
-                    } else {
-                        requestCameraPermission()
-
-                    }
-                }
-
-                1 -> {
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        pickImageFromGalleryForResult.launch(
-                            Intent(
-                                MediaStore.ACTION_PICK_IMAGES
-                            ).apply {
-                                type = "image/*"
-                            })
-                    } else {
-                        if (checkPermission(galleryPermission)) {
-                            openGallery()
-
-                        } else {
-                            requestGaleryPermission()
-
-                        }
-                    }
-
-
-                }
-
-                2 -> {
-
-                }
-            }
-
-        }
-
         binding.rl2.setOnClickListener {
-            builder.show()
+            showImageSourceDialog()
+        }
+        binding.selectedimage.setOnClickListener {
+            showImageSourceDialog()
+        }
+        binding.changePhoto.setOnClickListener {
+            showImageSourceDialog()
         }
 
 
@@ -389,6 +369,7 @@ binding.creatEq.setOnClickListener {
               make = binding.tvMake.text.toString(),
               model = binding.tvModelNum.text.toString(),
               image_url = file_name,
+              serial_number = binding.tvSpecifications.text.toString(),
               specifications = binding.tvSpecifications.text.toString(),
               manufacturer_date = YearPickerHelper.apiDateFromYear(binding.tvDate.text.toString()),
               location = binding.location.text.toString(),
@@ -401,12 +382,21 @@ binding.creatEq.setOnClickListener {
     }
 }
 
-        binding.siteName.setOnClickListener {
-            showBottomSheetDialog { selectedItem ->
-                binding.siteName.text = selectedItem.name
-                company_link = selectedItem.id
-
-
+        val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        if (RoleAccess.lockToAttachedCompany(accessType)) {
+            val attachedId = sharedPreferencesHelper.getValueInt(ConstantValues.COMAPNY_LINK)
+            val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
+            if (attachedId != 0) {
+                company_link = attachedId
+                binding.siteName.text = attachedName
+                binding.companySection.visibility = View.GONE
+            }
+        } else {
+            binding.siteName.setOnClickListener {
+                showBottomSheetDialog { selectedItem ->
+                    binding.siteName.text = selectedItem.name
+                    company_link = selectedItem.id
+                }
             }
         }
         viewModel.errorMessage.observe(this) { data ->
@@ -465,6 +455,7 @@ binding.creatEq.setOnClickListener {
         val make: String,
         val model: String,
         val image_url: String?=null,
+        val serial_number: String? = null,
         val specifications: String,
         val manufacturer_date: String,
         val location: String,
@@ -479,12 +470,26 @@ binding.creatEq.setOnClickListener {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun requestCameraPermission() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(cameraPermission),
-            cameraRequestCode
-        )
+    private fun showImageSourceDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Choose One")
+            .setItems(arrayOf("Camera", "Gallery", "Cancel")) { _, which ->
+                when (which) {
+                    0 -> openCameraAndRequestIfNeeded()
+                    1 -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            pickImageFromGalleryForResult.launch(
+                                Intent(MediaStore.ACTION_PICK_IMAGES).apply { type = "image/*" }
+                            )
+                        } else if (checkPermission(galleryPermission)) {
+                            openGallery()
+                        } else {
+                            requestGaleryPermission()
+                        }
+                    }
+                }
+            }
+            .show()
     }
 
     private fun requestGaleryPermission() {
@@ -501,29 +506,11 @@ binding.creatEq.setOnClickListener {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            cameraRequestCode -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    openCamera()
-                } else {
-                    Toast.makeText(
-                        this,
-                        "Camera permission denied",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-
-            galleryRequestCode -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    openGallery()
-                } else {
-                    Toast.makeText(
-                        this,
-                        "Gallery permission denied",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+        if (requestCode == galleryRequestCode) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openGallery()
+            } else {
+                Toast.makeText(this, "Gallery permission denied", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -542,7 +529,7 @@ binding.creatEq.setOnClickListener {
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
         viewModel.allAmcDataResponse.observe(this) { data ->
 
-            val adapter = UserCompaniesAdapter(data.data!!) { selectedItem ->
+            val adapter = UserCompaniesAdapter(data.data.activeCompanies()) { selectedItem ->
                 onItemSelected(selectedItem)
                 dialog.dismiss()
             }
@@ -596,52 +583,37 @@ binding.creatEq.setOnClickListener {
     }
 
     private fun validateFields(): Boolean {
-        if (binding.tvEqName.text.isNullOrEmpty()) {
-            showMsg("Please enter name")
-            return false
-        }
-        if (binding.tvMake.text.isNullOrEmpty()) {
-            showMsg("Please enter make")
-            return false
-        }
-        if (binding.tvModelNum.text.isNullOrEmpty()) {
-            showMsg("Please enter model number")
-            return false
-        }
-        if (binding.tvSpecifications.text.isNullOrEmpty()) {
-            showMsg("Please enter serial number")
-            return false
-        }
-        if (company_link==null) {
-            showMsg("Please Select Company")
-            return false
-        }
-        if (file_name.isNullOrBlank()) {
-            showMsg("Please select an image")
-            // Assuming there's a TextView to show an error for the image
-            return false
-        }
-//        if (binding.tvSpecifications.text.isNullOrEmpty()) {
-//            showMsg("Please enter specifications")
-//            return false
-//        }
-        if (binding.tvDate.text.isNullOrEmpty()) {
-            showMsg("Please enter manufacturing date")
-            return false
-        }
-        if (binding.location.text.isNullOrEmpty()) {
-            showMsg("Please enter location")
-            return false
-        }
-//        if (binding.desc.text.isNullOrEmpty()) {
-//            showMsg("Please enter description")
-//            return false
-//        }
-        if (backendIssueValue.isNullOrEmpty()) {
-            showMsg("Please select frequency")
-            return false
-        }
-        return true
+        return com.prod.evergreen.helper.FormValidator.firstInvalid(
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tvEqName, "Please enter name", !binding.tvEqName.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tvMake, "Please enter make", !binding.tvMake.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tvModelNum, "Please enter model number", !binding.tvModelNum.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tvSpecifications, "Please enter serial number", !binding.tvSpecifications.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tvDate, "Please enter manufacturing year", !binding.tvDate.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.location, "Please enter location", !binding.location.text.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.tmFrequency, "Please select frequency", !backendIssueValue.isNullOrEmpty()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.eqImg, "Please select an image", !file_name.isNullOrBlank()
+            ),
+            com.prod.evergreen.helper.FormValidator.Check(
+                binding.siteName,
+                "Please select company",
+                company_link != null && company_link != 0
+            )
+        ) == null
     }
 
     private fun showMsg(msg:String) {

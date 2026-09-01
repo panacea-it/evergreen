@@ -30,9 +30,11 @@ import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.FragmentDownloadQrBinding
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.models.AMCData
+import com.prod.evergreen.models.activeCompanies
 import okhttp3.ResponseBody
 import java.io.File
 import java.io.FileOutputStream
@@ -75,6 +77,17 @@ class DownloadQrFragment : Fragment() {
         setViewmodel()
         requestStoragePermission()
         viewModel.getAllAmc(token!!)
+        val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        if (RoleAccess.lockToAttachedCompany(accessType)) {
+            val attachedId = sharedPreferencesHelper.getValueInt(ConstantValues.COMAPNY_LINK)
+            val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
+            if (attachedId != 0) {
+                company_link_id = attachedId
+                binding.companySearc.setText(attachedName)
+                binding.companySearc.isEnabled = false
+                binding.companySearc.isClickable = false
+            }
+        }
 
         viewModel.loading.observe(viewLifecycleOwner) { data ->
             if (data){
@@ -85,11 +98,13 @@ class DownloadQrFragment : Fragment() {
             }
         }
 
-        binding.companySearc.setOnClickListener {
-            showBottomSheetDialog { selectedItem ->
-                binding.companySearc.setText(selectedItem.name)
-                binding.branchSearc.setText(selectedItem.branchName)
-                company_link_id = selectedItem.id
+        if (!RoleAccess.lockToAttachedCompany(accessType)) {
+            binding.companySearc.setOnClickListener {
+                showBottomSheetDialog { selectedItem ->
+                    binding.companySearc.setText(selectedItem.name)
+                    binding.branchSearc.setText(selectedItem.branchName)
+                    company_link_id = selectedItem.id
+                }
             }
         }
 
@@ -133,7 +148,7 @@ class DownloadQrFragment : Fragment() {
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
         val searchView: SearchView = view.findViewById(R.id.searchView)
         viewModel.allAmcDataResponse.observe(viewLifecycleOwner) { data ->
-            val adapter = ItemAdapter(data.data!!) { selectedItem ->
+            val adapter = ItemAdapter(data.data.activeCompanies()) { selectedItem ->
                 onItemSelected(selectedItem)
                 dialog.dismiss()
             }
@@ -184,11 +199,12 @@ class DownloadQrFragment : Fragment() {
                 }
             }
 
-            showToast("File downloaded: ${file.absolutePath}")
+            showToast("Downloaded to Downloads:\n${file.absolutePath}")
             binding.viewfile.visibility = View.VISIBLE
             binding.viewfile.setOnClickListener {
-                shareFileUsingFileProvider(file)
+                openPdfInSystemViewer(file)
             }
+            openDownloadsFolder()
         } catch (e: Exception) {
             println(e.message)
             showToast("Error saving file: ${e.message}")
@@ -201,20 +217,29 @@ class DownloadQrFragment : Fragment() {
         return Environment.MEDIA_MOUNTED == state
     }
 
-    private fun shareFileUsingFileProvider(file: File) {
+    private fun openPdfInSystemViewer(file: File) {
         try {
             val uri = FileProvider.getUriForFile(
                 requireContext(),
                 "${requireActivity().packageName}.fileprovider",
                 file
             )
-            val intent = Intent(Intent.ACTION_SEND)
-            intent.type = "application/pdf"
-            intent.putExtra(Intent.EXTRA_STREAM, uri)
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            startActivity(Intent.createChooser(intent, "Share PDF"))
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/pdf")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(Intent.createChooser(intent, "Open PDF"))
         } catch (e: Exception) {
-            showToast("Error sharing file: ${e.message}")
+            showToast("No PDF viewer found: ${e.message}")
+        }
+    }
+
+    private fun openDownloadsFolder() {
+        try {
+            startActivity(Intent(android.app.DownloadManager.ACTION_VIEW_DOWNLOADS))
+        } catch (_: Exception) {
+            showToast("Open the Downloads folder to view the PDF")
         }
     }
 

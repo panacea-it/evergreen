@@ -3,18 +3,19 @@ package com.prod.evergreen.activities
 import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.Window
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
+import androidx.navigation.NavOptions
 import androidx.navigation.findNavController
 import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.messaging.FirebaseMessaging
@@ -31,7 +32,9 @@ import com.prod.evergreen.databinding.ActivityMainBinding
 import com.prod.evergreen.dialogs.BlankFragment
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.ProgressDialogUtil
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import android.provider.Settings
 import com.prod.evergreen.helper.customdialog.PopupDialog
 import com.prod.evergreen.helper.customdialog.Styles
 import com.prod.evergreen.helper.customdialog.listener.OnDialogButtonClickListener
@@ -48,7 +51,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var userid: Int? = null
     private var token: String? = null
-    private var doubleBackToExitPressedOnce = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -66,6 +68,10 @@ class MainActivity : AppCompatActivity() {
         sharedPreferencesHelper = SharedPreferencesHelper(this)
         userid = sharedPreferencesHelper.getValueInt(ConstantValues.USER_ID)
         token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
+
+        if (intent.getBooleanExtra("company_inactive", false)) {
+            Toast.makeText(this, "Your company is inactive", Toast.LENGTH_LONG).show()
+        }
 
         navController = findNavController(R.id.nav_host_fragment)
         val accessLevel = getAccessLevelFromString(sharedPreferencesHelper.getValueString(
@@ -95,11 +101,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.navigationRv.adapter = CustomMenuAdapter(items) { selectedItem ->
-
-            navController.popBackStack()
-            navController.navigate(selectedItem.destinationId)
+            navigateToDestination(selectedItem.destinationId, selectedItem.name)
             binding.drawerLayout.closeDrawers()
-            binding.title.text = selectedItem.name
         }
 
 
@@ -131,6 +134,7 @@ class MainActivity : AppCompatActivity() {
 
 
         }
+        registerFcmToken()
 
         viewModel.loading.observe(this) { data ->
             if (data){
@@ -150,6 +154,34 @@ class MainActivity : AppCompatActivity() {
         binding.menu.setOnClickListener {
             binding.drawerLayout.openDrawer(GravityCompat.START)
         }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    binding.drawerLayout.closeDrawer(GravityCompat.START)
+                    return
+                }
+                if (!this@MainActivity::navController.isInitialized ||
+                    navController.currentDestination?.id == R.id.homeFragment
+                ) {
+                    moveTaskToBack(true)
+                    return
+                }
+                navigateToDestination(R.id.homeFragment, "Home")
+            }
+        })
+    }
+
+    private fun navigateToDestination(destinationId: Int, title: String) {
+        if (!this::navController.isInitialized) return
+        if (navController.currentDestination?.id != destinationId) {
+            val options = NavOptions.Builder()
+                .setPopUpTo(R.id.homeFragment, destinationId == R.id.homeFragment)
+                .setLaunchSingleTop(true)
+                .build()
+            navController.navigate(destinationId, null, options)
+        }
+        binding.title.text = title
     }
 
     private fun getItemsForAccessLevel(accessLevel: Enums.Companion.ClientRole): List<ListItem> {
@@ -161,7 +193,7 @@ class MainActivity : AppCompatActivity() {
             ListItem("Create Task", R.drawable.ic_create_task_icon, R.id.createTaskFragment),
            // ListItem("Add Users", R.drawable.ic_add_user_icon, R.id.createManagerFragment),
             ListItem("Users List", R.drawable.ic_users_list_icon, R.id.amc_mangers),
-            ListItem("Assign Tasks to Technician", R.drawable.ic_assign_tasks_to_technician_icon, R.id.amc_mangers),
+            ListItem("Assign Tasks to Technician", R.drawable.ic_assign_tasks_to_technician_icon, R.id.taskFragment),
         //    ListItem("Create Technian ", R.drawable.ic_create_techni_n_icon, R.id.amc_mangers),
        //     ListItem("Create  Manager", R.drawable.ic_create_manager_icon, R.id.amc_mangers),
             ListItem("Create AMC", R.drawable.ic_create_amc_icon, R.id.createAmcFragment),
@@ -189,12 +221,15 @@ class MainActivity : AppCompatActivity() {
             }
 
             Enums.Companion.ClientRole.client_admin -> allItems.filter {
-                it.name in listOf("Home","Equipments List", "Tasks List","Create Task","Upload Equipments Excel Data","Add Equipment","Download QR","Users List","Add Equipment","Download QR")
+                it.name in listOf("Home","Equipments List", "Tasks List","Create Task","Upload Equipments Excel Data","Add Equipment","Download QR","Users List")
             }
 
             Enums.Companion.ClientRole.others -> allItems.filter {
                 it.name in listOf("Home", "Notifications")
             }
+        }.filter { item ->
+            item.name != "Assign Tasks to Technician" ||
+                RoleAccess.canAssignTechnician(accessLevel.name)
         }
     }
 
@@ -253,6 +288,11 @@ private fun handleNotificationIntent(intent: Intent) {
 
 
         val buttonAccept = dialog.findViewById<Button>(R.id.buttonAccept)
+        val canAccept = RoleAccess.canAcceptTask(
+            sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        ) && !taskLink.isNullOrBlank()
+        buttonAccept.visibility = if (canAccept) android.view.View.VISIBLE else android.view.View.GONE
+        buttonAccept.text = "Accept"
         buttonAccept.setOnClickListener {
             val object1 = JsonObject()
             object1.addProperty("task_link", taskLink!!.toInt())
@@ -270,6 +310,22 @@ private fun handleNotificationIntent(intent: Intent) {
         val window = dialog.window
         window?.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
     }
+    private fun registerFcmToken() {
+        val authToken = token
+        if (authToken.isNullOrBlank()) return
+        val deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful || task.result.isNullOrBlank() || deviceId.isNullOrBlank()) {
+                return@addOnCompleteListener
+            }
+            sharedPreferencesHelper.save(ConstantValues.PREFCM_Tooken, task.result)
+            val body = JsonObject()
+            body.addProperty("fcm_id", task.result)
+            body.addProperty("device_id", deviceId)
+            viewModel.upsertToken(body, authToken)
+        }
+    }
+
     private fun setViewmodel() {
         val repository = MainRepository(
             RetrofitService.getInstance(this@MainActivity),
@@ -298,19 +354,6 @@ private fun handleNotificationIntent(intent: Intent) {
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
-    override fun onBackPressed() {
-        if (doubleBackToExitPressedOnce) {
-            super.onBackPressed()
-            return
-        }
-
-        this.doubleBackToExitPressedOnce = true
-        Toast.makeText(this, "Press again to exit", Toast.LENGTH_SHORT).show()
-
-        // Reset the flag after 2 seconds to allow another back press
-        Handler().postDelayed({ doubleBackToExitPressedOnce = false }, 2000)
-    }
-
     private fun removeFirebaseMessage(){
         CoroutineScope(Dispatchers.Default).launch {
             FirebaseMessaging.getInstance().isAutoInitEnabled = false

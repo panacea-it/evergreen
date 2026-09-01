@@ -25,7 +25,7 @@ class ListAllAMCTechniciansFragment : Fragment() {
     private val sharedViewModel: SharedViewModel by activityViewModels()
     private var param1: String? = null
     private var param2: String? = null
-    val items = listOf("Clients", "Pocs","Technicians","Managers")
+    val items = listOf("Client Admins", "Clients","Technicians","Managers")
     val types = listOf("client_admin", "client","technician","eg_admin")
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     lateinit var binding: FragmentListAllAMCTechniciansBinding

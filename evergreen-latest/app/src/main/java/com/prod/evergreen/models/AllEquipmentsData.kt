@@ -20,9 +20,13 @@ data class Data (
     val tm_frequency: String? = null,
     val description: String? = null,
     val company_link: String? = null,
+    val company: CompanyDataResponse? = null,
     val created_at: String? = null,
     val created_by: String? = null,
     val updated_at: String? = null,
     val updated_by: String? = null,
+    val is_active: Boolean? = true,
     val v: Long? = null
-)
+) {
+    fun isActive(): Boolean = is_active != false
+}

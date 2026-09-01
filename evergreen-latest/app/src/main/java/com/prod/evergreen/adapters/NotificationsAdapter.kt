@@ -37,10 +37,9 @@ class NotificationsAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = data[position]
         val role = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
-        val canAssign = role.equals("technician", ignoreCase = true) &&
+        val canAssign = com.prod.evergreen.helper.RoleAccess.canAcceptTask(role) &&
             item.taskLink != null &&
-            item.acceptedBy == null &&
-            item.title?.contains("New task", ignoreCase = true) == true
+            item.acceptedBy == null
 
         holder.itemView.setOnClickListener {
             if (item.acceptedBy==null){
@@ -50,6 +49,7 @@ class NotificationsAdapter(
 
 holder.binding.apply {
     btnAssign.visibility = if (canAssign) View.VISIBLE else View.GONE
+    btnAssign.text = "Accept"
     btnAssign.setOnClickListener {
         onAssign(item)
     }

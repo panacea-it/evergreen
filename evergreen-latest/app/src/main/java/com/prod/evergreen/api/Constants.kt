@@ -3,7 +3,8 @@ package com.prod.evergreen.api
 class Constants {
 
     companion object{
-        const val BASE_URL = "http://127.0.0.1:3000/"
+        const val BASE_URL = "https://evergreen-backend-smry.onrender.com/"
+        const val API_KEY = "evergreen_api_key"
         const val LOGIN = "auth/signIn"
         const val GETLIST = "products"
         const val FORGOT_PASSWORD = "user/forgetPassword"
@@ -13,6 +14,8 @@ class Constants {
         const val CREATE_TECHNICIAN = "user/createUser"
         const val CREATE_TASK = "user/createTask"
         const val CREATE_AMC = "user/createCompany"
+        const val UPDATE_AMC = "user/updateCompany"
+        const val DELETE_AMC = "user/deleteCompany"
         const val UPLOAD = "user/upload-file"
         const val GET_ALL_AMC = "user/getAllCompanies"
         const val GET_ALL_USERS = "user/getAllUser"
@@ -33,6 +36,12 @@ class Constants {
         const val COMPANIES_STATS = "user/companiesStats"
         const val USER_STATS = "user/getUserStats"
         const val GET_ALL_TASKS_COUNT = "user/getAllTasksCount"
+        const val DELETE_EQUIPMENT = "user/deleteEquipment"
+        const val UPDATE_TASK = "user/updateTask"
+        const val DELETE_TASK = "user/deleteTask"
+        const val UPDATE_USER = "user/updateUser"
+        const val DELETE_USER = "user/deleteUser"
+        const val UPSERT_TOKEN = "user/upsertToken"
 
     }
 }

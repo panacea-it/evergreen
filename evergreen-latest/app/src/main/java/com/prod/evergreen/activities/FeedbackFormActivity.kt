@@ -41,6 +41,7 @@ import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.FragmentFeedBackFormDialogBinding
 import com.prod.evergreen.dialogs.BlankFragment
+import com.prod.evergreen.helper.CameraCaptureHelper
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
@@ -170,13 +171,13 @@ class FeedbackFormActivity : AppCompatActivity(), BlankFragment.SignatureDialogL
             builder.show()
 
         }
-        binding.etCalltype.text = taskFromJson.task.callType
-        if (taskFromJson.task.followUp!=null) {
-            binding.tvActionDescription.setText(taskFromJson.task.actionTaken)
-            binding.etReqDetails.setText(taskFromJson.task.reqDetails)
-            binding.actionReqDetails.setText(taskFromJson.task.actionReqDetails)
+        binding.etCalltype.text = taskFromJson.task?.callType
+        if (taskFromJson.task?.followUp!=null) {
+            binding.tvActionDescription.setText(taskFromJson.task?.actionTaken)
+            binding.etReqDetails.setText(taskFromJson.task?.reqDetails)
+            binding.actionReqDetails.setText(taskFromJson.task?.actionReqDetails)
 
-            if (taskFromJson.task.followUp) {
+            if (taskFromJson.task?.followUp == true) {
                 binding.actionYes.isChecked=true
             } else {
                 binding.actionNo.isChecked=true
@@ -410,15 +411,8 @@ class FeedbackFormActivity : AppCompatActivity(), BlankFragment.SignatureDialogL
     }
 
     private fun openCamera() {
-        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         photoFile = createImageFile()
-        val photoURI: Uri = FileProvider.getUriForFile(
-            this,
-            "com.prod.evergreen.fileprovider",
-            photoFile
-        )
-        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-        cameraLauncher.launch(cameraIntent)
+        cameraLauncher.launch(CameraCaptureHelper.createCaptureIntent(this, photoFile))
     }
 
     @Throws(IOException::class)

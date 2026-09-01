@@ -24,8 +24,25 @@ data class Users (
     val created_at: String? = null,
     val created_by: String? = null,
     val updated_at: String? = null,
-    val updated_by: String? = null
+    val updated_by: String? = null,
+    val company_name: String? = null,
+    val companies: List<UserCompany>? = null
 )
+
+data class UserCompany(
+    val id: Int? = null,
+    val name: String? = null,
+    val branch_name: String? = null
+)
+
+fun Users.attachedCompanyLabel(): String {
+    if (!company_name.isNullOrBlank()) return company_name
+    val fromList = companies.orEmpty()
+        .map { listOfNotNull(it.name, it.branch_name).joinToString(" - ") }
+        .filter { it.isNotBlank() }
+        .joinToString(", ")
+    return fromList.ifBlank { "-" }
+}
 
 data class Countdata(
     val eg_super_admin: Int,

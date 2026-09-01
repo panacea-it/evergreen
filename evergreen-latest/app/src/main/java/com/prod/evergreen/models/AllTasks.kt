@@ -2,32 +2,32 @@ package com.prod.evergreen.models
 
 import com.google.gson.annotations.SerializedName
 data class AllTasks(
-    val data: List<TaskCreated>,
-    val count: Count,
-    val success: Int,
-    val message: String,
+    val data: List<TaskCreated>? = emptyList(),
+    val count: Count? = null,
+    val success: Int? = null,
+    val message: String? = null,
 )
 
 data class TaskCreated(
-    val id: Int,
+    val id: Int = 0,
     @SerializedName("technician_link")
-    val technicianLink: Any?,
+    val technicianLink: Any? = null,
     @SerializedName("client_link")
-    val clientLink: Int,
+    val clientLink: Int? = null,
     @SerializedName("task_link")
-    val taskLink: Int,
-    val status: String,
+    val taskLink: Int? = null,
+    val status: String? = null,
     val reason: String?=null,
     @SerializedName("created_at")
-    val createdAt: String,
+    val createdAt: String? = null,
     @SerializedName("created_by")
-    val createdBy: String,
+    val createdBy: String? = null,
     @SerializedName("updated_at")
-    val updatedAt: String,
+    val updatedAt: String? = null,
     @SerializedName("updated_by")
-    val updatedBy: String,
-    val task: Task,
-    val client: Client,
+    val updatedBy: String? = null,
+    val task: Task? = null,
+    val client: Client? = null,
     @SerializedName("technician") val technician: Technician?=null
 
 )
@@ -35,19 +35,19 @@ data class TaskCreated(
 
 
 data class Task(
-    val id: Int,
-    val name: String,
-    val description: String,
+    val id: Int = 0,
+    val name: String? = null,
+    val description: String? = null,
     @SerializedName("call_type")
-    val callType: String,
-    val image: List<String> = emptyList(),
+    val callType: String? = null,
+    val image: List<String>? = emptyList(),
     @SerializedName("equipment_link")
-    val equipmentLink: Long,
+    val equipmentLink: Long? = null,
     @SerializedName("ticket_no")
-    val ticketNo: String,
+    val ticketNo: String? = null,
     @SerializedName("hold_reason")
-    var holdReason:List<HoldReason>,
-    val otp: String,
+    var holdReason:List<HoldReason>? = emptyList(),
+    val otp: String? = null,
     val feedback: String?=null,
     @SerializedName("action_taken")
     val actionTaken: String?=null,
@@ -65,11 +65,11 @@ data class Task(
     val rating: Int?=null,
     val status: String?=null,
     @SerializedName("created_at")
-    val createdAt: String,
+    val createdAt: String? = null,
     @SerializedName("created_by")
     val createdBy: String?=null,
     @SerializedName("updated_at")
-    val updatedAt: String,
+    val updatedAt: String? = null,
     @SerializedName("updated_by")
     val updatedBy: String?=null,
     val equipment: Equipment?=null,
@@ -114,7 +114,7 @@ data class Equipment(
     val updatedAt: String,
     @SerializedName("updated_by")
     val updatedBy: String,
-    val company: CompanyData,
+    val company: CompanyData? = null,
 )
 
 data class CompanyData(

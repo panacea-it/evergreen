@@ -21,6 +21,7 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
     val taskDataMore: (TaskCreated) -> Unit,
     val settohold: (TaskCreated) -> Unit,
     val downloadfile: (TaskCreated) -> Unit, val editReson: (TaskCreated) -> Unit,
+    val onActionClick: (TaskCreated) -> Unit = {}
 ) : RecyclerView.Adapter<AssigningTasksStatusAdapter.ViewHolder>(), Filterable {
 
     private var filteredTaskList: List<TaskCreated> = listOf()
@@ -28,36 +29,31 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
 
     class ViewHolder(val binding: TaskItemBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(datum: TaskCreated, accessType: String) {
-            binding.title.text = datum.task.name
-            binding.description.text = datum.task.description
-            binding.eqName.text = datum.task.equipment?.name
-            binding.eqSno.text = datum.task.equipment?.serialNumber
+            binding.title.text = datum.task?.name ?: "-"
+            binding.description.text = datum.task?.description ?: "-"
+            binding.eqName.text = datum.task?.equipment?.name ?: "-"
+            binding.eqSno.text = datum.task?.equipment?.serialNumber ?: "-"
 
-            binding.ticketNo.text = datum.task.ticketNo
-            if(datum.task.equipment!=null) {
-                binding.company.text = datum.task.equipment.company.name
-            }
-
-          //  System.out.println("IMAGE ::  "+datum.task.image[0]);
-
+            binding.ticketNo.text = datum.task?.ticketNo ?: "-"
+            binding.company.text = datum.task?.equipment?.company?.name ?: "-"
 
             binding.status.text = when (datum.status) {
                 "open" -> "Not Started"
                 "in_progress" -> "In Progress"
                 "hold" -> "Hold"
                 "closed" -> "Closed"
-                else -> "" // Maintain the current text if no condition is met
+                else -> datum.status.orEmpty()
             }
 
-            if (datum.technicianLink == null) {
+            if (datum.technicianLink == null || datum.technician == null) {
                 binding.llTechnician.visibility = View.GONE
             } else {
                 binding.llTechnician.visibility = View.VISIBLE
-                binding.technician.text = datum.technician!!.name
+                binding.technician.text = datum.technician.name ?: "-"
             }
 
-            binding.createdDate.text = DateConverter.convertToLocalUtcAndFormat(datum.task.createdAt)
-            binding.days.text = DateConverter.getTimeAgo(datum.task.createdAt)
+            binding.createdDate.text = DateConverter.convertToLocalUtcAndFormat(datum.task?.createdAt)
+            binding.days.text = DateConverter.getTimeAgo(datum.task?.createdAt)
         }
     }
 
@@ -67,10 +63,12 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val datum = filteredTaskList[position]
-        if (!datum.task.image.isNullOrEmpty()) {
+      try {
+        val datum = filteredTaskList.getOrNull(position) ?: return
+        val imageUrl = datum.task?.image?.firstOrNull()
+        if (!imageUrl.isNullOrBlank()) {
             Glide.with(holder.binding.image.context)
-                .load(Constants.BASE_URL + datum.task.image[0])
+                .load(Constants.BASE_URL + imageUrl)
                 .into(holder.binding.image)
         }
 
@@ -100,11 +98,11 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
                 holder.binding.taskStatusUpdater.text = when {
                     datum.technicianLink == null -> "Accept"
                     datum.status == "open" -> "Move to InProgress"
-                    datum.status == "in_progress" && datum.task.followUp == null -> "Move to Done"
-                    datum.status == "in_progress" && datum.task.followUp != null -> "Move to Done"
+                    datum.status == "in_progress" && datum.task?.followUp == null -> "Move to Done"
+                    datum.status == "in_progress" && datum.task?.followUp != null -> "Move to Done"
                     else -> "Move to In Progress"
                 }
-                if (datum.status == "in_progress" && datum.task.followUp != null){
+                if (datum.status == "in_progress" && datum.task?.followUp != null){
 
                     holder.binding.taskStatusUpdater.visibility = View.INVISIBLE
                     holder.binding.tvHold.visibility = View.INVISIBLE
@@ -120,12 +118,12 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
                 holder.binding.tvHold.visibility = View.GONE
                 holder.binding.content.visibility = View.GONE
                 holder.binding.completed.visibility = View.VISIBLE
-                holder.binding.download.visibility = View.VISIBLE
+                holder.binding.download.visibility = View.GONE
             }
         } else {
             if (datum.status != "closed") {
 //                holder.binding.taskStatusUpdater.visibility = View.VISIBLE
-                if(datum.status == "in_progress" && datum.task.followUp != null){
+                if(datum.status == "in_progress" && datum.task?.followUp != null){
                     holder.binding.tvHold.visibility = View.INVISIBLE
                 }
 //
@@ -134,13 +132,13 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
                     datum.technicianLink == null -> View.GONE
                     datum.status == "open" -> View.GONE
                     datum.status == "hold" -> View.GONE
-                    datum.status == "in_progress" && datum.task.followUp == null -> View.GONE
+                    datum.status == "in_progress" && datum.task?.followUp == null -> View.GONE
                     else -> View.VISIBLE
                 }
 
 
                 holder.binding.taskStatusUpdater.text = when {
-                    datum.status == "in_progress" && datum.task.followUp != null -> "Approval"
+                    datum.status == "in_progress" && datum.task?.followUp != null -> "Approval"
                     else -> ""
                 }
 
@@ -161,7 +159,7 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
                 holder.binding.tvHold.visibility = View.GONE
                 holder.binding.content.visibility = View.GONE
                 holder.binding.completed.visibility = View.VISIBLE
-                holder.binding.download.visibility = View.VISIBLE
+                holder.binding.download.visibility = View.GONE
             }
         }
 
@@ -185,15 +183,31 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
 
 
 
+        holder.binding.btnServiceReport.visibility =
+            if (com.prod.evergreen.helper.RoleAccess.canGenerateServiceReport(accessType)) View.VISIBLE else View.GONE
+        holder.binding.btnServiceReport.setOnClickListener { downloadfile(datum) }
+        holder.binding.taskMenu.visibility =
+            if (com.prod.evergreen.helper.RoleAccess.canManageTasks(accessType)) View.VISIBLE else View.GONE
+        holder.binding.taskMenu.setOnClickListener { view ->
+            view.isEnabled = false
+            try {
+                onActionClick(datum)
+            } finally {
+                view.postDelayed({ view.isEnabled = true }, 400)
+            }
+        }
         holder.itemView.setOnClickListener {
           taskDataMore(datum)
+      }
+      } catch (_: Exception) {
+          holder.binding.title.text = "-"
       }
     }
 
     override fun getItemCount(): Int = filteredTaskList.size
 
     fun addData(data: List<TaskCreated>?) {
-        taskslist = data?.toMutableList() ?: mutableListOf()
+        taskslist = (data ?: emptyList()).sortedByDescending { it.task?.createdAt.orEmpty() }
         filteredTaskList = taskslist
         notifyDataSetChanged()
     }
@@ -206,9 +220,9 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
                     taskslist
                 } else {
                     taskslist.filter {
-                        it.task.name.contains(query, ignoreCase = true) ||
-                                it.task.equipment?.name!!.contains(query, ignoreCase = true) ||
-                                it.task.equipment.company.name.contains(query, ignoreCase = true)
+                        it.task?.name.orEmpty().contains(query, ignoreCase = true) ||
+                            it.task?.equipment?.name.orEmpty().contains(query, ignoreCase = true) ||
+                            it.task?.equipment?.company?.name.orEmpty().contains(query, ignoreCase = true)
                     }
                 }
                 return FilterResults().apply { values = filteredTaskList }
@@ -216,7 +230,7 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
 
             @Suppress("UNCHECKED_CAST")
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-                filteredTaskList = results?.values as List<TaskCreated>
+                filteredTaskList = (results?.values as? List<TaskCreated>).orEmpty()
                 notifyDataSetChanged()
             }
         }

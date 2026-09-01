@@ -18,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
@@ -26,7 +27,6 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointForward
@@ -39,8 +39,10 @@ import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.FragmentCreateAmcBinding
+import com.prod.evergreen.helper.CameraCaptureHelper
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import com.prod.evergreen.helper.Validator
 import com.prod.evergreen.helper.compressor.Compressor
 import com.prod.evergreen.helper.compressor.FileUtil
 import com.prod.evergreen.helper.customdialog.PopupDialog
@@ -88,10 +90,11 @@ lateinit var binding:FragmentCreateAmcBinding
     val pickImageFromGalleryForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val intent = result.data
-                val uri = intent!!.data
+                val uri = result.data?.data
                 if (uri != null) {
                     setImage(uri)
+                } else {
+                    showError("Unable to read selected image")
                 }
             }
         }
@@ -133,52 +136,8 @@ lateinit var binding:FragmentCreateAmcBinding
         super.onViewCreated(view, savedInstanceState)
 
 
-        val listItems = arrayOf("Camera", "Gallery", "Cancel")
-        val builder = AlertDialog.Builder(requireActivity())
-        builder.setTitle("Choose One")
-        // val dialog = builder.create()
-        builder.setItems(listItems) { _, which ->
-            when (which) {
-                0 -> {
-                    if (checkPermission(cameraPermission)) {
-                        openCamera()
-
-                    } else {
-                        requestCameraPermission()
-
-                    }
-                }
-
-                1 -> {
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        pickImageFromGalleryForResult.launch(
-                            Intent(
-                                MediaStore.ACTION_PICK_IMAGES
-                            ).apply {
-                                type = "image/*"
-                            })
-                    } else {
-                        if (checkPermission(galleryPermission)) {
-                            openGallery()
-
-                        } else {
-                            requestGaleryPermission()
-
-                        }
-                    }
-
-
-                }
-
-                2 -> {
-
-                }
-            }
-
-        }
         binding.imageupload.setOnClickListener {
-            builder.show()
+            showImageSourceDialog()
         }
         setViewmodel()
         binding.startDate.setOnClickListener {
@@ -199,20 +158,15 @@ lateinit var binding:FragmentCreateAmcBinding
             }
         }
 
-
-        viewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
-            Toast.makeText(requireActivity(), errorMessage.toString(), Toast.LENGTH_SHORT).show()
-        }
-
         viewModel.changePasswordDataResponse.observe(viewLifecycleOwner) { data ->
+            val message = data.message ?: "Operation completed"
             if (data.status_code==200) {
-
-                showDialog(data.message!!,true)
+                showDialog(message,true)
 
             }
             else{
 
-                showDialog(data.message!!,false)
+                showDialog(message,false)
             }
         }
 
@@ -247,56 +201,85 @@ lateinit var binding:FragmentCreateAmcBinding
 
         binding.createAmc.setOnClickListener {
             if (isSubmitting) return@setOnClickListener
-            if (compressedImage != null) {
-                val endDate = binding.endDate.text?.toString()
-                val startDate = binding.startDate.text?.toString() ?: ""
-                val siteLocation = binding.siteLocation.text?.toString() ?: ""
-                val siteBranch = binding.siteBranch.text?.toString() ?: ""
-                val sitename = binding.sitename.text?.toString() ?: ""
-                val siteemail = binding.siteEmail.text?.toString() ?: ""
-                val password = binding.poc.sitePswd.text?.toString() ?: ""
-                val pocMobile = binding.poc.pocNumber.text?.toString() ?: ""
-                val pocName = binding.poc.pocName.text?.toString() ?: ""
-                val pocMail = binding.poc.pocMail.text?.toString() ?: ""
+            val endDate = binding.endDate.text?.toString()?.trim().orEmpty()
+            val startDate = binding.startDate.text?.toString()?.trim().orEmpty()
+            val siteLocation = binding.siteLocation.text?.toString()?.trim().orEmpty()
+            val siteBranch = binding.siteBranch.text?.toString()?.trim().orEmpty()
+            val sitename = binding.sitename.text?.toString()?.trim().orEmpty()
+            val siteemail = binding.siteEmail.text?.toString()?.trim().orEmpty()
+            val password = binding.poc.sitePswd.text?.toString()?.trim().orEmpty()
+            val pocMobile = binding.poc.pocNumber.text?.toString()?.trim().orEmpty()
+            val pocName = binding.poc.pocName.text?.toString()?.trim().orEmpty()
+            val pocMail = binding.poc.pocMail.text?.toString()?.trim().orEmpty()
 
-                if (sitename.isEmpty()) {
-                    Toast.makeText(requireActivity(), "Enter site name", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                if (startDate.isEmpty()) {
-                    Toast.makeText(requireActivity(), "Select start date", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                if (endDate.isNullOrEmpty()) {
-                    Toast.makeText(requireActivity(), "Select end date", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-
-                val object1 = JsonObject()
-                object1.addProperty("company_name", sitename)
-                object1.addProperty("branch_name", siteBranch)
-                object1.addProperty("company_email", siteemail)
-                object1.addProperty("password", password)
-                object1.addProperty("start_date", startDate)
-                object1.addProperty("end_date", endDate)
-                object1.addProperty("company_location", siteLocation)
-                object1.addProperty("name", pocName)
-                object1.addProperty("location", "")
-                object1.addProperty("phone", pocMobile)
-                object1.addProperty("email", pocMail)
-                object1.addProperty("logo", file_name)
-
-                val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
-                isSubmitting = true
-                binding.createAmc.isEnabled = false
-                viewModel.createAMC(object1, token!!)
+            val validationMessage = com.prod.evergreen.helper.FormValidator.firstInvalid(
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.sitename, "Please enter site name", sitename.isNotBlank()
+                ),
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.siteBranch, "Please enter branch name", siteBranch.isNotBlank()
+                ),
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.startDate, "Select start date", startDate.isNotBlank()
+                ),
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.endDate, "Select end date", endDate.isNotBlank()
+                ),
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.siteImage,
+                    "Please select image",
+                    compressedImage != null && !file_name.isNullOrBlank()
+                ),
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.poc.pocName,
+                    "Please fill all Client Admin details or leave them empty",
+                    com.prod.evergreen.helper.FormValidator.cardCompleteOrEmpty(
+                        pocName, pocMobile, pocMail, password
+                    )
+                ),
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.poc.pocNumber,
+                    "Please enter valid mobile number",
+                    pocMobile.isBlank() || Validator.isMobileValid(pocMobile)
+                ),
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.poc.pocMail,
+                    "Please enter valid email address",
+                    pocMail.isBlank() || Validator.isEmailValid(pocMail)
+                )
+            )
+            if (validationMessage != null) {
+                return@setOnClickListener
             }
-            else{
-                Toast.makeText(requireActivity(),"Please Select Image",Toast.LENGTH_SHORT).show()
+
+            val object1 = JsonObject().apply {
+                addProperty("company_name", sitename)
+                addProperty("branch_name", siteBranch)
+                addProperty("company_email", siteemail)
+                addProperty("password", password)
+                addProperty("start_date", startDate)
+                addProperty("end_date", endDate)
+                addProperty("company_location", siteLocation)
+                // Name/email/password are optional in client details.
+                addProperty("name", pocName)
+                addProperty("location", "")
+                addProperty("phone", pocMobile)
+                addProperty("email", pocMail)
+                addProperty("logo", file_name)
             }
+
+            val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
+            if (token.isNullOrBlank()) {
+                Toast.makeText(requireActivity(), "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            isSubmitting = true
+            binding.createAmc.isEnabled = false
+            viewModel.createAMC(object1, token)
         }
 
     }
+
     private fun showDatePicker(minDate: Long? = null, onDateSelected: (String, Long) -> Unit) {
         val datePickerBuilder = MaterialDatePicker.Builder.datePicker()
             .setTitleText("Select a date")
@@ -338,12 +321,42 @@ private fun openGallery() {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun requestCameraPermission() {
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            arrayOf(cameraPermission),
-            cameraRequestCode
-        )
+    private val cameraPermissionRequestLauncher: ActivityResultLauncher<String> =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                openCamera()
+            } else if (isAdded) {
+                Toast.makeText(requireActivity(), "Camera permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    private fun showImageSourceDialog() {
+        if (!isAdded) return
+        AlertDialog.Builder(requireActivity())
+            .setTitle("Choose One")
+            .setItems(arrayOf("Camera", "Gallery", "Cancel")) { _, which ->
+                when (which) {
+                    0 -> {
+                        if (CameraCaptureHelper.hasCameraPermission(requireActivity())) {
+                            openCamera()
+                        } else {
+                            cameraPermissionRequestLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    }
+                    1 -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            pickImageFromGalleryForResult.launch(
+                                Intent(MediaStore.ACTION_PICK_IMAGES).apply { type = "image/*" }
+                            )
+                        } else if (checkPermission(galleryPermission)) {
+                            openGallery()
+                        } else {
+                            requestGaleryPermission()
+                        }
+                    }
+                }
+            }
+            .show()
     }
 
     private fun requestGaleryPermission() {
@@ -354,40 +367,12 @@ private fun openGallery() {
         )
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            cameraRequestCode -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    openCamera()
-                } else {
-                    Toast.makeText(requireActivity(), "Camera permission denied", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            galleryRequestCode -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    openGallery()
-                } else {
-                    Toast.makeText(requireActivity(), "Gallery permission denied", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
     private fun openCamera() {
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        val host = activity ?: return
         val currentTimeMillis: Long = System.currentTimeMillis()
-
-        actualImage = File(requireActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES), "${currentTimeMillis}captured.jpg")
-        fileUri = FileProvider.getUriForFile(requireActivity(), requireActivity().packageName + ".fileprovider", actualImage!!)
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri)
-        takeImageResult.launch(intent)
-
+        actualImage = File(host.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "${currentTimeMillis}captured.jpg")
+        fileUri = FileProvider.getUriForFile(host, "${host.packageName}.fileprovider", actualImage!!)
+        takeImageResult.launch(CameraCaptureHelper.createCaptureIntent(host, actualImage!!))
     }
 
     private val takeImageResult =
@@ -451,13 +436,14 @@ private fun openGallery() {
     }
 
     private fun setCompressedImage() {
+        if (!isAdded) return
         compressedImage?.let {
             binding.rl2.visibility=View.VISIBLE
 
             Glide.with(this).load(it.absolutePath).placeholder(R.drawable.dummy_text1).into(binding.selectedimage)
              binding.imageupload.visibility=View.GONE
-            val token = SharedPreferencesHelper(requireActivity()).getValueString(ConstantValues.AuthToken)!!
-            if (compressedImage != null) {
+            val token = SharedPreferencesHelper(requireActivity()).getValueString(ConstantValues.AuthToken)
+            if (compressedImage != null && !token.isNullOrBlank()) {
                 val file = File(compressedImage!!.path)
                 val fileReqBody = file.asRequestBody("image/png".toMediaTypeOrNull())
                 val typeReqBody = file.asRequestBody("text/plain".toMediaType())
@@ -466,13 +452,17 @@ private fun openGallery() {
                 val type = RequestBody.create(mediaType, "1")
 
                 viewModel.upLoadImage(part, token,"logo")
+            } else if (token.isNullOrBlank()) {
+                showError("Session expired. Please login again.")
             }
 
         }
     }
 
     private fun showError(errorMessage: String) {
-        Toast.makeText(requireActivity(), errorMessage, Toast.LENGTH_SHORT).show()
+        context?.let {
+            Toast.makeText(it, errorMessage, Toast.LENGTH_SHORT).show()
+        }
     }
 private fun setViewmodel() {
     val repository = MainRepository(RetrofitService.getInstance(requireActivity()),XApplication.database.newsDao(),XApplication.database.companyDao())
@@ -491,9 +481,9 @@ private fun setViewmodel() {
                 override fun onPositiveClicked(dialog: Dialog?) {
                     super.onPositiveClicked(dialog)
                     if (status){
-                        if (!findNavController().popBackStack()) {
-                            requireActivity().onBackPressedDispatcher.onBackPressed()
-                        }
+                        clearFormAfterSuccess()
+                        isSubmitting = false
+                        binding.createAmc.isEnabled = true
                     } else {
                         isSubmitting = false
                         binding.createAmc.isEnabled = true
@@ -501,6 +491,25 @@ private fun setViewmodel() {
 
                 }
             }, true)
+    }
+
+    private fun clearFormAfterSuccess() {
+        binding.sitename.text?.clear()
+        binding.siteBranch.text?.clear()
+        binding.siteEmail.text?.clear()
+        binding.siteLocation.text?.clear()
+        binding.startDate.text = ""
+        binding.endDate.text = ""
+        binding.poc.pocName.text?.clear()
+        binding.poc.pocNumber.text?.clear()
+        binding.poc.pocMail.text?.clear()
+        binding.poc.sitePswd.text?.clear()
+        selectedStartDate = null
+        compressedImage = null
+        actualImage = null
+        file_name = null
+        binding.imageupload.visibility = View.VISIBLE
+        binding.rl2.visibility = View.GONE
     }
 
     private fun createImageFile(): File {

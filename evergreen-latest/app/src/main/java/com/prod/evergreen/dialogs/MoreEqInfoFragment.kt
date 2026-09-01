@@ -14,6 +14,7 @@ import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.DateConverter
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.models.CompanyData
+import com.prod.evergreen.models.TaskCreated
 import com.prod.evergreen.models.TasksItem
 
 private const val ARG_TASK_ITEM = "arg_task_item"
@@ -31,8 +32,8 @@ class MoreEqInfoFragment : DialogFragment() {
         setStyle(STYLE_NORMAL, R.style.FullScreenDialog)
 
         arguments?.let {
-            tasksItem = it.getString(ARG_TASK_ITEM)!!
-            companyData = it.getString(ARG_COMPANY_DATA)!!
+            tasksItem = it.getString(ARG_TASK_ITEM)
+            companyData = it.getString(ARG_COMPANY_DATA)
         }
     }
 
@@ -50,45 +51,70 @@ class MoreEqInfoFragment : DialogFragment() {
         binding.close.setOnClickListener {
             dismiss()
         }
+        try {
         val gson = Gson()
 
-        // Convert JSON to Kotlin object (Task)
-        val task = gson.fromJson(tasksItem, TasksItem::class.java)
-        if (!companyData.isNullOrEmpty())
-        {
-            val company = gson.fromJson(companyData, CompanyData::class.java)
-            binding.tvCompanyName.text = company.name
-            binding.tvCompanyLocation.text =company.location
-
+        val created = try {
+            gson.fromJson(tasksItem, TaskCreated::class.java)
+        } catch (_: Exception) {
+            null
+        }
+        val legacy = if (created?.task == null) {
+            try {
+                gson.fromJson(tasksItem, TasksItem::class.java)
+            } catch (_: Exception) {
+                null
+            }
+        } else {
+            null
+        }
+        if (!companyData.isNullOrEmpty() && companyData != "null") {
+            try {
+                val company = gson.fromJson(companyData, CompanyData::class.java)
+                binding.tvCompanyName.text = company?.name ?: "-"
+                binding.tvCompanyLocation.text = company?.location ?: "-"
+            } catch (_: Exception) {
+                binding.tvCompanyName.text = "-"
+                binding.tvCompanyLocation.text = "-"
+            }
         }
 
-        // Now you can use tasksItem and companyData to populate your UI
-       if(task!=null){
-           binding.tvTaskName.text = task.task!!.name
-           binding.tvTaskDescription.text = task.task.description
-           if (task.technicianLink!=null) {
-               binding.tvTaskTechnician.text = task.technician!!.name
-               binding.tvTaskTechnicianPhone.text = task.technician.phone
-           }
-           binding.tvTaskCreated.text = DateConverter.convertToLocalUtcAndFormat(task.task.createdAt!!)
-           binding.tvTaskLastUpdate.text = DateConverter.convertToLocalUtcAndFormat(task.task.updatedAt!!)
+        val taskName = created?.task?.name ?: legacy?.task?.name
+        val taskDescription = created?.task?.description ?: legacy?.task?.description
+        val createdAt = created?.task?.createdAt ?: legacy?.task?.createdAt
+        val updatedAt = created?.task?.updatedAt ?: legacy?.task?.updatedAt
+        val status = created?.status ?: legacy?.status
+        val technicianName = created?.technician?.name ?: legacy?.technician?.name
+        val technicianPhone = created?.technician?.phone ?: legacy?.technician?.phone
+        val clientName = created?.client?.name ?: legacy?.client?.name
+        val clientPhone = created?.client?.phone ?: legacy?.client?.phone
+        val imageUrl = created?.task?.image?.firstOrNull() ?: legacy?.task?.image?.firstOrNull()
 
-           binding.tvStatus.text = when (task.status) {
-               "open" -> "Not Started"
-               "in_progress" -> "In Progress"
-               "closed" -> "Closed"
-               else -> "" // Maintain the current text if no condition is met
-           }
-           binding.tvPocName.text = task.client!!.name
-           binding.tvPocPhone.text = task.client.phone
-           if(task.task.image?.get(0) !=null){
-               binding.imageIssue.visibility=View.VISIBLE
-               Glide.with(requireActivity()).load(Constants.BASE_URL+task.task.image[0]).into(binding.imageIssue)
-           }
-           else{
-               binding.imageIssue.visibility=View.GONE
-           }
-       }
+        binding.tvTaskName.text = taskName ?: "-"
+        binding.tvTaskDescription.text = taskDescription ?: "-"
+        binding.tvTaskTechnician.text = technicianName ?: "-"
+        binding.tvTaskTechnicianPhone.text = technicianPhone ?: "-"
+        binding.tvTaskCreated.text = DateConverter.convertToLocalUtcAndFormat(createdAt)
+        binding.tvTaskLastUpdate.text = DateConverter.convertToLocalUtcAndFormat(updatedAt)
+        binding.tvStatus.text = when (status) {
+            "open" -> "Not Started"
+            "in_progress" -> "In Progress"
+            "closed" -> "Closed"
+            "hold" -> "Hold"
+            else -> status.orEmpty()
+        }
+        binding.tvPocName.text = clientName ?: "-"
+        binding.tvPocPhone.text = clientPhone ?: "-"
+        if (!imageUrl.isNullOrBlank()) {
+            binding.imageIssue.visibility = View.VISIBLE
+            Glide.with(requireActivity()).load(Constants.BASE_URL + imageUrl).into(binding.imageIssue)
+        } else {
+            binding.imageIssue.visibility = View.GONE
+        }
+        } catch (_: Exception) {
+            binding.tvTaskName.text = "-"
+            binding.imageIssue.visibility = View.GONE
+        }
 
 
 

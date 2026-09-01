@@ -286,7 +286,17 @@ if (response.data.status==200) {
                 }
                 is NetworkState.Error -> {
                     Log.e("userLogin", "error code=${response.statusCode} msg=${response.message}")
-                    handleApiError(response)
+                    loading.value = false
+                    val code = response.statusCode
+                    val apiMessage = response.message?.trim().orEmpty()
+                    onError(
+                        when {
+                            code == 400 -> apiMessage.ifBlank { "invalid mobile number" }
+                            code == 403 -> apiMessage.ifBlank { "you do not have the access" }
+                            code == 402 -> apiMessage.ifBlank { "wrong password" }
+                            else -> apiMessage.ifBlank { "Login failed. Please try again." }
+                        }
+                    )
                 }
             }
         }
@@ -465,7 +475,153 @@ if (response.data.status==200) {
         }
     }
 
+    fun updateAMC(companyId: Int, body: JsonObject, authenticator: String) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            when (val response = mainRepository.updateAMC(companyId, body, authenticator)) {
+                is NetworkState.Success -> {
+                    changePasswordDataResponse.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    Log.d("errors", response.message.toString())
+                    loading.value = false
+                    if ((response.statusCode ?: 0) >= 500) {
+                        onError("Internal Server Error: Please try again later.")
+                    } else if (response.statusCode == 404) {
+                        onError("Some thing went wrong please try again")
+                    } else {
+                        onError(response.message ?: "Unknown error")
+                    }
+                }
+            }
+        }
+    }
 
+    fun deleteAMC(companyId: Int, authenticator: String, activate: Boolean = false) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            val body = JsonObject().apply {
+                addProperty("company_link", companyId)
+                addProperty("action", if (activate) "activate" else "delete")
+            }
+            when (val response = mainRepository.deleteAMC(body, authenticator)) {
+                is NetworkState.Success -> {
+                    val payload = response.data
+                    if (payload.status_code == 200) {
+                        changePasswordDataResponse.postValue(payload)
+                    } else {
+                        onError(mapDeleteCompanyError(payload.message))
+                    }
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    Log.d("errors", response.message.toString())
+                    loading.value = false
+                    if ((response.statusCode ?: 0) >= 500) {
+                        onError("Internal Server Error: Please try again later.")
+                    } else if (response.statusCode == 404) {
+                        onError("Delete company endpoint not found. Please update backend.")
+                    } else {
+                        onError(mapDeleteCompanyError(response.message))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun mapDeleteCompanyError(message: String?): String {
+        val raw = message?.trim().orEmpty()
+        if (raw.contains("user already exists", ignoreCase = true)) {
+            return "Delete failed because backend is outdated. Please redeploy latest backend and try again."
+        }
+        if (raw.contains("PLEASE ENTER MOBILE NUMBER", ignoreCase = true)) {
+            return "Delete failed because backend treated this as company create. Please redeploy latest backend."
+        }
+        return raw.ifBlank { "Unable to delete company" }
+    }
+
+
+
+    fun deleteEquipment(body: JsonObject, authenticator: String) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            when (val response = mainRepository.deleteEquipment(body, authenticator)) {
+                is NetworkState.Success -> {
+                    changePasswordDataResponse.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(response.message ?: "Unable to update equipment status")
+                }
+            }
+        }
+    }
+
+    fun updateTask(body: JsonObject, authenticator: String) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            when (val response = mainRepository.updateTask(body, authenticator)) {
+                is NetworkState.Success -> {
+                    changePasswordDataResponse.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(response.message ?: "Unable to update task")
+                }
+            }
+        }
+    }
+
+    fun deleteTask(body: JsonObject, authenticator: String) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            when (val response = mainRepository.deleteTask(body, authenticator)) {
+                is NetworkState.Success -> {
+                    changePasswordDataResponse.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(response.message ?: "Unable to delete task")
+                }
+            }
+        }
+    }
+
+    fun updateUser(userId: Int, body: JsonObject, authenticator: String) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            when (val response = mainRepository.updateUser(userId, body, authenticator)) {
+                is NetworkState.Success -> {
+                    changePasswordDataResponse.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(response.message ?: "Unable to update user")
+                }
+            }
+        }
+    }
+
+    fun deleteUser(body: JsonObject, authenticator: String) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            when (val response = mainRepository.deleteUser(body, authenticator)) {
+                is NetworkState.Success -> {
+                    changePasswordDataResponse.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(response.message ?: "Unable to delete user")
+                }
+            }
+        }
+    }
 
     fun updateEquipment(body: AddEquipment.EquipmentUpdate, authenticator: String) {
         loading.value = true
@@ -711,17 +867,7 @@ if (response.data.status==200) {
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
                     loading.value = false
-                   if ((response.statusCode ?: 0) >= 500) {
-                       onError("Internal Server Error: Please try again later.")
-                   }
-                    else if (response.statusCode == 404) {
-                        onError("Some thing went wrong please try again")
-                    }
-
-                    else {
-                        onError(response.message ?: "Unknown error")
-                    }
-
+                    onError(response.message ?: "Unable to generate service report")
                 }
             }
         }
@@ -894,9 +1040,15 @@ if (response.data.status==200) {
 
 
 
+    fun upsertToken(body: JsonObject, authenticator: String) {
+        viewModelScope.launch(exceptionHandler) {
+            mainRepository.upsertToken(body, authenticator)
+        }
+    }
+
     private fun onError(message: String) {
-        _errorMessage.value = message
-        loading.value = false
+        _errorMessage.postValue(message)
+        loading.postValue(false)
     }
 
     override fun onCleared() {

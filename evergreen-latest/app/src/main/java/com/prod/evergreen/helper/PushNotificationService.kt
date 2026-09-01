@@ -3,6 +3,8 @@ package com.prod.evergreen.helper
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.SharedPreferencesHelper
 
 class PushNotificationService : FirebaseMessagingService() {
 
@@ -10,26 +12,24 @@ class PushNotificationService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
         Log.d("notificationdata", remoteMessage.data.toString())
 
-        if (remoteMessage.data.isNotEmpty()) {
-            val title = remoteMessage.data["title"]
-            val body = remoteMessage.data["description"]
-            val taskLink = remoteMessage.data["task_link"]
-            val description = remoteMessage.data["description"]
-            val imageUrl: String? = remoteMessage.data["image_url"]
-            val sno: String? = remoteMessage.data["serial_number"]
-                ?: remoteMessage.data["Serial_number"]
-            val location: String? = remoteMessage.data["location"]
-            val channel_id: String? = remoteMessage.data["channel_id"]
-            val action: String? = remoteMessage.data["action"]
-
-          //  Log.d("NotificationExtractedData", "Title: $title, Body: $body, Task Link: $taskLink, Description: $description, Image URL: $imageUrl")
+        val title = remoteMessage.data["title"] ?: remoteMessage.notification?.title
+        val body = remoteMessage.data["description"] ?: remoteMessage.notification?.body
+        val taskLink = remoteMessage.data["task_link"]
+        val description = remoteMessage.data["description"] ?: remoteMessage.notification?.body
+        val imageUrl: String? = remoteMessage.data["image_url"]
+        val sno: String? = remoteMessage.data["serial_number"]
+            ?: remoteMessage.data["Serial_number"]
+        val location: String? = remoteMessage.data["location"]
+        val channel_id: String? = remoteMessage.data["channel_id"] ?: "evergreen"
+        val action: String? = remoteMessage.data["action"]
+        if (!title.isNullOrBlank() || !body.isNullOrBlank() || remoteMessage.data.isNotEmpty()) {
             showNotification(applicationContext,title, body, taskLink, description, imageUrl,sno,location,channel_id, action)
         }
     }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        // Log.d("tokenfcm",token)
+        SharedPreferencesHelper(applicationContext).save(ConstantValues.PREFCM_Tooken, token)
     }
 
 //    private fun sendNotification(

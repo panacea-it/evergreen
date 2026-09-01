@@ -40,6 +40,7 @@ import com.prod.evergreen.api.MainRepository
 import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
+import com.prod.evergreen.helper.CameraCaptureHelper
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
@@ -357,16 +358,10 @@ class SetHoldFagment : DialogFragment() {
     }
 
     private fun openCamera() {
-        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        val host = activity ?: return
         photoFile = createImageFile()
         photoFile?.let {
-            val photoURI: Uri = FileProvider.getUriForFile(
-                requireActivity(),
-                "com.prod.evergreen.fileprovider",
-                it
-            )
-            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-            cameraLauncher.launch(cameraIntent)
+            cameraLauncher.launch(CameraCaptureHelper.createCaptureIntent(host, it))
         }
     }
 

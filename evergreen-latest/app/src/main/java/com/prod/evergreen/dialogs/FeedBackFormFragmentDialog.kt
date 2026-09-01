@@ -35,6 +35,7 @@ import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.FragmentFeedBackFormDialogBinding
+import com.prod.evergreen.helper.CameraCaptureHelper
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
@@ -130,13 +131,13 @@ lateinit var binding:FragmentFeedBackFormDialogBinding
             checkLocationPermission()
 
         }
-        binding.etCalltype.text = taskFromJson.task.callType
-        if (taskFromJson.task.followUp!=null) {
-            binding.tvActionDescription.setText(taskFromJson.task.actionTaken)
-            binding.etReqDetails.setText(taskFromJson.task.reqDetails)
-            binding.actionReqDetails.setText(taskFromJson.task.actionReqDetails)
+        binding.etCalltype.text = taskFromJson.task?.callType
+        if (taskFromJson.task?.followUp!=null) {
+            binding.tvActionDescription.setText(taskFromJson.task?.actionTaken)
+            binding.etReqDetails.setText(taskFromJson.task?.reqDetails)
+            binding.actionReqDetails.setText(taskFromJson.task?.actionReqDetails)
 
-            if (taskFromJson.task.followUp) {
+            if (taskFromJson.task?.followUp == true) {
                 binding.actionYes.isChecked=true
             } else {
                 binding.actionNo.isChecked=true
@@ -313,15 +314,9 @@ binding.descLayout.visibility=View.GONE
     }
 
     private fun openCamera() {
-        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        val host = activity ?: return
         photoFile = createImageFile()
-        val photoURI: Uri = FileProvider.getUriForFile(
-            requireActivity(),
-            "com.prod.evergreen.fileprovider",
-            photoFile
-        )
-        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-        cameraLauncher.launch(cameraIntent)
+        cameraLauncher.launch(CameraCaptureHelper.createCaptureIntent(host, photoFile))
     }
 
     @Throws(IOException::class)

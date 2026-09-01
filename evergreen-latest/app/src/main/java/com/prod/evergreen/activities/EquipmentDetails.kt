@@ -77,17 +77,32 @@ class EquipmentDetails : AppCompatActivity() {
             viewModel.assignTechnician(object1, token!!)
 
         }, downloadFile = { downloadfile ->
+            val taskId = downloadfile.taskLink ?: downloadfile.task?.id
             val object1 = JsonObject()
-            object1.addProperty("task_link", downloadfile.id)
+            object1.addProperty("task_link", taskId)
             viewModel.getServiceReport(object1, token!!)
         }
         )
 
         viewModel.downloadpdf.observe(this) { response ->
-            if (response.status_code == 200) {
-                openPdfInBrowser(Constants.BASE_URL + response.url!!)
+            if (response.status_code == 200 && !response.url.isNullOrBlank()) {
+                val pdfUrl = Constants.BASE_URL.trimEnd('/') + "/" + response.url.trimStart('/')
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Service Report")
+                    .setMessage("The report is ready. You can open or share the PDF.")
+                    .setPositiveButton("Open") { _, _ -> openPdfInBrowser(pdfUrl) }
+                    .setNeutralButton("Share") { _, _ ->
+                        val share = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_SUBJECT, "Evergreen Service Report")
+                            putExtra(Intent.EXTRA_TEXT, pdfUrl)
+                        }
+                        startActivity(Intent.createChooser(share, "Share service report"))
+                    }
+                    .setNegativeButton("Close", null)
+                    .show()
             } else {
-                showDialog(response.message!!)
+                showDialog(response.message ?: "Unable to download report")
             }
 
         }
@@ -145,7 +160,9 @@ class EquipmentDetails : AppCompatActivity() {
                 equipmentData = data.data!!
                 companyData = equipmentData.company
                 binding.specificationLayout.eqName.text = equipmentData.name
-                binding.specificationLayout.tvMfd.text = equipmentData.manufacturerDate
+                binding.specificationLayout.tvMake.text = equipmentData.make?.takeIf { it.isNotBlank() } ?: "-"
+                binding.specificationLayout.tvMfd.text =
+                    com.prod.evergreen.helper.YearPickerHelper.displayYear(equipmentData.manufacturerDate)
                 binding.specificationLayout.tvModelNum.text = equipmentData.model
                 binding.specificationLayout.tvSNumber.text = equipmentData.serialNumber
                 binding.specificationLayout.tvLocation.text = equipmentData.location
@@ -173,10 +190,23 @@ class EquipmentDetails : AppCompatActivity() {
             }
         }
 
+        loadEquipment()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::viewModel.isInitialized) {
+            loadEquipment()
+        }
+    }
+
+    private fun loadEquipment() {
+        val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken) ?: return
+        val equipment = intent.getIntExtra("eq_id", 0)
+        if (equipment == 0) return
         val object1 = JsonObject()
         object1.addProperty("equipment_link", equipment)
-        viewModel.GetEquipmentInfo(object1, token!!)
-
+        viewModel.GetEquipmentInfo(object1, token)
     }
 
     private fun setViewmodel() {

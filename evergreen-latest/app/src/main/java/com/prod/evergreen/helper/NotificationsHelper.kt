@@ -28,8 +28,11 @@ fun showNotification(
     val sharedPreferences = SharedPreferencesHelper(context)
     sharedPreferences.getValueString(ConstantValues.AuthToken) ?: return
     Log.d("NotificationExtractedData", "Title: $title, Body: $body, Task Link: $taskLink, Description: $description, Image URL: $imageUrl")
-    val canAssign = action.equals("assign", ignoreCase = true) ||
-        channel_id.equals("evergreen", ignoreCase = true)
+    val role = sharedPreferences.getValueString(ConstantValues.TYPE_ROLE)
+    val canAssign = RoleAccess.canAcceptTask(role) &&
+        (action.equals("accept", ignoreCase = true) ||
+            action.equals("assign", ignoreCase = true) ||
+            channel_id.equals("evergreen", ignoreCase = true))
     val notificationId = (taskLink ?: System.currentTimeMillis().toString()).hashCode()
     val intent = Intent(context, MainActivity::class.java).apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -93,7 +96,7 @@ fun showNotification(
         )
         notificationBuilder.addAction(
             R.drawable.ic_tasks_list_icon,
-            "Assign to me",
+            "Accept",
             assignPendingIntent
         )
     }

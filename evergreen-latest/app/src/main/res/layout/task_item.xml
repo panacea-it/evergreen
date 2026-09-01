@@ -10,6 +10,18 @@
         android:layout_width="match_parent"
         android:orientation="vertical"
         android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/task_menu"
+            android:layout_gravity="end"
+            android:layout_marginTop="@dimen/_6sdp"
+            android:layout_marginEnd="@dimen/_6sdp"
+            android:padding="@dimen/_6sdp"
+            android:src="@drawable/ic_more_vert"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Task actions"
+            android:layout_width="@dimen/_28sdp"
+            android:layout_height="@dimen/_28sdp"/>
     <LinearLayout
         android:layout_margin="@dimen/_8sdp"
         android:baselineAligned="false"
@@ -98,7 +110,7 @@
                             android:textSize="@dimen/_14ssp"
                             android:includeFontPadding="false"
                             android:fontFamily="@font/roboto_regular"
-                            android:text="Equpment Name :"
+                            android:text="Equipment Name :"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"/>
                         <TextView
@@ -397,6 +409,24 @@
 
 
     </LinearLayout>
+
+    <TextView
+        android:visibility="gone"
+        android:id="@+id/btn_service_report"
+        android:layout_marginHorizontal="@dimen/_10sdp"
+        android:layout_marginBottom="@dimen/_10sdp"
+        android:backgroundTint="@color/btn_back"
+        android:background="@drawable/rounded_corners"
+        android:paddingHorizontal="@dimen/_15sdp"
+        android:paddingVertical="@dimen/_8sdp"
+        android:textSize="@dimen/_14ssp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:fontFamily="@font/roboto_medium"
+        android:textColor="@color/white"
+        android:text="Service Report"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
     <TextView
         android:visibility="gone"

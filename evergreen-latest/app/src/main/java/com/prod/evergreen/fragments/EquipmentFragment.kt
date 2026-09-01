@@ -1,6 +1,6 @@
 package com.prod.evergreen.fragments
 
-import android.content.Intent
+import android.app.AlertDialog
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -10,8 +10,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.prod.evergreen.XApplication
-import com.prod.evergreen.activities.EquipmentDetails
 import com.prod.evergreen.adapters.EquipmentListAdapter
+import com.prod.evergreen.helper.EquipmentEditor
+import com.prod.evergreen.models.Data
 
 import com.prod.evergreen.api.MainRepository
 import com.prod.evergreen.api.MainViewModel
@@ -56,11 +57,11 @@ lateinit var binding:FragmentEquipmentBinding
         super.onViewCreated(view, savedInstanceState)
         setViewmodel()
 
-        equipmentlistAdapter= EquipmentListAdapter(sharedPreferencesHelper) { data->
-//            val gson = Gson()
-//            val json = gson.toJson(data)
-            startActivity(Intent(requireActivity(), EquipmentDetails::class.java).putExtra("eq_id",data.id))
-        }
+        equipmentlistAdapter = EquipmentListAdapter(
+            sharedPreferencesHelper,
+            onViewClick = { data -> EquipmentEditor.openDetails(requireActivity(), data) },
+            onActionClick = { data -> showEquipmentActions(data) }
+        )
 
         binding.recyclerCompanies.adapter=equipmentlistAdapter
         binding.etSearch.addTextChangedListener(object : TextWatcher {
@@ -81,6 +82,10 @@ lateinit var binding:FragmentEquipmentBinding
                 ProgressDialogUtil.hideProgressDialog()
             }
         }
+        viewModel.changePasswordDataResponse.observe(viewLifecycleOwner) { data ->
+            android.widget.Toast.makeText(requireActivity(), data.message ?: "Updated", android.widget.Toast.LENGTH_SHORT).show()
+            loadEquipments()
+        }
         viewModel.allequipmentsDataResponse.observe(viewLifecycleOwner) { data ->
             if (data.status==200){
                 equipmentlistAdapter.addData(data.data)
@@ -96,10 +101,50 @@ lateinit var binding:FragmentEquipmentBinding
             }
 
         }
-        val token=sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
-        viewModel.getAllEquipments(token!!)
-
+        loadEquipments()
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (::viewModel.isInitialized) {
+            loadEquipments()
+        }
+    }
+
+    private fun loadEquipments() {
+        val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken) ?: return
+        viewModel.getAllEquipments(token)
+    }
+
+    private fun showEquipmentActions(equipment: Data) {
+        val name = equipment.name?.takeIf { it.isNotBlank() } ?: "Equipment"
+        val role = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        val options = mutableListOf("View Equipment")
+        if (com.prod.evergreen.helper.RoleAccess.canManageEquipment(role)) {
+            options.add("Edit Equipment")
+            options.add(if (equipment.isActive()) "Mark Inactive" else "Mark Active")
+        }
+        options.add("Cancel")
+        AlertDialog.Builder(requireActivity())
+            .setTitle(name)
+            .setItems(options.toTypedArray()) { dialog, which ->
+                when (options[which]) {
+                    "View Equipment" -> EquipmentEditor.openDetails(requireActivity(), equipment)
+                    "Edit Equipment" -> EquipmentEditor.openEdit(requireActivity(), equipment)
+                    "Mark Inactive", "Mark Active" -> toggleEquipmentActive(equipment)
+                    else -> dialog.dismiss()
+                }
+            }
+            .show()
+    }
+    private fun toggleEquipmentActive(equipment: Data) {
+        val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken) ?: return
+        val body = com.google.gson.JsonObject()
+        body.addProperty("equipment_link", equipment.id)
+        body.addProperty("action", if (equipment.isActive()) "delete" else "activate")
+        viewModel.deleteEquipment(body, token)
+    }
+
     companion object {
         @JvmStatic
         fun newInstance(param1: String, param2: String) =

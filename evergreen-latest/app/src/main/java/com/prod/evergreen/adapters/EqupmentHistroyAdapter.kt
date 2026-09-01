@@ -71,8 +71,10 @@ class EqupmentHistroyAdapter(val data:(TasksItem)->Unit,val selfAssign:(TasksIte
             data(tasksList[position])
         }
 
-        if (tasksList[position].status=="closed"){
-            holder.binding.downloadFile.visibility=View.VISIBLE
+        if (com.prod.evergreen.helper.RoleAccess.canGenerateServiceReport(accesstype)) {
+            holder.binding.downloadFile.visibility = View.VISIBLE
+        } else {
+            holder.binding.downloadFile.visibility = View.GONE
         }
         holder.binding.downloadFile.setOnClickListener {
             downloadFile(tasksList[position])

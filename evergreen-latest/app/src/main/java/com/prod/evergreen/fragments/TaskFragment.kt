@@ -22,6 +22,7 @@ import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.api.SharedViewModel
 import com.prod.evergreen.databinding.FragmentTaskBinding
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.models.AMCData
 
@@ -93,22 +94,27 @@ class TaskFragment : Fragment() {
 
 
         sharedViewModel.sharedData.observe(viewLifecycleOwner) { data ->
-
-            binding.buttons.totaltasks.text = data.count.hold.toString()
-            val openCount = data.count.open.toString()
-            val inProgressCount = data.count.in_progress.toString()
-            val completedCount = data.count.closed.toString()
-            binding.buttons.open.text = openCount.toString()
-            binding.buttons.inprogress.text = inProgressCount.toString()
-            binding.buttons.completed.text = completedCount.toString()
+            val count = data?.count
+            binding.buttons.totaltasks.text = (count?.hold ?: 0).toString()
+            binding.buttons.open.text = (count?.open ?: 0).toString()
+            binding.buttons.inprogress.text = (count?.in_progress ?: 0).toString()
+            binding.buttons.completed.text = (count?.closed ?: 0).toString()
         }
       //  viewModel.getAllAmc(token!!)
-          binding.companySearch.setOnClickListener {
-          showBottomSheetDialog() { selectedItem ->
-                   binding.companySearch.text = selectedItem.name
-                             amc_id=selectedItem.id.toString()
-    }
-}
+        val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        if (RoleAccess.lockToAttachedCompany(accessType)) {
+            val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
+            binding.companySearch.text = attachedName
+            binding.companySearch.isEnabled = false
+            binding.companySearch.isClickable = false
+        } else {
+            binding.companySearch.setOnClickListener {
+                showBottomSheetDialog() { selectedItem ->
+                    binding.companySearch.text = selectedItem.name
+                    amc_id=selectedItem.id.toString()
+                }
+            }
+        }
 
 
 

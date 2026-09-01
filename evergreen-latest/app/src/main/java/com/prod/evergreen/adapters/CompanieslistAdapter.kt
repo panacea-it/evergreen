@@ -10,81 +10,97 @@ import com.prod.evergreen.R
 import com.prod.evergreen.api.Constants
 import com.prod.evergreen.databinding.CompaniesListItemsBinding
 import com.prod.evergreen.helper.DateConverter
-import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.models.AMCData
+import com.prod.evergreen.models.isCompanyActive
 
+class CompanieslistAdapter(
+    private val onCompanyClick: (Int, String) -> Unit,
+    private val onCompanyActionClick: (AMCData) -> Unit
+) : RecyclerView.Adapter<CompanieslistAdapter.ViewHolder>(), Filterable {
 
+    private var amcList: List<AMCData> = emptyList()
+    private var filteredCompanyList: List<AMCData> = emptyList()
 
-class CompanieslistAdapter(val sharedPreferencesHelper: SharedPreferencesHelper,val callback: (Int,String)->Unit): RecyclerView.Adapter<CompanieslistAdapter.viewHolder>(),Filterable {
+    class ViewHolder(val binding: CompaniesListItemsBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(datum: AMCData) {
+            binding.location.text = "Location : ${datum.branchName.orEmpty()}"
+            val inactiveLabel = if (datum.isCompanyActive()) "" else "  (Inactive)"
+            binding.companyName.text = "Name : ${datum.name.orEmpty()}$inactiveLabel"
+            binding.statDate.text = "Start Date : ${formatDate(datum.startDate)}"
+            binding.endDate.text = "End Date : ${formatDate(datum.endDate)}"
 
-    private var amcList: List<AMCData> = listOf()
-    private var filteredTaskList: List<AMCData> = listOf()
-    class viewHolder(val binding: CompaniesListItemsBinding) : RecyclerView.ViewHolder(binding.root) {
-         fun bind(datum: AMCData) {
+            val pocUser = datum.pocDetails?.user
+            binding.pocName.text = "Name : ${pocUser?.name.orEmpty()}"
+            binding.pocMail.text = "Email ID : ${pocUser?.email.orEmpty()}"
+            binding.pocMobile.text = "Mobile : ${pocUser?.phone.orEmpty()}"
+        }
 
-             binding.endDate.text=datum.endDate
-             binding.statDate.text=datum.startDate
-//             binding.cEmail.text="Email ID : "+datum.email
-             if (datum.pocDetails!=null) {
-                 binding.pocName.text = "Name :" + datum.pocDetails!!.user!!.name
-              binding.pocMail.text="Email ID :"+datum.pocDetails!!.user!!.email
-              binding.pocMobile.text="Mobile :"+datum.pocDetails!!.user!!.phone
-             }
-             binding.location.text="Location : "+datum.branchName
-             binding.companyName.text="Name : "+datum.name
-             binding.statDate.text="Start Date : "+DateConverter.convertToLocalUtcAndFormat(datum.startDate!!)
-             binding.endDate.text="End Date : "+DateConverter.convertToLocalUtcAndFormat(datum.endDate!!)
-
-
+        private fun formatDate(date: String?): String {
+            if (date.isNullOrBlank()) return "-"
+            return DateConverter.convertToLocalUtcAndFormat(date)
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): viewHolder {
-        val binding = CompaniesListItemsBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return viewHolder(binding)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding =
+            CompaniesListItemsBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: viewHolder, position: Int) {
-           holder.bind(filteredTaskList[position])
-        Glide.with(holder.binding.image.context). load(Constants.BASE_URL+filteredTaskList[position].logo).error(R.drawable.place_holder1).placeholder(R.drawable.place_holder1).into(holder.binding.image)
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val item = filteredCompanyList[position]
+        holder.bind(item)
+        Glide.with(holder.itemView.context)
+            .load(Constants.BASE_URL + item.logo)
+            .error(R.drawable.place_holder1)
+            .placeholder(R.drawable.place_holder1)
+            .into(holder.binding.image)
+
         holder.itemView.setOnClickListener {
-            callback(filteredTaskList[position].id!!,filteredTaskList[position].name!!)
+            val id = item.id ?: return@setOnClickListener
+            onCompanyClick(id, item.name.orEmpty())
         }
-
+        holder.binding.companyMenu.setOnClickListener {
+            onCompanyActionClick(item)
+        }
     }
 
-    override fun getItemCount(): Int {
-        return filteredTaskList.size
-    }
+    override fun getItemCount(): Int = filteredCompanyList.size
 
     fun addData(data: List<AMCData>?) {
-        this.amcList=data?.toMutableList()?: mutableListOf()
-        this.filteredTaskList=amcList
+        amcList = data.orEmpty()
+        filteredCompanyList = amcList
         notifyDataSetChanged()
     }
+
+    fun removeCompanyById(companyId: Int) {
+        amcList = amcList.filter { it.id != companyId }
+        filteredCompanyList = filteredCompanyList.filter { it.id != companyId }
+        notifyDataSetChanged()
+    }
+
     override fun getFilter(): Filter {
         return object : Filter() {
             override fun performFiltering(constraint: CharSequence?): FilterResults {
-                val query = constraint?.toString()?.lowercase()?.trim() ?: ""
-                filteredTaskList = if (query.isEmpty()) {
+                val query = constraint?.toString()?.lowercase()?.trim().orEmpty()
+                filteredCompanyList = if (query.isEmpty()) {
                     amcList
                 } else {
-                    amcList.filter {
-                        it.name!!.contains(query, ignoreCase = true)
-                                it.branchName!!.contains(query, ignoreCase = true) ||
-                                it.location!!.contains(query, ignoreCase = true)||it.name.contains(query, ignoreCase = true)
+                    amcList.filter { company ->
+                        company.name.orEmpty().contains(query, ignoreCase = true) ||
+                            company.branchName.orEmpty().contains(query, ignoreCase = true) ||
+                            company.location.orEmpty().contains(query, ignoreCase = true)
                     }
                 }
-                return FilterResults().apply { values = filteredTaskList }
+                return FilterResults().apply { values = filteredCompanyList }
             }
 
             @Suppress("UNCHECKED_CAST")
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-                filteredTaskList = results?.values as List<AMCData>
+                filteredCompanyList = (results?.values as? List<AMCData>).orEmpty()
                 notifyDataSetChanged()
             }
         }
     }
-
-
 }
