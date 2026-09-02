@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
+import com.example.app.ui.theme.EvergreenTheme
 
 private val Background = Color(0xFFF9FAFE)
 private val DarkText = Color(0xFF202344)
@@ -104,6 +105,7 @@ fun CreateAmcScreen(
     onProfileClick: () -> Unit = {},
     onAddClick: () -> Unit = {}
 ) {
+    EvergreenTheme {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -151,6 +153,7 @@ fun CreateAmcScreen(
             )
         }
     }
+    }
 }
 
 @Composable
@@ -192,7 +195,7 @@ private fun CreateAmcHeader(
             )
             Text(
                 text = "Add new AMC company",
-                fontSize = 8.sp,
+                fontSize = 14.sp,
                 color = SecondaryText
             )
         }
@@ -205,23 +208,14 @@ private fun CreateAmcHeader(
                 .clickable(onClick = onMenuClick)
         )
         Spacer(modifier = Modifier.width(14.dp))
-        Box(
-            modifier = Modifier.clickable(onClick = onNotificationClick)
-        ) {
-            Icon(
-                imageVector = Icons.Default.NotificationsNone,
-                contentDescription = "Notifications",
-                tint = DarkText,
-                modifier = Modifier.size(21.dp)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(5.dp)
-                    .clip(CircleShape)
-                    .background(Purple)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.NotificationsNone,
+            contentDescription = "Notifications",
+            tint = DarkText,
+            modifier = Modifier
+                .size(21.dp)
+                .clickable(onClick = onNotificationClick)
+        )
     }
 }
 
@@ -263,7 +257,7 @@ private fun CompanyInformationSection(
             text = "Company Information",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
-            fontSize = 12.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = DarkText
         )
@@ -273,7 +267,7 @@ private fun CompanyInformationSection(
                 .fillMaxWidth()
                 .padding(top = 2.dp),
             textAlign = TextAlign.Center,
-            fontSize = 8.sp,
+            fontSize = 14.sp,
             color = SecondaryText
         )
         Spacer(modifier = Modifier.height(13.dp))
@@ -381,14 +375,14 @@ private fun FormField(
             Row {
                 Text(
                     text = label,
-                    fontSize = 8.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = DarkText
                 )
                 if (required) {
                     Text(
                         text = " *",
-                        fontSize = 8.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = RequiredRed
                     )
@@ -398,7 +392,7 @@ private fun FormField(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(36.dp)
+                    .height(48.dp)
                     .clip(RoundedCornerShape(7.dp))
                     .background(InputBackground)
                     .border(1.dp, Border, RoundedCornerShape(7.dp))
@@ -413,7 +407,7 @@ private fun FormField(
                     ) {
                         Text(
                             text = value.ifBlank { placeholder },
-                            fontSize = 10.sp,
+                            fontSize = 14.sp,
                             color = if (value.isBlank()) Color(0xFF9DA3B3) else DarkText,
                             modifier = Modifier.weight(1f)
                         )
@@ -431,7 +425,7 @@ private fun FormField(
                         value = value,
                         onValueChange = onValueChange,
                         placeholder = {
-                            Text(text = placeholder, fontSize = 10.sp, color = Color(0xFF9DA3B3))
+                            Text(text = placeholder, fontSize = 14.sp, color = Color(0xFF9DA3B3))
                         },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
@@ -441,7 +435,7 @@ private fun FormField(
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent
                         ),
-                        textStyle = TextStyle(fontSize = 10.sp, color = DarkText),
+                        textStyle = TextStyle(fontSize = 14.sp, color = DarkText),
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -460,13 +454,13 @@ private fun UploadLogoBox(
         Row {
             Text(
                 text = "Add Company Photo / Logo",
-                fontSize = 8.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = DarkText
             )
             Text(
                 text = " *",
-                fontSize = 8.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = RequiredRed
             )
@@ -532,25 +526,25 @@ private fun UploadLogoBox(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Drag & drop your image here",
-                        fontSize = 8.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = DarkText
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Row {
-                        Text(text = "or ", fontSize = 8.sp, color = SecondaryText)
+                        Text(text = "or ", fontSize = 14.sp, color = SecondaryText)
                         Text(
                             text = "browse",
-                            fontSize = 8.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Purple
                         )
-                        Text(text = " from gallery", fontSize = 8.sp, color = SecondaryText)
+                        Text(text = " from gallery", fontSize = 14.sp, color = SecondaryText)
                     }
                     Spacer(modifier = Modifier.height(5.dp))
                     Text(
                         text = "PNG, JPG up to 5MB",
-                        fontSize = 7.sp,
+                        fontSize = 12.sp,
                         color = Color(0xFF9CA2B2)
                     )
                 }
@@ -591,13 +585,13 @@ private fun ClientDetailsSection(
             Column {
                 Text(
                     text = "Client Details",
-                    fontSize = 12.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = DarkText
                 )
                 Text(
                     text = "Optional — fill all or leave empty",
-                    fontSize = 7.sp,
+                    fontSize = 12.sp,
                     color = SecondaryText
                 )
             }
@@ -670,7 +664,7 @@ private fun PasswordField(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Password",
-                fontSize = 8.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = DarkText
             )
@@ -678,7 +672,7 @@ private fun PasswordField(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(36.dp)
+                    .height(48.dp)
                     .clip(RoundedCornerShape(7.dp))
                     .border(1.dp, Border, RoundedCornerShape(7.dp))
             ) {
@@ -686,7 +680,7 @@ private fun PasswordField(
                     value = value,
                     onValueChange = onValueChange,
                     placeholder = {
-                        Text(text = "Enter password", fontSize = 10.sp, color = Color(0xFF9DA3B3))
+                        Text(text = "Enter password", fontSize = 14.sp, color = Color(0xFF9DA3B3))
                     },
                     singleLine = true,
                     visualTransformation = if (visible) {
@@ -710,7 +704,7 @@ private fun PasswordField(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    textStyle = TextStyle(fontSize = 10.sp, color = DarkText),
+                    textStyle = TextStyle(fontSize = 14.sp, color = DarkText),
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -724,7 +718,7 @@ private fun SaveContinueButton(onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 13.dp, vertical = 8.dp)
-            .height(34.dp)
+            .height(48.dp)
             .clip(RoundedCornerShape(7.dp))
             .background(Brush.horizontalGradient(listOf(Color(0xFF8178FF), Color(0xFF4E48F5))))
             .clickable(onClick = onClick),
@@ -740,7 +734,7 @@ private fun SaveContinueButton(onClick: () -> Unit) {
             ) {
                 Text(
                     text = "✓",
-                    fontSize = 8.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = Purple
                 )
@@ -748,7 +742,7 @@ private fun SaveContinueButton(onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = "Save & Continue",
-                fontSize = 9.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.White
             )
@@ -832,7 +826,7 @@ private fun BottomNavItem(
         Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = label,
-            fontSize = 7.sp,
+            fontSize = 12.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             color = if (selected) Color(0xFF2872EE) else Color(0xFF9298A6)
         )

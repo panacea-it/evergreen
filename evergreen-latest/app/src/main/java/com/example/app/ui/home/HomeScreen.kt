@@ -25,7 +25,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.NotificationsNone
@@ -53,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.max
+import com.example.app.ui.theme.EvergreenTheme
 
 // ------------------------------------------------------------
 // COLORS
@@ -80,31 +80,28 @@ private val OrangeLight = Color(0xFFFFF8EC)
 data class DashboardStat(
     val value: String,
     val title: String,
-    val change: String,
     val color: Color,
     val background: Color,
     val iconType: Int
 )
 
 val defaultAccessStats = listOf(
-    DashboardStat("7", "POC's", "17%", Green, GreenLight, 0),
-    DashboardStat("1", "Client's", "50%", Blue, BlueLight, 1),
-    DashboardStat("2", "Manager's", "20%", Purple, PurpleLight, 2),
-    DashboardStat("5", "Technician's", "25%", Orange, OrangeLight, 3)
+    DashboardStat("0", "POC's", Green, GreenLight, 0),
+    DashboardStat("0", "Client's", Blue, BlueLight, 1),
+    DashboardStat("0", "Manager's", Purple, PurpleLight, 2),
+    DashboardStat("0", "Technician's", Orange, OrangeLight, 3)
 )
 
 val defaultStatusStats = listOf(
-    DashboardStat("7", "Open", "12%", Green, GreenLight, 4),
-    DashboardStat("0", "Hold", "0%", Orange, OrangeLight, 5),
-    DashboardStat("1", "In Progress", "10%", Blue, BlueLight, 5),
-    DashboardStat("3", "Closed", "30%", Purple, PurpleLight, 6)
+    DashboardStat("0", "Open", Green, GreenLight, 4),
+    DashboardStat("0", "Hold", Orange, OrangeLight, 5),
+    DashboardStat("0", "In Progress", Blue, BlueLight, 5),
+    DashboardStat("0", "Closed", Purple, PurpleLight, 6)
 )
 
-val defaultChartLabels = listOf(
-    "2025-10", "2025-12", "2026-02", "2026-04", "2026-06", "2026-08"
-)
+val defaultChartLabels = emptyList<String>()
 
-val defaultChartValues = listOf(0f, 0f, 0f, 0f, 6f, 1f)
+val defaultChartValues = emptyList<Float>()
 
 data class HomeUiState(
     val greetingName: String = "Admin",
@@ -139,6 +136,7 @@ fun HomeScreen(
     state: HomeUiState = HomeUiState(),
     actions: HomeActions = HomeActions()
 ) {
+    EvergreenTheme {
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -190,6 +188,7 @@ fun HomeScreen(
 
             BottomNavigation(actions)
         }
+    }
     }
 }
 
@@ -265,7 +264,7 @@ private fun HomeHeader(
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = "Dashboard Overview",
-                fontSize = 10.sp,
+                fontSize = 14.sp,
                 color = TextGray
             )
         }
@@ -345,22 +344,22 @@ private fun WelcomeBanner() {
         ) {
             Text(
                 text = "Welcome back",
-                fontSize = 9.sp,
+                fontSize = 14.sp,
                 color = Color.White.copy(alpha = 0.8f)
             )
             Spacer(modifier = Modifier.height(3.dp))
             Text(
                 text = "Everything looks\ngood today! 🎉",
                 fontSize = 16.sp,
-                lineHeight = 20.sp,
+                lineHeight = 24.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White
             )
             Spacer(modifier = Modifier.height(5.dp))
             Text(
                 text = "Here's what's happening with your\norganization.",
-                fontSize = 8.sp,
-                lineHeight = 12.sp,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
                 color = Color.White.copy(alpha = 0.82f)
             )
         }
@@ -481,43 +480,9 @@ private fun SectionHeader() {
     ) {
         Text(
             text = "At a Glance",
-            fontSize = 15.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
-            color = TextDark,
-            modifier = Modifier.weight(1f)
-        )
-        DateFilter()
-    }
-}
-
-@Composable
-private fun DateFilter() {
-    Row(
-        modifier = Modifier
-            .height(34.dp)
-            .clip(RoundedCornerShape(9.dp))
-            .background(Color.White)
-            .border(1.dp, BorderColor, RoundedCornerShape(9.dp))
-            .padding(horizontal = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Default.CalendarMonth,
-            contentDescription = null,
-            tint = Color(0xFF667085),
-            modifier = Modifier.size(14.dp)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-            text = "Last 12 months",
-            fontSize = 9.sp,
-            color = Color(0xFF596579)
-        )
-        Spacer(modifier = Modifier.width(5.dp))
-        Text(
-            text = "⌄",
-            fontSize = 13.sp,
-            color = Color(0xFF7D8796)
+            color = TextDark
         )
     }
 }
@@ -530,7 +495,7 @@ private fun StatCard(
 ) {
     Box(
         modifier = modifier
-            .height(122.dp)
+            .height(110.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(stat.background)
             .border(1.dp, Color.White, RoundedCornerShape(14.dp))
@@ -554,25 +519,10 @@ private fun StatCard(
                 )
                 Text(
                     text = stat.title,
-                    fontSize = 11.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF4B5563)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = if (stat.change == "0%") "— 0%" else "↑ ${stat.change}",
-                        fontSize = 8.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = stat.color
-                    )
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text(
-                        text = "vs last month",
-                        fontSize = 8.sp,
-                        color = TextGray
-                    )
-                }
             }
         }
         MiniWave(
@@ -699,12 +649,11 @@ private fun UserCountChart(
         ) {
             Text(
                 text = title,
-                fontSize = 12.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = TextDark,
                 modifier = Modifier.weight(1f)
             )
-            DateFilter()
         }
         Spacer(modifier = Modifier.height(7.dp))
         UserChartCanvas(labels = labels, values = values)
@@ -716,8 +665,19 @@ private fun UserChartCanvas(
     labels: List<String>,
     values: List<Float>
 ) {
-    val axisLabels = if (labels.isEmpty()) defaultChartLabels else labels
-    val points = if (values.isEmpty()) defaultChartValues else values
+    val axisLabels = labels
+    val points = values
+    if (axisLabels.isEmpty() || points.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "No chart data yet", fontSize = 14.sp, color = TextGray)
+        }
+        return
+    }
     val maxY = max(7f, points.maxOrNull() ?: 7f)
 
     Row(
@@ -727,14 +687,14 @@ private fun UserChartCanvas(
     ) {
         Column(
             modifier = Modifier
-                .width(19.dp)
+                .width(28.dp)
                 .height(148.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             listOf("7", "6", "5", "4", "3", "2", "1", "0").forEach {
                 Text(
                     text = it,
-                    fontSize = 7.sp,
+                    fontSize = 12.sp,
                     color = Color(0xFF687385)
                 )
             }
@@ -829,7 +789,7 @@ private fun UserChartCanvas(
                 axisLabels.forEach {
                     Text(
                         text = it,
-                        fontSize = 7.sp,
+                        fontSize = 12.sp,
                         color = Color(0xFF687385)
                     )
                 }
@@ -933,7 +893,7 @@ private fun BottomNavItem(
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
-            fontSize = 9.sp,
+            fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             color = if (selected) Blue else Color(0xFF8C95A3)
         )

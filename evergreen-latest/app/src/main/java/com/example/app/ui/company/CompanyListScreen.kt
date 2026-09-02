@@ -60,6 +60,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.prod.evergreen.R
 import com.prod.evergreen.helper.MediaUrl
+import com.example.app.ui.theme.EvergreenTheme
 
 private val PageBackground = Color(0xFFF8F9FC)
 private val DarkText = Color(0xFF20243D)
@@ -102,6 +103,7 @@ fun CompanyListScreen(
     onNotificationClick: () -> Unit = {},
     onMenuClick: () -> Unit = {}
 ) {
+    EvergreenTheme {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -163,6 +165,7 @@ fun CompanyListScreen(
             onClick = onAddClick
         )
     }
+    }
 }
 
 @Composable
@@ -208,24 +211,14 @@ private fun CompanyHeader(
             )
             Text(
                 text = "Dashboard Overview",
-                fontSize = 9.sp,
+                fontSize = 14.sp,
                 color = GrayText
             )
         }
 
         HeaderIcon(icon = Icons.Default.QrCodeScanner, onClick = onScanClick)
         Spacer(modifier = Modifier.width(7.dp))
-        Box {
-            HeaderIcon(icon = Icons.Default.NotificationsNone, onClick = onNotificationClick)
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 7.dp, end = 7.dp)
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(Green)
-            )
-        }
+        HeaderIcon(icon = Icons.Default.NotificationsNone, onClick = onNotificationClick)
     }
 }
 
@@ -285,7 +278,7 @@ private fun SearchBar(
             singleLine = true,
             cursorBrush = SolidColor(DarkText),
             textStyle = TextStyle(
-                fontSize = 12.sp,
+                fontSize = 16.sp,
                 color = DarkText
             ),
             modifier = Modifier
@@ -295,7 +288,7 @@ private fun SearchBar(
                 if (query.isEmpty()) {
                     Text(
                         text = "Search companies...",
-                        fontSize = 9.sp,
+                        fontSize = 14.sp,
                         color = Color(0xFFA1A6B5)
                     )
                 }
@@ -356,7 +349,7 @@ private fun CompanyCard(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = company.name,
-                                    fontSize = 12.sp,
+                                    fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = DarkText,
                                     maxLines = 1,
@@ -377,7 +370,7 @@ private fun CompanyCard(
                                 Spacer(modifier = Modifier.width(3.dp))
                                 Text(
                                     text = company.location,
-                                    fontSize = 8.sp,
+                                    fontSize = 14.sp,
                                     color = GrayText,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -473,7 +466,7 @@ private fun ActiveBadge(isActive: Boolean) {
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = label,
-            fontSize = 7.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             color = color
         )
@@ -500,7 +493,7 @@ private fun POCDetails(company: Company) {
             Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = "POC Details",
-                fontSize = 9.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Purple
             )
@@ -533,15 +526,15 @@ private fun CompanyInfoRow(
         Spacer(modifier = Modifier.width(5.dp))
         Text(
             text = label,
-            fontSize = 7.sp,
+            fontSize = 12.sp,
             color = Color(0xFF72798C),
-            modifier = Modifier.width(39.dp)
+            modifier = Modifier.width(72.dp)
         )
-        Text(text = ":", fontSize = 7.sp, color = Color(0xFF72798C))
+        Text(text = ":", fontSize = 12.sp, color = Color(0xFF72798C))
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = value.ifBlank { "-" },
-            fontSize = 7.sp,
+            fontSize = 12.sp,
             color = Color(0xFF41485A),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -557,7 +550,7 @@ private fun DateRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(30.dp)
+            .height(48.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFFF8F6FF))
             .padding(horizontal = 9.dp),
@@ -571,8 +564,8 @@ private fun DateRow(
         )
         Spacer(modifier = Modifier.width(6.dp))
         Column {
-            Text(text = "Start Date", fontSize = 6.sp, color = GrayText)
-            Text(text = startDate, fontSize = 7.sp, color = DarkText)
+            Text(text = "Start Date", fontSize = 12.sp, color = GrayText)
+            Text(text = startDate, fontSize = 12.sp, color = DarkText)
         }
         Spacer(modifier = Modifier.weight(1f))
         Box(
@@ -583,8 +576,8 @@ private fun DateRow(
         )
         Spacer(modifier = Modifier.weight(1f))
         Column(horizontalAlignment = Alignment.End) {
-            Text(text = "End Date", fontSize = 6.sp, color = GrayText)
-            Text(text = endDate, fontSize = 7.sp, color = DarkText)
+            Text(text = "End Date", fontSize = 12.sp, color = GrayText)
+            Text(text = endDate, fontSize = 12.sp, color = DarkText)
         }
         Spacer(modifier = Modifier.width(6.dp))
         Icon(
@@ -697,7 +690,7 @@ private fun BottomNavItem(
         Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = label,
-            fontSize = 8.sp,
+            fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             color = if (selected) Color(0xFF2872EE) else Color(0xFF8C93A1)
         )

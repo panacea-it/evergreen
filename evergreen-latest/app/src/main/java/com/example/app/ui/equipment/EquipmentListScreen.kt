@@ -64,6 +64,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.prod.evergreen.R
 import com.prod.evergreen.helper.MediaUrl
+import com.example.app.ui.theme.EvergreenTheme
 
 private val Background = Color(0xFFF9FAFD)
 private val White = Color.White
@@ -110,6 +111,7 @@ fun EquipmentListScreen(
     onMenuClick: () -> Unit = {},
     onBackClick: (() -> Unit)? = null
 ) {
+    EvergreenTheme {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -139,7 +141,7 @@ fun EquipmentListScreen(
                 ) {
                     Text(
                         text = "No equipment found",
-                        fontSize = 13.sp,
+                        fontSize = 16.sp,
                         color = Color(0xFF8990A8)
                     )
                 }
@@ -177,6 +179,7 @@ fun EquipmentListScreen(
                 .padding(end = 18.dp, bottom = 82.dp),
             onClick = onAddClick
         )
+    }
     }
 }
 
@@ -220,23 +223,14 @@ private fun EquipmentHeader(
                 .clickable(onClick = onScanClick)
         )
         Spacer(modifier = Modifier.width(18.dp))
-        Box {
-            Icon(
-                imageVector = Icons.Default.NotificationsNone,
-                contentDescription = "Notifications",
-                tint = DarkText,
-                modifier = Modifier
-                    .size(24.dp)
-                    .clickable(onClick = onNotificationClick)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(7.dp)
-                    .clip(CircleShape)
-                    .background(Purple)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.NotificationsNone,
+            contentDescription = "Notifications",
+            tint = DarkText,
+            modifier = Modifier
+                .size(24.dp)
+                .clickable(onClick = onNotificationClick)
+        )
     }
 }
 
@@ -277,13 +271,13 @@ private fun EquipmentSearchBar(
                 onValueChange = onQueryChange,
                 singleLine = true,
                 cursorBrush = SolidColor(DarkText),
-                textStyle = TextStyle(fontSize = 13.sp, color = DarkText),
+                textStyle = TextStyle(fontSize = 16.sp, color = DarkText),
                 modifier = Modifier.weight(1f),
                 decorationBox = { inner ->
                     if (query.isEmpty()) {
                         Text(
                             text = "Search equipments by name, model or location...",
-                            fontSize = 11.sp,
+                            fontSize = 14.sp,
                             color = Color(0xFF8990A8),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -389,7 +383,7 @@ private fun EquipmentImage(equipment: EquipmentItem) {
                     Spacer(modifier = Modifier.height(7.dp))
                     Text(
                         text = equipment.name,
-                        fontSize = 9.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF59606C),
                         maxLines = 2,
@@ -429,7 +423,7 @@ private fun EquipmentTitle(equipment: EquipmentItem) {
             Spacer(modifier = Modifier.height(5.dp))
             Text(
                 text = equipment.description,
-                fontSize = 10.sp,
+                fontSize = 14.sp,
                 color = DarkText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -465,7 +459,7 @@ private fun ActiveBadge(isActive: Boolean) {
         Spacer(modifier = Modifier.width(5.dp))
         Text(
             text = if (isActive) "Active" else "Inactive",
-            fontSize = 9.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             color = color
         )
@@ -483,7 +477,7 @@ private fun DetailsHeader() {
     ) {
         Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = Blue, modifier = Modifier.size(15.dp))
         Spacer(modifier = Modifier.width(6.dp))
-        Text(text = "Details", fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = Blue)
+        Text(text = "Details", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Blue)
     }
 }
 
@@ -515,17 +509,17 @@ private fun EquipmentDetailRow(icon: ImageVector, label: String, value: String) 
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = label,
-            fontSize = 9.sp,
+            fontSize = 14.sp,
             color = DarkText,
             modifier = Modifier.width(112.dp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        Text(text = ":", fontSize = 9.sp, color = DarkText)
+        Text(text = ":", fontSize = 14.sp, color = DarkText)
         Spacer(modifier = Modifier.width(9.dp))
         Text(
             text = value.ifBlank { "-" },
-            fontSize = 9.sp,
+            fontSize = 14.sp,
             color = DarkText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -620,7 +614,7 @@ private fun EquipmentNavItem(
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
-            fontSize = 8.sp,
+            fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             color = if (selected) Blue else Color(0xFF858B9B)
         )

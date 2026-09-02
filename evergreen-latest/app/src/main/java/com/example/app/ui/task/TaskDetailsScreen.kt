@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.prod.evergreen.helper.MediaUrl
+import com.example.app.ui.theme.EvergreenTheme
 
 private val Background = Color(0xFFF8FAFE)
 private val White = Color.White
@@ -89,6 +90,7 @@ fun TaskDetailsScreen(
     onEditTaskClick: () -> Unit = {},
     onDeleteTaskClick: () -> Unit = {}
 ) {
+    EvergreenTheme {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -118,6 +120,7 @@ fun TaskDetailsScreen(
         }
         Spacer(modifier = Modifier.height(15.dp))
     }
+    }
 }
 
 @Composable
@@ -145,7 +148,7 @@ private fun TaskDetailsHeader(onCloseClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = "Task Details", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = DarkText)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Overview of task information", fontSize = 13.sp, color = SecondaryText)
+            Text(text = "Overview of task information", fontSize = 16.sp, color = SecondaryText)
         }
         Box(
             modifier = Modifier
@@ -208,7 +211,7 @@ private fun TaskImage(task: TaskDetailsData) {
                         modifier = Modifier.size(55.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Task Image", fontSize = 12.sp, color = Color(0xFF718097))
+                    Text(text = "Task Image", fontSize = 16.sp, color = Color(0xFF718097))
                 }
             }
         }
@@ -309,8 +312,8 @@ private fun TaskInformationCard(task: TaskDetailsData) {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Status", fontSize = 12.sp, color = DarkText, modifier = Modifier.width(145.dp))
-            Text(text = ":", fontSize = 12.sp, color = DarkText)
+            Text(text = "Status", fontSize = 16.sp, color = DarkText, modifier = Modifier.width(145.dp))
+            Text(text = ":", fontSize = 16.sp, color = DarkText)
             Spacer(modifier = Modifier.width(17.dp))
             StatusBadge(status = task.status, statusKey = task.statusKey)
         }
@@ -369,12 +372,12 @@ private fun DetailsRow(
             Icon(imageVector = icon, contentDescription = null, tint = Purple, modifier = Modifier.size(16.dp))
         }
         Spacer(modifier = Modifier.width(9.dp))
-        Text(text = label, fontSize = 11.sp, color = DarkText, modifier = Modifier.width(118.dp))
-        Text(text = ":", fontSize = 11.sp, color = DarkText)
+        Text(text = label, fontSize = 14.sp, color = DarkText, modifier = Modifier.width(118.dp))
+        Text(text = ":", fontSize = 14.sp, color = DarkText)
         Spacer(modifier = Modifier.width(15.dp))
         Text(
             text = value.ifEmpty { "-" },
-            fontSize = 11.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = valueColor,
             maxLines = 1,
@@ -399,12 +402,12 @@ private fun TaskDetailLine(label: String, value: String) {
                 .background(Blue)
         )
         Spacer(modifier = Modifier.width(12.dp))
-        Text(text = label, fontSize = 10.sp, color = DarkText, modifier = Modifier.width(120.dp))
-        Text(text = ":", fontSize = 10.sp, color = DarkText)
+        Text(text = label, fontSize = 14.sp, color = DarkText, modifier = Modifier.width(120.dp))
+        Text(text = ":", fontSize = 14.sp, color = DarkText)
         Spacer(modifier = Modifier.width(11.dp))
         Text(
             text = value.ifEmpty { "-" },
-            fontSize = 10.sp,
+            fontSize = 14.sp,
             color = DarkText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -431,12 +434,12 @@ private fun TaskDateLine(label: String, value: String) {
             Icon(imageVector = Icons.Default.CalendarMonth, contentDescription = null, tint = Blue, modifier = Modifier.size(16.dp))
         }
         Spacer(modifier = Modifier.width(9.dp))
-        Text(text = label, fontSize = 10.sp, color = DarkText, modifier = Modifier.width(83.dp))
-        Text(text = ":", fontSize = 10.sp, color = DarkText)
+        Text(text = label, fontSize = 14.sp, color = DarkText, modifier = Modifier.width(83.dp))
+        Text(text = ":", fontSize = 14.sp, color = DarkText)
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = value.ifEmpty { "-" },
-            fontSize = 10.sp,
+            fontSize = 14.sp,
             color = DarkText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -476,7 +479,7 @@ private fun StatusBadge(status: String, statusKey: String) {
                 .background(color)
         )
         Spacer(modifier = Modifier.width(9.dp))
-        Text(text = label, fontSize = 11.sp, fontWeight = FontWeight.Medium, color = color)
+        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = color)
     }
 }
 

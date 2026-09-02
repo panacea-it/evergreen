@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
+import com.example.app.ui.theme.EvergreenTheme
 
 private val Background = Color(0xFFF9FAFD)
 private val White = Color.White
@@ -102,6 +103,7 @@ fun CreateTaskScreen(
     onPhotoClick: () -> Unit = {},
     onClearPhotoClick: () -> Unit = {}
 ) {
+    EvergreenTheme {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -144,6 +146,7 @@ fun CreateTaskScreen(
             )
         }
     }
+    }
 }
 
 @Composable
@@ -183,7 +186,7 @@ private fun CreateTaskHeader(
                 fontWeight = FontWeight.Bold,
                 color = DarkText
             )
-            Text(text = "Add new task", fontSize = 8.sp, color = SecondaryText)
+            Text(text = "Add new task", fontSize = 14.sp, color = SecondaryText)
         }
         Icon(
             imageVector = Icons.Default.GridView,
@@ -194,21 +197,14 @@ private fun CreateTaskHeader(
                 .clickable(onClick = onMenuClick)
         )
         Spacer(modifier = Modifier.width(14.dp))
-        Box(modifier = Modifier.clickable(onClick = onNotificationClick)) {
-            Icon(
-                imageVector = Icons.Default.NotificationsNone,
-                contentDescription = "Notifications",
-                tint = DarkText,
-                modifier = Modifier.size(21.dp)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(Purple)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.NotificationsNone,
+            contentDescription = "Notifications",
+            tint = DarkText,
+            modifier = Modifier
+                .size(21.dp)
+                .clickable(onClick = onNotificationClick)
+        )
     }
 }
 
@@ -253,7 +249,7 @@ private fun TaskInformationCard(
             text = "Task Information",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
-            fontSize = 13.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = DarkText
         )
@@ -263,7 +259,7 @@ private fun TaskInformationCard(
                 .fillMaxWidth()
                 .padding(top = 3.dp),
             textAlign = TextAlign.Center,
-            fontSize = 9.sp,
+            fontSize = 14.sp,
             color = SecondaryText
         )
         Spacer(modifier = Modifier.height(17.dp))
@@ -308,7 +304,7 @@ private fun TaskInformationCard(
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = state.equipmentSummary,
-                fontSize = 8.sp,
+                fontSize = 14.sp,
                 color = SecondaryText,
                 modifier = Modifier.padding(start = 53.dp)
             )
@@ -408,7 +404,7 @@ private fun SelectField(
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = value.ifEmpty { placeholder },
-                        fontSize = 10.sp,
+                        fontSize = 14.sp,
                         color = if (value.isEmpty()) Color(0xFF8E95A8) else DarkText,
                         modifier = Modifier.weight(1f)
                     )
@@ -450,9 +446,9 @@ private fun DescriptionField(
                     value = value,
                     onValueChange = onValueChange,
                     placeholder = {
-                        Text(text = placeholder, fontSize = 9.sp, color = Color(0xFF969CAE))
+                        Text(text = placeholder, fontSize = 14.sp, color = Color(0xFF969CAE))
                     },
-                    textStyle = TextStyle(fontSize = 9.sp, color = DarkText),
+                    textStyle = TextStyle(fontSize = 14.sp, color = DarkText),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -483,9 +479,9 @@ private fun FieldIcon(icon: ImageVector) {
 @Composable
 private fun FieldLabel(label: String, required: Boolean) {
     Row {
-        Text(text = label, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
+        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
         if (required) {
-            Text(text = " *", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = RequiredRed)
+            Text(text = " *", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = RequiredRed)
         }
     }
 }
@@ -508,10 +504,10 @@ private fun TextFieldContainer(
             value = value,
             onValueChange = onValueChange,
             placeholder = {
-                Text(text = placeholder, fontSize = 9.sp, color = Color(0xFF969CAE))
+                Text(text = placeholder, fontSize = 14.sp, color = Color(0xFF969CAE))
             },
             singleLine = true,
-            textStyle = TextStyle(fontSize = 9.sp, color = DarkText),
+            textStyle = TextStyle(fontSize = 14.sp, color = DarkText),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
@@ -531,7 +527,7 @@ private fun UploadPhotoSection(
     onClearClick: () -> Unit
 ) {
     Column {
-        Text(text = "Add Photo", fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
+        Text(text = "Add Photo", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
         Spacer(modifier = Modifier.height(6.dp))
         Box(
             modifier = Modifier
@@ -573,7 +569,7 @@ private fun UploadPhotoSection(
                 if (photoCount > 1) {
                     Text(
                         text = "$photoCount photos",
-                        fontSize = 8.sp,
+                        fontSize = 14.sp,
                         color = DarkText,
                         modifier = Modifier
                             .align(Alignment.BottomStart)
@@ -599,18 +595,18 @@ private fun UploadPhotoSection(
                     Spacer(modifier = Modifier.height(7.dp))
                     Text(
                         text = "Drag & drop your image here",
-                        fontSize = 9.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = DarkText
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Row {
-                        Text(text = "or ", fontSize = 8.sp, color = SecondaryText)
-                        Text(text = "browse", fontSize = 8.sp, fontWeight = FontWeight.SemiBold, color = Purple)
-                        Text(text = " from gallery", fontSize = 8.sp, color = SecondaryText)
+                        Text(text = "or ", fontSize = 14.sp, color = SecondaryText)
+                        Text(text = "browse", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Purple)
+                        Text(text = " from gallery", fontSize = 14.sp, color = SecondaryText)
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "PNG, JPG up to 5MB", fontSize = 7.sp, color = Color(0xFF9CA1B1))
+                    Text(text = "PNG, JPG up to 5MB", fontSize = 12.sp, color = Color(0xFF9CA1B1))
                 }
             }
         }
@@ -630,7 +626,7 @@ private fun CreateTaskButton(modifier: Modifier, onClick: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(imageVector = Icons.Default.TaskAlt, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(7.dp))
-            Text(text = "Create Task", fontSize = 9.sp, fontWeight = FontWeight.Medium, color = Color.White)
+            Text(text = "Create Task", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.White)
         }
     }
 }
@@ -649,7 +645,7 @@ private fun CancelButton(modifier: Modifier, onClick: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(imageVector = Icons.Default.Cancel, contentDescription = null, tint = Purple, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(7.dp))
-            Text(text = "Cancel", fontSize = 9.sp, fontWeight = FontWeight.Medium, color = Purple)
+            Text(text = "Cancel", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Purple)
         }
     }
 }
@@ -718,7 +714,7 @@ private fun BottomNavItem(
         Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = label,
-            fontSize = 7.sp,
+            fontSize = 12.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             color = if (selected) Color(0xFF2872EE) else Color(0xFF9298A6)
         )

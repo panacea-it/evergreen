@@ -57,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.app.ui.theme.EvergreenTheme
 
 private val Background = Color(0xFFFAFBFE)
 private val White = Color.White
@@ -144,6 +145,7 @@ fun UsersListScreen(
     onNotificationClick: () -> Unit = {},
     onMenuClick: () -> Unit = {}
 ) {
+    EvergreenTheme {
     val needle = searchQuery.trim()
     val filteredUsers = users.filter { user ->
         user.role == selectedRole && (
@@ -204,7 +206,7 @@ fun UsersListScreen(
                         ) {
                             Text(
                                 text = "No users found",
-                                fontSize = 13.sp,
+                                fontSize = 16.sp,
                                 color = SecondaryText
                             )
                         }
@@ -231,6 +233,7 @@ fun UsersListScreen(
                 onProfileClick = onProfileClick
             )
         }
+    }
     }
 }
 
@@ -259,7 +262,7 @@ private fun UsersHeader(
         Column(modifier = Modifier.weight(1f)) {
             Text(text = "Users List", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkText)
             Spacer(modifier = Modifier.height(2.dp))
-            Text(text = "Manage and view all your users", fontSize = 10.sp, color = SecondaryText)
+            Text(text = "Manage and view all your users", fontSize = 14.sp, color = SecondaryText)
         }
         Icon(
             imageVector = Icons.Default.QrCodeScanner,
@@ -270,23 +273,14 @@ private fun UsersHeader(
                 .clickable(onClick = onScanClick)
         )
         Spacer(modifier = Modifier.width(18.dp))
-        Box {
-            Icon(
-                imageVector = Icons.Default.NotificationsNone,
-                contentDescription = "Notifications",
-                tint = DarkText,
-                modifier = Modifier
-                    .size(26.dp)
-                    .clickable(onClick = onNotificationClick)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(Purple)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.NotificationsNone,
+            contentDescription = "Notifications",
+            tint = DarkText,
+            modifier = Modifier
+                .size(26.dp)
+                .clickable(onClick = onNotificationClick)
+        )
     }
 }
 
@@ -337,7 +331,7 @@ private fun UserCountCard(
         Spacer(modifier = Modifier.height(9.dp))
         Text(text = count.toString(), fontSize = 26.sp, fontWeight = FontWeight.Bold, color = iconColor)
         Spacer(modifier = Modifier.height(2.dp))
-        Text(text = label, fontSize = 9.sp, color = DarkText)
+        Text(text = label, fontSize = 14.sp, color = DarkText)
     }
 }
 
@@ -389,7 +383,7 @@ private fun UserRoleTab(
             Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = label,
-                fontSize = 9.sp,
+                fontSize = 14.sp,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 color = if (selected) Purple else SecondaryText
             )
@@ -441,13 +435,13 @@ private fun UserSearchBar(
                 onValueChange = onQueryChange,
                 singleLine = true,
                 cursorBrush = SolidColor(DarkText),
-                textStyle = TextStyle(fontSize = 12.sp, color = DarkText),
+                textStyle = TextStyle(fontSize = 16.sp, color = DarkText),
                 modifier = Modifier.weight(1f),
                 decorationBox = { inner ->
                     if (query.isEmpty()) {
                         Text(
                             text = "Search ${roleLabel(selectedRole).lowercase()}s by name or number...",
-                            fontSize = 10.sp,
+                            fontSize = 14.sp,
                             color = Color(0xFF8C93AA),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -499,7 +493,7 @@ private fun UserCard(
                 Box(
                     modifier = Modifier
                         .width(3.dp)
-                        .height(34.dp)
+                        .height(48.dp)
                         .clip(CircleShape)
                         .background(Purple)
                 )
@@ -529,7 +523,7 @@ private fun UserCard(
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
                     text = roleLabel(user.role) + " Details",
-                    fontSize = 8.sp,
+                    fontSize = 14.sp,
                     color = Purple,
                     fontWeight = FontWeight.Medium
                 )
@@ -594,7 +588,7 @@ private fun ActiveUserBadge(status: String) {
         Spacer(modifier = Modifier.width(5.dp))
         Text(
             text = status,
-            fontSize = 8.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = if (active) Green else Red
         )
@@ -625,12 +619,12 @@ private fun ContactRow(icon: ImageVector, label: String, value: String) {
     ) {
         Icon(imageVector = icon, contentDescription = null, tint = Purple, modifier = Modifier.size(17.dp))
         Spacer(modifier = Modifier.width(9.dp))
-        Text(text = label, fontSize = 9.sp, color = SecondaryText, modifier = Modifier.width(72.dp))
-        Text(text = ":", fontSize = 9.sp, color = SecondaryText)
+        Text(text = label, fontSize = 14.sp, color = SecondaryText, modifier = Modifier.width(80.dp))
+        Text(text = ":", fontSize = 14.sp, color = SecondaryText)
         Spacer(modifier = Modifier.width(9.dp))
         Text(
             text = value.ifBlank { "-" },
-            fontSize = 9.sp,
+            fontSize = 14.sp,
             color = SecondaryText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -663,7 +657,7 @@ private fun AddNewUserButton(onClick: () -> Unit) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = Purple, modifier = Modifier.size(20.dp))
             }
             Spacer(modifier = Modifier.width(11.dp))
-            Text(text = "Add new user", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.White)
+            Text(text = "Add new user", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.White)
         }
     }
 }
@@ -742,7 +736,7 @@ private fun UserNavItem(
         }
         Text(
             text = label,
-            fontSize = 8.sp,
+            fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             color = if (selected) Purple else SecondaryText
         )

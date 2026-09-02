@@ -25,11 +25,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BusinessCenter
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mail
@@ -37,9 +34,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.app.ui.theme.EvergreenTheme
 
 private val Background = Color(0xFFFAFAFD)
 private val White = Color.White
@@ -61,9 +56,6 @@ private val DarkText = Color(0xFF202443)
 private val SecondaryText = Color(0xFF7D849B)
 private val Purple = Color(0xFF654BFF)
 private val PurpleLight = Color(0xFFF2EEFF)
-private val Blue = Color(0xFF3185F5)
-private val Orange = Color(0xFFFF8B32)
-private val Green = Color(0xFF24B86B)
 private val Border = Color(0xFFE9E9F1)
 
 data class ProfileData(
@@ -72,16 +64,11 @@ data class ProfileData(
     val location: String = "",
     val phone: String = "",
     val userId: String = "",
-    val projects: String = "-",
-    val tasks: String = "-",
-    val documents: String = "-",
-    val activityDays: String = "-",
     val fullName: String = "",
     val email: String = "",
     val phoneNumber: String = "",
     val userRole: String = "",
     val joinedOn: String = "",
-    val status: String = "",
     val address: String = "",
     val company: String = ""
 )
@@ -95,64 +82,51 @@ fun ProfileScreen(
     onNotificationClick: () -> Unit = {},
     onMoreClick: () -> Unit = {},
     onEditClick: () -> Unit = {},
-    onOverviewClick: () -> Unit = {},
-    onProjectsClick: () -> Unit = {},
-    onActivityClick: () -> Unit = {},
-    onDocumentsClick: () -> Unit = {},
     onHomeClick: () -> Unit = {},
     onUsersClick: () -> Unit = {},
-    onAddClick: () -> Unit = {},
-    onSearchClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+    onAddClick: () -> Unit = {}
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-            .statusBarsPadding()
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            ProfileHeader(
-                notificationCount = notificationCount,
-                onBackClick = onBackClick,
-                onNotificationClick = onNotificationClick,
-                onMoreClick = onMoreClick
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 14.dp)
-            ) {
-                Spacer(modifier = Modifier.height(7.dp))
-                ProfileSummaryCard(profile = profile)
-                Spacer(modifier = Modifier.height(12.dp))
-                StatisticsCard(profile = profile)
-                Spacer(modifier = Modifier.height(12.dp))
-                ProfileTabs(
-                    onOverviewClick = onOverviewClick,
-                    onProjectsClick = onProjectsClick,
-                    onActivityClick = onActivityClick,
-                    onDocumentsClick = onDocumentsClick
+    EvergreenTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background)
+                .statusBarsPadding()
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                ProfileHeader(
+                    notificationCount = notificationCount,
+                    onBackClick = onBackClick,
+                    onNotificationClick = onNotificationClick,
+                    onMoreClick = onMoreClick
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                InformationCard(
-                    profile = profile,
-                    showEdit = showEdit,
-                    onEditClick = onEditClick
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 14.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(7.dp))
+                    ProfileSummaryCard(profile = profile)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    InformationCard(
+                        profile = profile,
+                        showEdit = showEdit,
+                        onEditClick = onEditClick
+                    )
+                    if (profile.address.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        AddressCard(address = profile.address)
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                ProfileBottomNavigation(
+                    onHomeClick = onHomeClick,
+                    onUsersClick = onUsersClick,
+                    onAddClick = onAddClick
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                AddressCard(profile = profile)
-                Spacer(modifier = Modifier.height(12.dp))
             }
-            ProfileBottomNavigation(
-                onHomeClick = onHomeClick,
-                onUsersClick = onUsersClick,
-                onAddClick = onAddClick,
-                onSearchClick = onSearchClick,
-                onSettingsClick = onSettingsClick
-            )
         }
     }
 }
@@ -191,7 +165,7 @@ private fun ProfileHeader(
         Column(modifier = Modifier.weight(1f)) {
             Text(text = "Profile", fontSize = 19.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
             Spacer(modifier = Modifier.height(2.dp))
-            Text(text = "View and manage user details", fontSize = 10.sp, color = SecondaryText)
+            Text(text = "View and manage user details", fontSize = 14.sp, color = SecondaryText)
         }
         Box(
             modifier = Modifier
@@ -220,7 +194,7 @@ private fun ProfileHeader(
                 ) {
                     Text(
                         text = notificationCount.toString(),
-                        fontSize = 8.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
@@ -252,7 +226,6 @@ private fun ProfileSummaryCard(profile: ProfileData) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(163.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(Brush.horizontalGradient(listOf(Color(0xFFFBFAFF), Color(0xFFF6F2FF))))
             .border(1.dp, Color(0xFFECE8FA), RoundedCornerShape(18.dp))
@@ -275,14 +248,6 @@ private fun ProfileSummaryCard(profile: ProfileData) {
                     contentDescription = null,
                     tint = Purple,
                     modifier = Modifier.size(54.dp)
-                )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .size(20.dp)
-                        .clip(CircleShape)
-                        .background(Green)
-                        .border(3.dp, Color.White, CircleShape)
                 )
             }
             Spacer(modifier = Modifier.width(15.dp))
@@ -307,28 +272,32 @@ private fun ProfileSummaryCard(profile: ProfileData) {
                         ) {
                             Text(
                                 text = profile.role,
-                                fontSize = 8.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = Purple
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(9.dp))
-                ProfileInfoLine(icon = Icons.Default.LocationOn, text = profile.location.ifBlank { "-" })
-                Spacer(modifier = Modifier.height(7.dp))
-                ProfileInfoLine(icon = Icons.Default.Phone, text = profile.phone.ifBlank { "-" })
+                if (profile.location.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(9.dp))
+                    ProfileInfoLine(icon = Icons.Default.LocationOn, text = profile.location)
+                }
+                if (profile.phone.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(7.dp))
+                    ProfileInfoLine(icon = Icons.Default.Phone, text = profile.phone)
+                }
                 Spacer(modifier = Modifier.height(9.dp))
                 Text(
                     text = "User ID: ${profile.userId.ifBlank { "-" }}",
-                    fontSize = 9.sp,
+                    fontSize = 14.sp,
                     color = SecondaryText
                 )
                 if (profile.company.isNotBlank()) {
                     Spacer(modifier = Modifier.height(5.dp))
                     Text(
                         text = profile.company,
-                        fontSize = 9.sp,
+                        fontSize = 14.sp,
                         color = SecondaryText,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -346,123 +315,10 @@ private fun ProfileInfoLine(icon: ImageVector, text: String) {
         Spacer(modifier = Modifier.width(7.dp))
         Text(
             text = text,
-            fontSize = 9.sp,
+            fontSize = 14.sp,
             color = SecondaryText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
-private fun StatisticsCard(profile: ProfileData) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(115.dp)
-            .clip(RoundedCornerShape(17.dp))
-            .background(White)
-            .border(1.dp, Border, RoundedCornerShape(17.dp))
-            .padding(vertical = 17.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ProfileStat(Modifier.weight(1f), Icons.Default.Group, profile.projects, "Projects", Purple)
-        StatDivider()
-        ProfileStat(Modifier.weight(1f), Icons.Default.TaskAlt, profile.tasks, "Tasks", Blue)
-        StatDivider()
-        ProfileStat(Modifier.weight(1f), Icons.Default.Description, profile.documents, "Documents", Orange)
-        StatDivider()
-        ProfileStat(Modifier.weight(1f), Icons.Default.CalendarMonth, profile.activityDays, "Activity Days", Green)
-    }
-}
-
-@Composable
-private fun ProfileStat(
-    modifier: Modifier,
-    icon: ImageVector,
-    value: String,
-    label: String,
-    iconColor: Color
-) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(imageVector = icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(21.dp))
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = value.ifBlank { "-" }, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = DarkText)
-        Spacer(modifier = Modifier.height(3.dp))
-        Text(text = label, fontSize = 8.sp, color = SecondaryText)
-    }
-}
-
-@Composable
-private fun StatDivider() {
-    Box(
-        modifier = Modifier
-            .height(55.dp)
-            .width(1.dp)
-            .background(Border)
-    )
-}
-
-@Composable
-private fun ProfileTabs(
-    onOverviewClick: () -> Unit,
-    onProjectsClick: () -> Unit,
-    onActivityClick: () -> Unit,
-    onDocumentsClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(62.dp)
-            .clip(RoundedCornerShape(15.dp))
-            .background(White)
-            .border(1.dp, Border, RoundedCornerShape(15.dp)),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ProfileTab(Modifier.weight(1f), Icons.Default.Person, "Overview", true, onOverviewClick)
-        ProfileTab(Modifier.weight(1f), Icons.Default.BusinessCenter, "Projects", false, onProjectsClick)
-        ProfileTab(Modifier.weight(1f), Icons.Default.History, "Activity", false, onActivityClick)
-        ProfileTab(Modifier.weight(1f), Icons.Default.Description, "Documents", false, onDocumentsClick)
-    }
-}
-
-@Composable
-private fun ProfileTab(
-    modifier: Modifier,
-    icon: ImageVector,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (selected) Purple else SecondaryText,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(5.dp))
-            Text(
-                text = label,
-                fontSize = 9.sp,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (selected) Purple else SecondaryText
-            )
-        }
-        Spacer(modifier = Modifier.height(11.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.65f)
-                .height(2.dp)
-                .clip(CircleShape)
-                .background(if (selected) Purple else Color.Transparent)
         )
     }
 }
@@ -497,7 +353,7 @@ private fun InformationCard(
             Spacer(modifier = Modifier.width(9.dp))
             Text(
                 text = "Information",
-                fontSize = 13.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = DarkText,
                 modifier = Modifier.weight(1f)
@@ -519,7 +375,7 @@ private fun InformationCard(
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(5.dp))
-                        Text(text = "Edit", fontSize = 9.sp, color = DarkText)
+                        Text(text = "Edit", fontSize = 14.sp, color = DarkText)
                     }
                 }
             }
@@ -532,9 +388,6 @@ private fun InformationCard(
         if (profile.joinedOn.isNotBlank()) {
             InformationRow(Icons.Default.CalendarMonth, "Joined On", profile.joinedOn)
         }
-        if (profile.status.isNotBlank()) {
-            InformationStatusRow(status = profile.status)
-        }
     }
 }
 
@@ -544,15 +397,15 @@ private fun InformationRow(icon: ImageVector, label: String, value: String) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp),
+                .height(48.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(imageVector = icon, contentDescription = null, tint = Color(0xFF7B83A0), modifier = Modifier.size(17.dp))
             Spacer(modifier = Modifier.width(10.dp))
-            Text(text = label, fontSize = 9.sp, color = SecondaryText, modifier = Modifier.weight(1f))
+            Text(text = label, fontSize = 14.sp, color = SecondaryText, modifier = Modifier.weight(1f))
             Text(
                 text = value.ifBlank { "-" },
-                fontSize = 9.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = DarkText,
                 maxLines = 1,
@@ -569,44 +422,15 @@ private fun InformationRow(icon: ImageVector, label: String, value: String) {
 }
 
 @Composable
-private fun InformationStatusRow(status: String) {
+private fun AddressCard(address: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(42.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Default.CheckCircle,
-            contentDescription = null,
-            tint = Color(0xFF7B83A0),
-            modifier = Modifier.size(17.dp)
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(text = "Status", fontSize = 9.sp, color = SecondaryText, modifier = Modifier.weight(1f))
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFEAFBF1))
-                .border(1.dp, Color(0xFFB8EFD0), RoundedCornerShape(12.dp))
-                .padding(horizontal = 11.dp, vertical = 5.dp)
-        ) {
-            Text(text = status, fontSize = 8.sp, fontWeight = FontWeight.Medium, color = Green)
-        }
-    }
-}
-
-@Composable
-private fun AddressCard(profile: ProfileData) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(116.dp)
             .clip(RoundedCornerShape(17.dp))
             .background(White)
             .border(1.dp, Border, RoundedCornerShape(17.dp))
             .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
         Box(
             modifier = Modifier
@@ -619,28 +443,13 @@ private fun AddressCard(profile: ProfileData) {
         }
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Address", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
-            Spacer(modifier = Modifier.height(12.dp))
+            Text(text = "Address", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = profile.address.ifBlank { "-" },
-                fontSize = 9.sp,
-                lineHeight = 15.sp,
+                text = address,
+                fontSize = 16.sp,
+                lineHeight = 22.sp,
                 color = SecondaryText
-            )
-        }
-        Box(
-            modifier = Modifier
-                .width(108.dp)
-                .height(92.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFEAF2E9)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = null,
-                tint = Purple,
-                modifier = Modifier.size(35.dp)
             )
         }
     }
@@ -650,9 +459,7 @@ private fun AddressCard(profile: ProfileData) {
 private fun ProfileBottomNavigation(
     onHomeClick: () -> Unit,
     onUsersClick: () -> Unit,
-    onAddClick: () -> Unit,
-    onSearchClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onAddClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -685,8 +492,6 @@ private fun ProfileBottomNavigation(
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add", tint = Color.White, modifier = Modifier.size(30.dp))
                 }
             }
-            ProfileBottomItem(Icons.Default.Search, "Search", false, onSearchClick)
-            ProfileBottomItem(Icons.Default.Settings, "Settings", false, onSettingsClick)
         }
     }
 }
@@ -720,7 +525,7 @@ private fun ProfileBottomItem(
         }
         Text(
             text = label,
-            fontSize = 8.sp,
+            fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             color = if (selected) Purple else Color(0xFF727A91)
         )

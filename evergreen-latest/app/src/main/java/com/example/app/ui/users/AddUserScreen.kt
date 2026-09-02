@@ -52,6 +52,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.app.ui.theme.EvergreenTheme
 
 private val Background = Color(0xFFF9FAFE)
 private val White = Color.White
@@ -90,6 +91,7 @@ fun AddUserScreen(
     onMenuClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {}
 ) {
+    EvergreenTheme {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -121,6 +123,7 @@ fun AddUserScreen(
             )
             Spacer(modifier = Modifier.height(15.dp))
         }
+    }
     }
 }
 
@@ -159,7 +162,7 @@ private fun UserDetailsHeader(
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, fontSize = 21.sp, fontWeight = FontWeight.Bold, color = DarkText)
             Spacer(modifier = Modifier.height(2.dp))
-            Text(text = subtitle, fontSize = 11.sp, color = SecondaryText)
+            Text(text = subtitle, fontSize = 14.sp, color = SecondaryText)
         }
         Icon(
             imageVector = Icons.Default.GridView,
@@ -178,13 +181,6 @@ private fun UserDetailsHeader(
                 modifier = Modifier
                     .size(27.dp)
                     .clickable(onClick = onNotificationClick)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(7.dp)
-                    .clip(CircleShape)
-                    .background(Purple)
             )
         }
     }
@@ -229,7 +225,7 @@ private fun UserInformationCard(
         Text(
             text = "Please provide basic details of user",
             modifier = Modifier.fillMaxWidth(),
-            fontSize = 13.sp,
+            fontSize = 16.sp,
             color = SecondaryText
         )
         Spacer(modifier = Modifier.height(31.dp))
@@ -327,10 +323,10 @@ private fun UserInputField(
                     value = value,
                     onValueChange = onValueChange,
                     placeholder = {
-                        Text(text = placeholder, fontSize = 12.sp, color = Color(0xFF8A91AC))
+                        Text(text = placeholder, fontSize = 16.sp, color = Color(0xFF8A91AC))
                     },
                     singleLine = true,
-                    textStyle = TextStyle(fontSize = 12.sp, color = DarkText),
+                    textStyle = TextStyle(fontSize = 16.sp, color = DarkText),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -376,7 +372,7 @@ private fun PasswordInputField(
                     value = value,
                     onValueChange = onValueChange,
                     placeholder = {
-                        Text(text = placeholder, fontSize = 12.sp, color = Color(0xFF8A91AC))
+                        Text(text = placeholder, fontSize = 16.sp, color = Color(0xFF8A91AC))
                     },
                     singleLine = true,
                     visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -389,7 +385,7 @@ private fun PasswordInputField(
                             )
                         }
                     },
-                    textStyle = TextStyle(fontSize = 12.sp, color = DarkText),
+                    textStyle = TextStyle(fontSize = 16.sp, color = DarkText),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -435,7 +431,7 @@ private fun UserDropdownField(
             ) {
                 Text(
                     text = value.ifEmpty { placeholder },
-                    fontSize = 12.sp,
+                    fontSize = 16.sp,
                     color = if (value.isEmpty()) Color(0xFF8A91AC) else DarkText,
                     modifier = Modifier.weight(1f)
                 )
@@ -467,9 +463,9 @@ private fun UserFieldIcon(icon: ImageVector) {
 @Composable
 private fun UserFieldLabel(label: String, required: Boolean) {
     Row {
-        Text(text = label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
+        Text(text = label, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
         if (required) {
-            Text(text = " *", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = RequiredRed)
+            Text(text = " *", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = RequiredRed)
         }
     }
 }

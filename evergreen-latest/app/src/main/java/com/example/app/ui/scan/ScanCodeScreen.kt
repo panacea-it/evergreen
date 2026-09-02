@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.app.ui.theme.EvergreenTheme
 
 private val Background = Color(0xFFFCFCFE)
 private val DarkText = Color(0xFF20203D)
@@ -60,6 +61,7 @@ fun ScanCodeScreen(
     flashOn: Boolean = false,
     cameraPreview: @Composable () -> Unit = {}
 ) {
+    EvergreenTheme {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -133,7 +135,7 @@ fun ScanCodeScreen(
                 text = "Point your camera at a QR code.",
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                fontSize = 12.sp,
+                fontSize = 16.sp,
                 color = SecondaryText
             )
 
@@ -141,7 +143,7 @@ fun ScanCodeScreen(
                 text = "Once it's recognized, we'll take you to the link.",
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                fontSize = 12.sp,
+                fontSize = 16.sp,
                 color = SecondaryText
             )
 
@@ -178,6 +180,7 @@ fun ScanCodeScreen(
 
             TroubleScanningCard()
         }
+    }
     }
 }
 
@@ -352,7 +355,7 @@ private fun ScanActionButton(
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = text,
-            fontSize = 11.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = DarkText,
             maxLines = 1
@@ -394,20 +397,20 @@ private fun TroubleScanningCard() {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Having trouble scanning?",
-                fontSize = 12.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = DarkText
             )
             Spacer(modifier = Modifier.height(3.dp))
             Text(
                 text = "Make sure the QR code is well lit and in focus.",
-                fontSize = 9.sp,
+                fontSize = 14.sp,
                 color = SecondaryText
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = "It should be centered on your viewfinder.",
-                fontSize = 9.sp,
+                fontSize = 14.sp,
                 color = SecondaryText
             )
         }

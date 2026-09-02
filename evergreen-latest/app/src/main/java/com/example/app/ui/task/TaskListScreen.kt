@@ -58,6 +58,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.prod.evergreen.R
 import com.prod.evergreen.helper.MediaUrl
+import com.example.app.ui.theme.EvergreenTheme
 
 private val Background = Color(0xFFF9FAFD)
 private val White = Color.White
@@ -116,6 +117,7 @@ fun TaskListScreen(
     onNotificationClick: () -> Unit = {},
     onMenuClick: () -> Unit = {}
 ) {
+    EvergreenTheme {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -165,6 +167,7 @@ fun TaskListScreen(
             onClick = onAddClick
         )
     }
+    }
 }
 
 @Composable
@@ -205,23 +208,14 @@ private fun TaskHeader(
                 .clickable(onClick = onScanClick)
         )
         Spacer(modifier = Modifier.width(15.dp))
-        Box {
-            Icon(
-                imageVector = Icons.Default.NotificationsNone,
-                contentDescription = "Notifications",
-                tint = DarkText,
-                modifier = Modifier
-                    .size(21.dp)
-                    .clickable(onClick = onNotificationClick)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(Purple)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.NotificationsNone,
+            contentDescription = "Notifications",
+            tint = DarkText,
+            modifier = Modifier
+                .size(21.dp)
+                .clickable(onClick = onNotificationClick)
+        )
     }
 }
 
@@ -292,7 +286,7 @@ private fun TaskStatusCard(
                 )
                 Text(
                     text = status.label,
-                    fontSize = 6.sp,
+                    fontSize = 12.sp,
                     color = DarkText,
                     maxLines = 1
                 )
@@ -322,7 +316,7 @@ private fun TaskTabs(
             ) {
                 Text(
                     text = tab,
-                    fontSize = 8.sp,
+                    fontSize = 14.sp,
                     fontWeight = if (index == selectedTab) FontWeight.SemiBold else FontWeight.Normal,
                     color = if (index == selectedTab) DarkText else Color(0xFF8C91A5)
                 )
@@ -350,7 +344,7 @@ private fun SearchBar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 7.dp)
-            .height(36.dp)
+            .height(48.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(Color.White)
             .border(1.dp, Border, RoundedCornerShape(8.dp)),
@@ -370,13 +364,13 @@ private fun SearchBar(
             onValueChange = onQueryChange,
             singleLine = true,
             cursorBrush = SolidColor(DarkText),
-            textStyle = TextStyle(fontSize = 12.sp, color = DarkText),
+            textStyle = TextStyle(fontSize = 16.sp, color = DarkText),
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 7.dp, end = 8.dp),
             decorationBox = { inner ->
                 if (query.isEmpty()) {
-                    Text(text = "Search...", fontSize = 8.sp, color = Color(0xFFA1A6B5))
+                    Text(text = "Search...", fontSize = 14.sp, color = Color(0xFFA1A6B5))
                 }
                 inner()
             }
@@ -423,7 +417,7 @@ private fun TaskCard(
                     Box(
                         modifier = Modifier
                             .width(2.dp)
-                            .height(34.dp)
+                            .height(48.dp)
                             .clip(RoundedCornerShape(2.dp))
                             .background(accent)
                     )
@@ -431,7 +425,7 @@ private fun TaskCard(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = task.title,
-                            fontSize = 12.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = DarkText,
                             maxLines = 1,
@@ -440,7 +434,7 @@ private fun TaskCard(
                         Spacer(modifier = Modifier.height(3.dp))
                         Text(
                             text = task.type,
-                            fontSize = 8.sp,
+                            fontSize = 14.sp,
                             color = DarkText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -520,7 +514,7 @@ private fun StatusBadge(status: String, statusKey: String) {
                 .background(color)
         )
         Spacer(modifier = Modifier.width(4.dp))
-        Text(text = status, fontSize = 7.sp, color = color)
+        Text(text = status, fontSize = 12.sp, color = color)
     }
 }
 
@@ -544,7 +538,7 @@ private fun DetailsBox(task: TaskItem) {
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = "Details",
-                fontSize = 8.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Purple
             )
@@ -569,16 +563,16 @@ private fun TaskDetailRow(icon: ImageVector, label: String, value: String) {
         Spacer(modifier = Modifier.width(5.dp))
         Text(
             text = label,
-            fontSize = 7.sp,
+            fontSize = 12.sp,
             color = Color(0xFF697185),
-            modifier = Modifier.width(72.dp),
+            modifier = Modifier.width(120.dp),
             maxLines = 1
         )
-        Text(text = ":", fontSize = 7.sp, color = Color(0xFF697185))
+        Text(text = ":", fontSize = 12.sp, color = Color(0xFF697185))
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = value.ifBlank { "-" },
-            fontSize = 7.sp,
+            fontSize = 12.sp,
             color = Color(0xFF3F4658),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -670,7 +664,7 @@ private fun BottomNavItem(
         Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = label,
-            fontSize = 7.sp,
+            fontSize = 12.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             color = if (selected) Color(0xFF2872EE) else Color(0xFF9298A6)
         )

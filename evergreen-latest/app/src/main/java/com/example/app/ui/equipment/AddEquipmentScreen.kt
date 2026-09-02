@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.prod.evergreen.helper.MediaUrl
+import com.example.app.ui.theme.EvergreenTheme
 
 private val Background = Color(0xFFF9FAFE)
 private val White = Color.White
@@ -110,6 +111,7 @@ fun AddEquipmentScreen(
     onMenuClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {}
 ) {
+    EvergreenTheme {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -154,6 +156,7 @@ fun AddEquipmentScreen(
             )
         }
     }
+    }
 }
 
 @Composable
@@ -190,7 +193,7 @@ private fun EquipmentDetailsHeader(
         Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkText)
-            Text(text = subtitle, fontSize = 8.sp, color = SecondaryText)
+            Text(text = subtitle, fontSize = 14.sp, color = SecondaryText)
         }
         Icon(
             imageVector = Icons.Default.GridView,
@@ -201,23 +204,14 @@ private fun EquipmentDetailsHeader(
                 .clickable(onClick = onMenuClick)
         )
         Spacer(modifier = Modifier.width(14.dp))
-        Box {
-            Icon(
-                imageVector = Icons.Default.NotificationsNone,
-                contentDescription = "Notifications",
-                tint = DarkText,
-                modifier = Modifier
-                    .size(22.dp)
-                    .clickable(onClick = onNotificationClick)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(6.dp)
-                    .clip(CircleShape)
-                    .background(Purple)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.NotificationsNone,
+            contentDescription = "Notifications",
+            tint = DarkText,
+            modifier = Modifier
+                .size(22.dp)
+                .clickable(onClick = onNotificationClick)
+        )
     }
 }
 
@@ -262,7 +256,7 @@ private fun EquipmentInformationCard(
             text = "Equipment Information",
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
-            fontSize = 13.sp,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = DarkText
         )
@@ -272,7 +266,7 @@ private fun EquipmentInformationCard(
                 .fillMaxWidth()
                 .padding(top = 3.dp),
             textAlign = TextAlign.Center,
-            fontSize = 9.sp,
+            fontSize = 14.sp,
             color = SecondaryText
         )
         Spacer(modifier = Modifier.height(18.dp))
@@ -431,7 +425,7 @@ private fun InputField(
                     ) {
                         Text(
                             text = value.ifBlank { placeholder },
-                            fontSize = 9.sp,
+                            fontSize = 14.sp,
                             color = if (value.isBlank()) Color(0xFF969CAE) else DarkText,
                             modifier = Modifier.weight(1f)
                         )
@@ -449,7 +443,7 @@ private fun InputField(
                         value = value,
                         onValueChange = onValueChange,
                         placeholder = {
-                            Text(text = placeholder, fontSize = 9.sp, color = Color(0xFF969CAE))
+                            Text(text = placeholder, fontSize = 14.sp, color = Color(0xFF969CAE))
                         },
                         singleLine = true,
                         trailingIcon = if (dropdown) {
@@ -464,7 +458,7 @@ private fun InputField(
                         } else {
                             null
                         },
-                        textStyle = TextStyle(fontSize = 9.sp, color = DarkText),
+                        textStyle = TextStyle(fontSize = 14.sp, color = DarkText),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
@@ -511,9 +505,9 @@ private fun DescriptionField(
                     value = value,
                     onValueChange = onValueChange,
                     placeholder = {
-                        Text(text = placeholder, fontSize = 9.sp, color = Color(0xFF969CAE))
+                        Text(text = placeholder, fontSize = 14.sp, color = Color(0xFF969CAE))
                     },
-                    textStyle = TextStyle(fontSize = 9.sp, color = DarkText),
+                    textStyle = TextStyle(fontSize = 14.sp, color = DarkText),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
@@ -546,9 +540,9 @@ private fun FieldIcon(icon: ImageVector) {
 @Composable
 private fun FieldLabel(label: String, required: Boolean) {
     Row {
-        Text(text = label, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
+        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
         if (required) {
-            Text(text = " *", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = RequiredRed)
+            Text(text = " *", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = RequiredRed)
         }
     }
 }
@@ -564,8 +558,8 @@ private fun UploadPhotoSection(
         ?: MediaUrl.resolve(remoteUrl).takeIf { it.isNotBlank() }
     Column {
         Row {
-            Text(text = "Add Photo", fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
-            Text(text = " *", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = RequiredRed)
+            Text(text = "Add Photo", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = DarkText)
+            Text(text = " *", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = RequiredRed)
         }
         Spacer(modifier = Modifier.height(6.dp))
         Box(
@@ -624,18 +618,18 @@ private fun UploadPhotoSection(
                     Spacer(modifier = Modifier.height(7.dp))
                     Text(
                         text = "Drag & drop your image here",
-                        fontSize = 9.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = DarkText
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Row {
-                        Text(text = "or ", fontSize = 8.sp, color = SecondaryText)
-                        Text(text = "browse", fontSize = 8.sp, fontWeight = FontWeight.SemiBold, color = Purple)
-                        Text(text = " from gallery", fontSize = 8.sp, color = SecondaryText)
+                        Text(text = "or ", fontSize = 14.sp, color = SecondaryText)
+                        Text(text = "browse", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Purple)
+                        Text(text = " from gallery", fontSize = 14.sp, color = SecondaryText)
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "PNG, JPG up to 5MB", fontSize = 7.sp, color = Color(0xFF9CA1B0))
+                    Text(text = "PNG, JPG up to 5MB", fontSize = 12.sp, color = Color(0xFF9CA1B0))
                 }
             }
         }
@@ -664,7 +658,7 @@ private fun SaveEquipmentButton(
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text(text = label, fontSize = 9.sp, fontWeight = FontWeight.Medium, color = Color.White)
+            Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.White)
         }
     }
 }
@@ -686,7 +680,7 @@ private fun CancelButton(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = "⊗", fontSize = 15.sp, color = Purple)
             Spacer(modifier = Modifier.width(6.dp))
-            Text(text = "Cancel", fontSize = 9.sp, fontWeight = FontWeight.Medium, color = Purple)
+            Text(text = "Cancel", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Purple)
         }
     }
 }
@@ -756,7 +750,7 @@ private fun BottomNavItem(
         Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = label,
-            fontSize = 7.sp,
+            fontSize = 12.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             color = if (selected) Blue else Color(0xFF9298A7)
         )

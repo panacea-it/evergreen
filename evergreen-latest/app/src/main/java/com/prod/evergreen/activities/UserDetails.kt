@@ -59,9 +59,7 @@ class UserDetails : AppCompatActivity() {
                 onEditClick = { openEdit() },
                 onHomeClick = { goHome() },
                 onUsersClick = { goUsers() },
-                onAddClick = { onAddUser() },
-                onSearchClick = { goUsers() },
-                onSettingsClick = { goHome() }
+                onAddClick = { onAddUser() }
             )
         }
 
