@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Size
 import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,50 +19,61 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.app.ui.scan.ScanCodeScreen
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.NotFoundException
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.Result
 import com.google.zxing.common.HybridBinarizer
-
-import com.prod.evergreen.databinding.ActivityQrScannerBinding
 import com.prod.evergreen.helper.BarcodeAnalyzer
 import java.io.IOException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
 private const val REQUEST_CODE_PERMISSIONS = 10
 private val REQUIRED_PERMISSIONS = arrayOf(android.Manifest.permission.CAMERA)
 
 class QrScanner : AppCompatActivity() {
 
     private val multiFormatReader = MultiFormatReader()
-    private lateinit var binding: ActivityQrScannerBinding
     private lateinit var cameraExecutor: ExecutorService
+    private lateinit var previewView: PreviewView
     private var cameraProvider: ProcessCameraProvider? = null
     private var camera: Camera? = null
-    private var isFlashOn = false
-    private var hasNavigated = false  // Add this flag
+    private val flashOnState = mutableStateOf(false)
+    private var hasNavigated = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        binding = ActivityQrScannerBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
         cameraExecutor = Executors.newSingleThreadExecutor()
-
-        binding.back.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
+        previewView = PreviewView(this).apply {
+            scaleType = PreviewView.ScaleType.FILL_CENTER
         }
 
-        binding.tvFlash.setOnClickListener {
-            toggleFlashlight()
-        }
-        binding.tvPickFrom.setOnClickListener {
-            openGallery()
+        setContent {
+            val flashOn by flashOnState
+            ScanCodeScreen(
+                onBackClick = { onBackPressedDispatcher.onBackPressed() },
+                onFlashClick = { toggleFlashlight() },
+                onPickPhotoClick = { openGallery() },
+                flashOn = flashOn,
+                cameraPreview = {
+                    AndroidView(
+                        factory = { previewView },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            )
         }
 
         if (allPermissionsGranted()) {
@@ -73,7 +85,9 @@ class QrScanner : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        cameraExecutor.shutdown()
+        if (!cameraExecutor.isShutdown) {
+            cameraExecutor.shutdown()
+        }
         cameraProvider?.unbindAll()
     }
 
@@ -90,13 +104,13 @@ class QrScanner : AppCompatActivity() {
             .requireLensFacing(CameraSelector.LENS_FACING_BACK)
             .build()
 
-        val preview = Preview.Builder()
-            .build()
-
+        val preview = Preview.Builder().build()
+        val analysisWidth = previewView.width.takeIf { it > 0 } ?: 1280
+        val analysisHeight = previewView.height.takeIf { it > 0 } ?: 720
 
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .setTargetResolution(Size(binding.previeView.width, binding.previeView.height))
+            .setTargetResolution(Size(analysisWidth, analysisHeight))
             .build()
             .also {
                 it.setAnalyzer(cameraExecutor, BarcodeAnalyzer { qrCodes ->
@@ -108,14 +122,13 @@ class QrScanner : AppCompatActivity() {
 
         cameraProvider?.unbindAll()
         camera = cameraProvider?.bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
-        preview.setSurfaceProvider(binding.previeView.createSurfaceProvider(camera!!.cameraInfo))
+        preview.setSurfaceProvider(previewView.createSurfaceProvider(camera!!.cameraInfo))
     }
 
     private fun toggleFlashlight() {
-        val cameraControl = camera?.cameraControl
-        isFlashOn = !isFlashOn
-        cameraControl?.enableTorch(isFlashOn)
-        binding.tvFlash.text = if (isFlashOn) "Turn off flash" else "Turn on flash"
+        val next = !flashOnState.value
+        flashOnState.value = next
+        camera?.cameraControl?.enableTorch(next)
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
@@ -131,7 +144,7 @@ class QrScanner : AppCompatActivity() {
         pickImageFromGalleryForResult.launch(pickIntent)
     }
 
-    val pickImageFromGalleryForResult =
+    private val pickImageFromGalleryForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             if (result.resultCode == RESULT_OK) {
                 val intent = result.data
@@ -163,9 +176,7 @@ class QrScanner : AppCompatActivity() {
             return
         }
 
-        // Convert the bitmap to a software-backed bitmap
         val softwareBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
-
         val width = softwareBitmap.width
         val height = softwareBitmap.height
         val pixels = IntArray(width * height)
@@ -175,33 +186,50 @@ class QrScanner : AppCompatActivity() {
         val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
         try {
             val result: Result = multiFormatReader.decode(binaryBitmap)
-            val qrText = result.text
-            handleQrCodeData(qrText)
+            handleQrCodeData(result.text)
         } catch (e: NotFoundException) {
             Toast.makeText(this, "QR code not found", Toast.LENGTH_SHORT).show()
         } finally {
-            // Recycle the software-backed bitmap to free up memory
             softwareBitmap.recycle()
         }
     }
 
     private fun handleQrCodeData(qrText: String) {
-        if (!hasNavigated) {  // Check if navigation has already happened
-            hasNavigated = true  // Set the flag to true to prevent future navigations
-            startActivity(Intent(this@QrScanner, EquipmentDetails::class.java).putExtra("eq_id", qrText.toInt()).putExtra("screentype",1))
+        if (!hasNavigated) {
+            hasNavigated = true
+            startActivity(
+                Intent(this@QrScanner, EquipmentDetails::class.java)
+                    .putExtra("eq_id", qrText.toInt())
+                    .putExtra("screentype", 1)
+            )
             finish()
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS && allPermissionsGranted()) {
+            startCamera()
         }
     }
 
     override fun onPause() {
         super.onPause()
-        // Release camera resources
-        cameraExecutor.shutdown()
+        if (!cameraExecutor.isShutdown) {
+            cameraExecutor.shutdown()
+        }
         cameraProvider?.unbindAll()
     }
 
     override fun onResume() {
         super.onResume()
+        if (cameraExecutor.isShutdown) {
+            cameraExecutor = Executors.newSingleThreadExecutor()
+        }
         if (allPermissionsGranted()) {
             startCamera()
         } else {

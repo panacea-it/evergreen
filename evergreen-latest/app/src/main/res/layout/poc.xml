@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    app:cardBackgroundColor="#F9FCFF"
+    app:cardBackgroundColor="@color/white"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="16dp"
+    app:strokeColor="@color/home_card_stroke"
+    app:strokeWidth="1dp"
     android:layout_marginTop="@dimen/_20sdp"
     android:layout_height="wrap_content"
     android:paddingVertical="@dimen/_5sdp"

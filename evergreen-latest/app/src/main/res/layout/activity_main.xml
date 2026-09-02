@@ -28,8 +28,9 @@
                 <ImageView
                     android:layout_centerVertical="true"
                     android:id="@+id/menu"
-                    android:padding="@dimen/_5sdp"
+                    android:padding="@dimen/_8sdp"
                     android:src="@drawable/menu"
+                    android:background="@drawable/bg_home_toolbar_icon"
                     android:layout_width="@dimen/_35sdp"
                     android:layout_height="@dimen/_35sdp"/>
                 <TextView
@@ -53,14 +54,18 @@
                         android:id="@+id/scanner"
                         android:layout_marginHorizontal="@dimen/_5sdp"
                         android:src="@drawable/scanner"
-                        android:layout_width="@dimen/_25sdp"
-                        android:layout_height="@dimen/_25sdp"/>
+                        android:background="@drawable/bg_home_toolbar_icon"
+                        android:padding="@dimen/_6sdp"
+                        android:layout_width="@dimen/_32sdp"
+                        android:layout_height="@dimen/_32sdp"/>
                     <ImageView
                         android:id="@+id/notifications"
                         android:layout_marginHorizontal="@dimen/_5sdp"
                         android:src="@drawable/notification"
-                        android:layout_width="@dimen/_30sdp"
-                        android:layout_height="@dimen/_30sdp"/>
+                        android:background="@drawable/bg_home_toolbar_icon"
+                        android:padding="@dimen/_6sdp"
+                        android:layout_width="@dimen/_32sdp"
+                        android:layout_height="@dimen/_32sdp"/>
                     <ImageView
                         android:id="@+id/profile"
                         android:layout_marginHorizontal="@dimen/_5sdp"
@@ -75,7 +80,7 @@
         </androidx.appcompat.widget.Toolbar>
 
 <RelativeLayout
-
+    android:id="@+id/nav_container"
     android:layout_width="match_parent"
     android:layout_marginTop="@dimen/_5sdp"
     android:background="@drawable/top_rounded_corners"

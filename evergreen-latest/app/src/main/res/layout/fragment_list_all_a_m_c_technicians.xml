@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/home_page_bg"
     tools:context=".fragments.ListAllAMCTechniciansFragment">
 
 
@@ -29,11 +30,13 @@
         app:tabTextAppearance="@style/CustomTabTextAppearance"
         app:tabIndicatorAnimationMode="elastic"
         app:tabIndicatorFullWidth="false"
-        app:tabTextColor="@color/gray1"
+        app:tabTextColor="@color/gray2"
         app:tabBackground="@color/white"
-        android:layout_marginTop="@dimen/_15sdp"
+        android:background="@color/white"
+        android:layout_marginTop="@dimen/_8sdp"
         android:contentDescription="@string/menu"
-        app:tabSelectedTextColor="@color/black_blue1"
+        app:tabIndicatorColor="@color/btn_back"
+        app:tabSelectedTextColor="@color/black1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/buttons"

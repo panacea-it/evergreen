@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/home_page_bg"
     tools:context=".fragments.TaskFragment">
 
     <TextView
@@ -16,12 +17,12 @@
         android:textSize="@dimen/_14ssp"
         android:drawablePadding="@dimen/_5sdp"
         android:paddingHorizontal="@dimen/_10sdp"
-        android:elevation="@dimen/_10sdp"
+        android:elevation="0dp"
         android:paddingVertical="@dimen/_14sdp"
         android:layout_marginHorizontal="@dimen/_15sdp"
         android:layout_marginTop="@dimen/_10sdp"
 
-        android:background="@drawable/rectangler_searc_back"
+        android:background="@drawable/bg_search_field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
     <include
@@ -45,11 +46,13 @@
         android:id="@+id/tabLayout"
         app:tabTextAppearance="@style/CustomTabTextAppearance"
         app:tabIndicatorFullWidth="false"
-        app:tabTextColor="@color/gray1"
+        app:tabTextColor="@color/gray2"
         app:tabBackground="@color/white"
-        android:layout_marginTop="@dimen/_15sdp"
+        android:background="@color/white"
+        android:layout_marginTop="@dimen/_8sdp"
         android:contentDescription="@string/menu"
-        app:tabSelectedTextColor="@color/black_blue"
+        app:tabIndicatorColor="@color/btn_back"
+        app:tabSelectedTextColor="@color/black1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
        app:layout_constraintTop_toBottomOf="@+id/buttons"

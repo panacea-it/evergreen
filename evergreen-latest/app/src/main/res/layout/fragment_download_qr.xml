@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
+    android:background="@color/home_page_bg"
     android:layout_height="match_parent"
     tools:context=".fragments.DownloadQrFragment">
 
@@ -23,7 +24,7 @@
         android:paddingVertical="@dimen/_14sdp"
         android:layout_marginHorizontal="@dimen/_15sdp"
         android:layout_marginTop="@dimen/_30sdp"
-        android:background="@drawable/rectangler_searc_back"
+        android:background="@drawable/bg_search_field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
@@ -43,7 +44,7 @@
         android:paddingVertical="@dimen/_14sdp"
         android:layout_marginHorizontal="@dimen/_15sdp"
         android:layout_marginTop="@dimen/_30sdp"
-        android:background="@drawable/rectangler_searc_back"
+        android:background="@drawable/bg_search_field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 

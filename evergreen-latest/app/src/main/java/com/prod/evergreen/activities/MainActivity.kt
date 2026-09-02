@@ -2,16 +2,21 @@ package com.prod.evergreen.activities
 
 import android.app.Dialog
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
@@ -74,6 +79,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         navController = findNavController(R.id.nav_host_fragment)
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            setHomeChrome(
+                destination.id == R.id.homeFragment ||
+                    destination.id == R.id.companiesFragment ||
+                    destination.id == R.id.createAmcFragment ||
+                    destination.id == R.id.taskFragment ||
+                    destination.id == R.id.createTaskFragment ||
+                    destination.id == R.id.equipmentFragment ||
+                    destination.id == R.id.addEquipmentFragment ||
+                    destination.id == R.id.amc_mangers
+            )
+        }
         val accessLevel = getAccessLevelFromString(sharedPreferencesHelper.getValueString(
             ConstantValues.TYPE_ROLE
         ))
@@ -106,6 +123,10 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+
+        if (intent.getBooleanExtra("open_users", false)) {
+            navigateToDestination(R.id.amc_mangers, "Users List")
+        }
 
         binding.navHeader.userName.text=sharedPreferencesHelper.getValueString(ConstantValues.PREF_USERNAME)
         binding.navHeader.mobileNumber.text=sharedPreferencesHelper.getValueString(ConstantValues.PREF_MOBILE)
@@ -249,6 +270,9 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (intent.getBooleanExtra("open_users", false)) {
+            navigateToDestination(R.id.amc_mangers, "Users List")
+        }
         handleNotificationIntent(intent)
     }
 //
@@ -366,6 +390,21 @@ private fun handleNotificationIntent(intent: Intent) {
 
     fun setTitleTextView(title: String) {
         binding.title.text = title
+    }
+
+    private fun setHomeChrome(isHome: Boolean) {
+        binding.toolbar.visibility = if (isHome) View.GONE else View.VISIBLE
+        val params = binding.navContainer.layoutParams as LinearLayout.LayoutParams
+        params.topMargin = if (isHome) 0 else resources.getDimensionPixelSize(R.dimen._5sdp)
+        binding.navContainer.layoutParams = params
+        if (isHome) {
+            binding.navContainer.background = ColorDrawable(Color.parseColor("#F9FAFC"))
+            binding.mainActivityContentId.setBackgroundColor(Color.parseColor("#F9FAFC"))
+        } else {
+            binding.navContainer.background =
+                ContextCompat.getDrawable(this, R.drawable.top_rounded_corners)
+            binding.mainActivityContentId.setBackgroundResource(R.drawable.kitechn_back)
+        }
     }
 
 }

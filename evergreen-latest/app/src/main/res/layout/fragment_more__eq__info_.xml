@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:background="@color/white"
+    android:background="@color/home_page_bg"
     android:layout_height="match_parent">
 
     <LinearLayout
@@ -306,10 +306,10 @@
                 android:paddingHorizontal="@dimen/_15sdp"
                 android:paddingVertical="@dimen/_8sdp"
                 android:textSize="@dimen/_14ssp"
-                android:backgroundTint="#FCEDE8"
+                android:backgroundTint="@color/chip_orange"
                 android:background="@drawable/rounded_corners"
                 android:fontFamily="@font/roboto_regular"
-                android:textColor="#D02B14"
+                android:textColor="@color/accent_orange"
                 android:text="Not Started"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>

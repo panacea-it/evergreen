@@ -33,6 +33,7 @@ class MainViewModel(private val mainRepository: MainRepository) : ViewModel() {
     val allTasksDataResponse :MutableLiveData<AllTasks> = MutableLiveData()
     val allUsersDataResponse :MutableLiveData<AllUsers> = MutableLiveData()
     val allequipmentsDataResponse :MutableLiveData<AllEquipmentsData> = MutableLiveData()
+    val companyEquipmentsDataResponse :MutableLiveData<AllEquipmentsData> = MutableLiveData()
     val allAmcDataResponse :MutableLiveData<AllAmcData> = MutableLiveData()
     val userloginresponse :MutableLiveData<LoginData> = MutableLiveData()
     val forgotPasswordResponse :MutableLiveData<ForgotPasswordData> = MutableLiveData()
@@ -191,7 +192,7 @@ if (response.data.status==200) {
         viewModelScope.launch(exceptionHandler) {
             when (val response = mainRepository.getAllEquipmentsByID(authorization,c_id)) {
                 is NetworkState.Success -> {
-                    allequipmentsDataResponse.postValue(response.data)
+                    companyEquipmentsDataResponse.postValue(response.data)
                     loading.value = false
                 }
                 is NetworkState.Error -> {

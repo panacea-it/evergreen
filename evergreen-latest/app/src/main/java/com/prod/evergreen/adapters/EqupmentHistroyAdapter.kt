@@ -5,7 +5,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.prod.evergreen.R
 import com.prod.evergreen.databinding.HistoryItemsBinding
 import com.prod.evergreen.helper.DateConverter
 import com.prod.evergreen.models.TasksItem
@@ -23,6 +25,14 @@ class EqupmentHistroyAdapter(val data:(TasksItem)->Unit,val selfAssign:(TasksIte
             binding.date.text= DateConverter.convertToLocalUtcAndFormat(tasksItem.createdAt!!)
             binding.status.text=tasksItem.status
             binding.title.text=tasksItem.task!!.name
+            val statusColor = when (tasksItem.status?.lowercase()) {
+                "open" -> R.color.accent_green
+                "hold" -> R.color.accent_orange
+                "in_progress", "in progress" -> R.color.accent_blue
+                "closed" -> R.color.accent_purple
+                else -> R.color.gray2
+            }
+            binding.status.setTextColor(ContextCompat.getColor(binding.root.context, statusColor))
 
             if(tasksItem.technicianLink!=null){
                 binding.technician.text=tasksItem.technician!!.name

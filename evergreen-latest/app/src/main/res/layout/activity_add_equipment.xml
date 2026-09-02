@@ -10,7 +10,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".activities.AddEquipment">
     <LinearLayout
-        android:background="@color/white"
+        android:background="@color/home_page_bg"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:orientation="vertical"
@@ -52,7 +52,7 @@
             </RelativeLayout>
         </androidx.appcompat.widget.Toolbar>
         <LinearLayout
-            android:background="@color/white"
+            android:background="@color/home_page_bg"
             android:orientation="vertical"
             android:layout_width="match_parent"
 

@@ -10,7 +10,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".dialogs.FeedBackFormFragmentDialog">
     <LinearLayout
-        android:background="@color/white"
+        android:background="@color/home_page_bg"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:orientation="vertical"
@@ -378,7 +378,7 @@
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:id="@+id/uploadimage_rl_sig"
-                    android:background="@drawable/sidestroke"
+                    android:background="@drawable/edit_text_background"
                     android:layout_width="match_parent"
                     android:orientation="horizontal"
                     android:layout_height="wrap_content">
@@ -422,7 +422,7 @@
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:id="@+id/uploadimage_rl"
-                    android:background="@drawable/sidestroke"
+                    android:background="@drawable/edit_text_background"
                     android:layout_width="match_parent"
                     android:orientation="horizontal"
                     android:layout_height="wrap_content">

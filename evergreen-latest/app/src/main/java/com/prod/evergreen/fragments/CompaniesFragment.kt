@@ -3,9 +3,7 @@ package com.prod.evergreen.fragments
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.text.Editable
 import android.text.InputType
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,18 +12,29 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
+import com.example.app.ui.company.Company
+import com.example.app.ui.company.CompanyListScreen
 import com.google.gson.JsonObject
+import com.prod.evergreen.R
 import com.prod.evergreen.XApplication
 import com.prod.evergreen.activities.EquipmentsList
-import com.prod.evergreen.adapters.CompanieslistAdapter
+import com.prod.evergreen.activities.MainActivity
+import com.prod.evergreen.activities.NotificationList
+import com.prod.evergreen.activities.QrScanner
 import com.prod.evergreen.api.MainRepository
 import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
-import com.prod.evergreen.databinding.FragmentCompaniesBinding
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.DateConverter
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.Validator
@@ -38,12 +47,15 @@ private const val ARG_PARAM2 = "param2"
 class CompaniesFragment : Fragment() {
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private lateinit var viewModel: MainViewModel
-    private lateinit var companieslistAdapter: CompanieslistAdapter
 
     private var param1: String? = null
     private var param2: String? = null
     private var pendingDeleteCompanyId: Int? = null
-    private lateinit var binding: FragmentCompaniesBinding
+    private val allCompanies = mutableStateOf<List<AMCData>>(emptyList())
+    private val searchQuery = mutableStateOf("")
+    private val filterMode = mutableStateOf(FilterMode.ALL)
+
+    private enum class FilterMode { ALL, ACTIVE, INACTIVE }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,38 +70,56 @@ class CompaniesFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentCompaniesBinding.inflate(layoutInflater, container, false)
         sharedPreferencesHelper = SharedPreferencesHelper(requireActivity())
-        return binding.root
+        val greeting = greetingForRole(sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE))
+
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val source by allCompanies
+                val query by searchQuery
+                val filter by filterMode
+                CompanyListScreen(
+                    companies = source.toUiCompanies(query, filter),
+                    greetingName = greeting,
+                    searchQuery = query,
+                    onSearchQueryChange = { searchQuery.value = it },
+                    onCompanyClick = { company ->
+                        val id = company.id ?: return@CompanyListScreen
+                        startActivity(
+                            Intent(requireActivity(), EquipmentsList::class.java)
+                                .putExtra("c_id", id)
+                                .putExtra("name", company.name)
+                        )
+                    },
+                    onCompanyLongClick = { company ->
+                        source.firstOrNull { it.id == company.id }?.let { showCompanyActions(it) }
+                    },
+                    onFilterClick = { showFilterDialog() },
+                    onAddClick = { goTo(R.id.createAmcFragment, "Create AMC") },
+                    onHomeClick = { goTo(R.id.homeFragment, "Home") },
+                    onMessagesClick = {
+                        startActivity(Intent(requireActivity(), NotificationList::class.java))
+                    },
+                    onTasksClick = { goTo(R.id.taskFragment, "Tasks List") },
+                    onProfileClick = {
+                        startActivity(Intent(requireActivity(), com.prod.evergreen.activities.UserDetails::class.java))
+                    },
+                    onScanClick = {
+                        startActivity(Intent(requireActivity(), QrScanner::class.java))
+                    },
+                    onNotificationClick = {
+                        startActivity(Intent(requireActivity(), NotificationList::class.java))
+                    },
+                    onMenuClick = { openDrawer() }
+                )
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setViewmodel()
-
-        companieslistAdapter = CompanieslistAdapter(
-            onCompanyClick = { companyId, name ->
-                startActivity(
-                    Intent(requireActivity(), EquipmentsList::class.java)
-                        .putExtra("c_id", companyId)
-                        .putExtra("name", name)
-                )
-            },
-            onCompanyActionClick = { company ->
-                showCompanyActions(company)
-            }
-        )
-
-        binding.recyclerCompanies.setHasFixedSize(true)
-        binding.recyclerCompanies.adapter = companieslistAdapter
-        binding.etSearc.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                companieslistAdapter.filter.filter(s.toString())
-            }
-
-            override fun afterTextChanged(s: Editable?) {}
-        })
 
         viewModel.loading.observe(viewLifecycleOwner) { loading ->
             if (loading) {
@@ -101,13 +131,7 @@ class CompaniesFragment : Fragment() {
 
         viewModel.allAmcDataResponse.observe(viewLifecycleOwner) { data ->
             if (data.status == 200) {
-                val companies = data.data.orEmpty()
-                if (companies.isEmpty()) {
-                    binding.noDataLayout?.visibility = View.VISIBLE
-                } else {
-                    companieslistAdapter.addData(companies)
-                    binding.noDataLayout?.visibility = View.GONE
-                }
+                allCompanies.value = data.data.orEmpty()
             }
         }
 
@@ -130,6 +154,73 @@ class CompaniesFragment : Fragment() {
         }
 
         refreshCompanies()
+    }
+
+    private fun List<AMCData>.toUiCompanies(query: String, filter: FilterMode): List<Company> {
+        val needle = query.trim()
+        return filter { company ->
+            val matchesFilter = when (filter) {
+                FilterMode.ALL -> true
+                FilterMode.ACTIVE -> company.isCompanyActive()
+                FilterMode.INACTIVE -> !company.isCompanyActive()
+            }
+            val matchesQuery = needle.isEmpty() ||
+                company.name.orEmpty().contains(needle, ignoreCase = true) ||
+                company.branchName.orEmpty().contains(needle, ignoreCase = true) ||
+                company.location.orEmpty().contains(needle, ignoreCase = true)
+            matchesFilter && matchesQuery
+        }.map { it.toUiCompany() }
+    }
+
+    private fun AMCData.toUiCompany(): Company {
+        val locationText = location?.takeIf { it.isNotBlank() } ?: branchName.orEmpty()
+        val poc = pocDetails?.user
+        return Company(
+            id = id,
+            name = name.orEmpty(),
+            location = locationText,
+            pocName = poc?.name.orEmpty(),
+            email = poc?.email.orEmpty(),
+            mobile = poc?.phone.orEmpty(),
+            startDate = DateConverter.convertToLocalUtcAndFormat(startDate),
+            endDate = DateConverter.convertToLocalUtcAndFormat(endDate),
+            imageUrl = logo,
+            isActive = isCompanyActive()
+        )
+    }
+
+    private fun greetingForRole(role: String?): String {
+        return when (role) {
+            "eg_super_admin" -> "Admin"
+            "eg_admin" -> "Manager"
+            "client_admin", "client" -> "Client"
+            "technician" -> "Technician"
+            else -> sharedPreferencesHelper.getValueString(ConstantValues.PREF_USERNAME) ?: "Admin"
+        }
+    }
+
+    private fun showFilterDialog() {
+        val options = arrayOf("All companies", "Active", "Inactive")
+        val selected = filterMode.value.ordinal
+        AlertDialog.Builder(requireActivity())
+            .setTitle("Filter")
+            .setSingleChoiceItems(options, selected) { dialog, which ->
+                filterMode.value = FilterMode.entries[which]
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun goTo(destinationId: Int, title: String) {
+        findNavController().navigate(destinationId)
+        (activity as? MainActivity)?.setTitleTextView(title)
+    }
+
+    private fun openDrawer() {
+        (activity as? MainActivity)
+            ?.findViewById<androidx.drawerlayout.widget.DrawerLayout>(R.id.drawer_layout)
+            ?.openDrawer(GravityCompat.START)
     }
 
     private fun refreshCompanies() {

@@ -4,6 +4,8 @@
     android:layout_width="match_parent"
     android:orientation="vertical"
     android:layout_marginHorizontal="@dimen/_10sdp"
+    android:background="@drawable/bg_search_field"
+    android:padding="@dimen/_10sdp"
     android:layout_height="wrap_content">
 
 

@@ -1,52 +1,71 @@
 package com.prod.evergreen.fragments
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.widget.SearchView
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.view.GravityCompat
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.app.ui.task.TaskItem
+import com.example.app.ui.task.TaskListScreen
+import com.example.app.ui.task.defaultStatusCounts
+import com.example.app.ui.task.taskStatusKeys
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.tabs.TabLayout
-import com.prod.evergreen.XApplication
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.prod.evergreen.R
+import com.prod.evergreen.XApplication
+import com.prod.evergreen.activities.MainActivity
+import com.prod.evergreen.activities.NotificationList
+import com.prod.evergreen.activities.QrScanner
 import com.prod.evergreen.adapters.ItemAdapter
 import com.prod.evergreen.api.MainRepository
 import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.api.SharedViewModel
-import com.prod.evergreen.databinding.FragmentTaskBinding
+import com.prod.evergreen.dialogs.MoreEqInfoFragment
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.DateConverter
+import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.models.AMCData
+import com.prod.evergreen.models.TaskCreated
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [TaskFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class TaskFragment : Fragment() {
     private val sharedViewModel: SharedViewModel by activityViewModels()
     private lateinit var viewModel: MainViewModel
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
-    val items = listOf("Not Started","Hold" , "In Progress", "Done")
+    val items = listOf("Not Started", "Hold", "In Progress", "Done")
     val task_status = listOf("open", "hold", "in_progress", "closed")
     private var token: String? = null
-    private var amc_id: String? = null
     private var param1: String? = null
     private var param2: String? = null
-    lateinit var binding: FragmentTaskBinding
+    private val selectedTab = mutableIntStateOf(0)
+    private val searchQuery = mutableStateOf("")
+    private val allTasks = mutableStateOf<List<TaskCreated>>(emptyList())
+    private val openCount = mutableIntStateOf(0)
+    private val holdCount = mutableIntStateOf(0)
+    private val inProgressCount = mutableIntStateOf(0)
+    private val closedCount = mutableIntStateOf(0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -56,71 +75,93 @@ class TaskFragment : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // Inflate the layout for this fragment
-        binding = FragmentTaskBinding.inflate(layoutInflater, container, false)
-
         sharedPreferencesHelper = SharedPreferencesHelper(requireActivity())
         token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
-        return binding.root
-
-
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val tab by selectedTab
+                val query by searchQuery
+                val source by allTasks
+                TaskListScreen(
+                    tasks = source.toUiTasks(query),
+                    statusCounts = defaultStatusCounts(
+                        open = openCount.intValue,
+                        hold = holdCount.intValue,
+                        inProgress = inProgressCount.intValue,
+                        closed = closedCount.intValue
+                    ),
+                    selectedTab = tab,
+                    searchQuery = query,
+                    onSearchQueryChange = { searchQuery.value = it },
+                    onTabSelected = { selectTab(it) },
+                    onTaskClick = { item -> openTaskDetails(item.id) },
+                    onStatusClick = { selectTab(it) },
+                    onFilterClick = { showCompanyFilter() },
+                    onAddClick = { onAddTask() },
+                    onHomeClick = { goTo(R.id.homeFragment, "Home") },
+                    onMessagesClick = {
+                        startActivity(Intent(requireActivity(), NotificationList::class.java))
+                    },
+                    onTasksClick = {},
+                    onProfileClick = {
+                        startActivity(Intent(requireActivity(), com.prod.evergreen.activities.UserDetails::class.java))
+                    },
+                    onScanClick = {
+                        startActivity(Intent(requireActivity(), QrScanner::class.java))
+                    },
+                    onNotificationClick = {
+                        startActivity(Intent(requireActivity(), NotificationList::class.java))
+                    },
+                    onMenuClick = { openDrawer() }
+                )
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setViewmodel()
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Not Started"))
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Hold"))
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("In Progress"))
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("Done"))
-        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-                tab?.let {
-                    val position = it.position
-                    replaceFragment(position)
+
+        viewModel.loading.observe(viewLifecycleOwner) { loading ->
+            if (loading) {
+                ProgressDialogUtil.showProgressDialog(requireActivity(), "Loading")
+            } else {
+                ProgressDialogUtil.hideProgressDialog()
+            }
+        }
+
+        viewModel.allTasksDataResponse.observe(viewLifecycleOwner) { data ->
+            if (!isAdded) return@observe
+            if (data?.success == 200) {
+                sharedViewModel.setSharedData(data)
+                allTasks.value = data.data.orEmpty()
+                val count = data.count
+                if (count != null) {
+                    openCount.intValue = count.open
+                    holdCount.intValue = count.hold
+                    inProgressCount.intValue = count.in_progress
+                    closedCount.intValue = count.closed
                 }
             }
-
-            override fun onTabUnselected(tab: TabLayout.Tab?) {}
-
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
-        })
-
-        // Initially replace with the first fragment
-        replaceFragment(0)
-
+        }
 
         sharedViewModel.sharedData.observe(viewLifecycleOwner) { data ->
-            val count = data?.count
-            binding.buttons.totaltasks.text = (count?.hold ?: 0).toString()
-            binding.buttons.open.text = (count?.open ?: 0).toString()
-            binding.buttons.inprogress.text = (count?.in_progress ?: 0).toString()
-            binding.buttons.completed.text = (count?.closed ?: 0).toString()
-        }
-      //  viewModel.getAllAmc(token!!)
-        val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
-        if (RoleAccess.lockToAttachedCompany(accessType)) {
-            val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
-            binding.companySearch.text = attachedName
-            binding.companySearch.isEnabled = false
-            binding.companySearch.isClickable = false
-        } else {
-            binding.companySearch.setOnClickListener {
-                showBottomSheetDialog() { selectedItem ->
-                    binding.companySearch.text = selectedItem.name
-                    amc_id=selectedItem.id.toString()
-                }
-            }
+            val count = data?.count ?: return@observe
+            openCount.intValue = count.open
+            holdCount.intValue = count.hold
+            inProgressCount.intValue = count.in_progress
+            closedCount.intValue = count.closed
         }
 
-
-
+        loadTasks(selectedTab.intValue)
     }
+
     companion object {
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
             TaskFragment().apply {
@@ -130,56 +171,143 @@ class TaskFragment : Fragment() {
                 }
             }
     }
-    private fun setViewmodel() {
-        val repository = MainRepository(RetrofitService.getInstance(requireActivity()),XApplication.database.newsDao(),XApplication.database.companyDao())
-        val viewModelFactory = MyViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
+
+    private fun selectTab(index: Int) {
+        if (index == selectedTab.intValue) return
+        selectedTab.intValue = index
+        searchQuery.value = ""
+        loadTasks(index)
     }
+
+    private fun loadTasks(index: Int) {
+        val authToken = token
+        if (authToken.isNullOrBlank()) {
+            Toast.makeText(requireActivity(), "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val body = JsonObject()
+        body.addProperty("status", taskStatusKeys.getOrElse(index) { "open" })
+        viewModel.getAllTasks(authToken, body)
+    }
+
+    private fun List<TaskCreated>.toUiTasks(query: String): List<TaskItem> {
+        val needle = query.trim()
+        return map { it.toUiTask() }.filter { task ->
+            needle.isEmpty() ||
+                task.title.contains(needle, ignoreCase = true) ||
+                task.equipmentName.contains(needle, ignoreCase = true) ||
+                task.serialNumber.contains(needle, ignoreCase = true) ||
+                task.company.contains(needle, ignoreCase = true)
+        }
+    }
+
+    private fun TaskCreated.toUiTask(): TaskItem {
+        val task = task
+        return TaskItem(
+            id = id,
+            title = task?.name.orEmpty().ifBlank { "-" },
+            type = task?.callType?.takeIf { it.isNotBlank() }
+                ?: task?.description.orEmpty().ifBlank { "-" },
+            status = when (status) {
+                "open" -> "Not Started"
+                "in_progress" -> "In Progress"
+                "hold" -> "Hold"
+                "closed" -> "Closed"
+                else -> status.orEmpty()
+            },
+            statusKey = status.orEmpty(),
+            equipmentName = task?.equipment?.name.orEmpty(),
+            serialNumber = task?.equipment?.serialNumber.orEmpty(),
+            company = task?.equipment?.company?.name.orEmpty(),
+            createdAt = DateConverter.convertToLocalUtcAndFormat(task?.createdAt),
+            imageUrl = task?.image?.firstOrNull()
+        )
+    }
+
+    private fun openTaskDetails(taskId: Int) {
+        val task = allTasks.value.firstOrNull { it.id == taskId } ?: return
+        try {
+            val gson = Gson()
+            MoreEqInfoFragment.newInstance(
+                gson.toJson(task),
+                gson.toJson(task.task?.equipment?.company)
+            ).show(childFragmentManager, "")
+        } catch (_: Exception) {
+            Toast.makeText(requireActivity(), "Unable to open task details", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun onAddTask() {
+        val role = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        if (RoleAccess.canManageTasks(role)) {
+            goTo(R.id.createTaskFragment, "Create Task")
+        } else {
+            Toast.makeText(requireActivity(), "You cannot create a task", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showCompanyFilter() {
+        val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        if (RoleAccess.lockToAttachedCompany(accessType)) {
+            Toast.makeText(
+                requireActivity(),
+                sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME) ?: "Your company",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+        showBottomSheetDialog { }
+    }
+
+    private fun goTo(destinationId: Int, title: String) {
+        findNavController().navigate(destinationId)
+        (activity as? MainActivity)?.setTitleTextView(title)
+    }
+
+    private fun openDrawer() {
+        (activity as? MainActivity)
+            ?.findViewById<androidx.drawerlayout.widget.DrawerLayout>(R.id.drawer_layout)
+            ?.openDrawer(GravityCompat.START)
+    }
+
+    private fun setViewmodel() {
+        val repository = MainRepository(
+            RetrofitService.getInstance(requireActivity()),
+            XApplication.database.newsDao(),
+            XApplication.database.companyDao()
+        )
+        val viewModelFactory = MyViewModelFactory(repository)
+        viewModel = ViewModelProvider(this, viewModelFactory)[MainViewModel::class.java]
+    }
+
     private fun showBottomSheetDialog(onItemSelected: (AMCData) -> Unit) {
         val dialog = BottomSheetDialog(requireActivity(), R.style.NoBackgroundDialogTheme)
         val view = layoutInflater.inflate(R.layout.bottom_sheet_amc_layout, null)
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
         val searchView: SearchView = view.findViewById(R.id.searchView)
+        val authToken = token
+        if (!authToken.isNullOrBlank()) {
+            viewModel.getAllAmc(authToken)
+        }
         viewModel.allAmcDataResponse.observe(viewLifecycleOwner) { data ->
-
-            val adapter = ItemAdapter(data.data!!) { selectedItem ->
+            val adapter = ItemAdapter(data.data.orEmpty()) { selectedItem ->
                 onItemSelected(selectedItem)
                 dialog.dismiss()
             }
-
             recyclerView.layoutManager = LinearLayoutManager(requireActivity())
             recyclerView.adapter = adapter
-
-            // Setup search view listener
             searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean {
-                    return false
-                }
-
+                override fun onQueryTextSubmit(query: String?): Boolean = false
                 override fun onQueryTextChange(newText: String?): Boolean {
                     adapter.filter.filter(newText)
                     return false
                 }
             })
         }
-
-
         dialog.setContentView(view)
         val layoutParams = view.layoutParams
         layoutParams.height = (resources.displayMetrics.heightPixels * 0.8).toInt()
         view.layoutParams = layoutParams
         dialog.show()
-
     }
-
-    private fun replaceFragment(position: Int) {
-        val fragment = TaskStatusFragment.newInstance(items[position], task_status[position])
-
-        // Replace the fragment_container with the selected fragment
-        childFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, fragment)
-            .commit()
-    }
-
 }
-

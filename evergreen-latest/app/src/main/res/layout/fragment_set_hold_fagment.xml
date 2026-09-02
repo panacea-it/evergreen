@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/home_page_bg"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="16dp">
@@ -23,7 +24,7 @@
         android:layout_height="wrap_content"/>
     <RelativeLayout
         android:layout_marginTop="@dimen/_10sdp"
-        android:background="@drawable/sidestroke"
+        android:background="@drawable/edit_text_background"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <androidx.appcompat.widget.AppCompatSpinner
@@ -41,14 +42,14 @@
         android:layout_marginTop="@dimen/_10sdp"
         android:paddingVertical="@dimen/_12sdp"
         android:hint="Spare Part number"
-        android:background="@drawable/sidestroke"
+        android:background="@drawable/edit_text_background"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
     <RelativeLayout
         android:layout_marginTop="@dimen/_10sdp"
         android:layout_gravity="center"
         android:gravity="center"
-        android:background="@drawable/sidestroke"
+        android:background="@drawable/edit_text_background"
         android:layout_width="match_parent"
         android:orientation="horizontal"
         android:layout_height="wrap_content">
@@ -102,7 +103,7 @@
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/feedback_input"
-            android:background="@drawable/sidestroke"
+            android:background="@drawable/edit_text_background"
             android:layout_width="match_parent"
             android:textColor="@color/black_blue"
             android:layout_height="wrap_content"

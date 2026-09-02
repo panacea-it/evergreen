@@ -61,7 +61,7 @@
                 android:id="@+id/self_assign"
                 android:paddingVertical="@dimen/_4sdp"
                 android:paddingHorizontal="@dimen/_10sdp"
-                android:background="#F0F2F5"
+                android:background="@drawable/bg_search_field"
                 android:textColor="@color/black1"
                 android:fontFamily="@font/roboto_medium"
                 android:textSize="@dimen/_12ssp"
@@ -75,7 +75,7 @@
                 android:id="@+id/download_file"
                 android:paddingVertical="@dimen/_4sdp"
                 android:paddingHorizontal="@dimen/_10sdp"
-                android:background="#F0F2F5"
+                android:background="@drawable/bg_search_field"
                 android:textColor="@color/black1"
                 android:fontFamily="@font/roboto_medium"
                 android:textSize="@dimen/_12ssp"
@@ -89,7 +89,7 @@
     <View
         android:layout_marginTop="@dimen/_10sdp"
         android:id="@+id/view"
-        android:background="#DBDEE5"
+        android:background="@color/home_card_stroke"
         android:layout_width="match_parent"
         android:layout_height="1dp"/>
 </LinearLayout>

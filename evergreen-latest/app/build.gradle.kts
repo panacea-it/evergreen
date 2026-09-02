@@ -14,8 +14,8 @@ android {
         applicationId = "com.prod.evergreen"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 14
+        versionName = "1.0.13"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -39,6 +39,10 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.7"
     }
     lint {
         abortOnError = false
@@ -104,5 +108,13 @@ dependencies {
     implementation ("com.google.firebase:firebase-database:21.0.0")
     implementation ("com.github.gcacace:signature-pad:1.3.1")
 
-
+    val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
+    implementation(composeBom)
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.activity:activity-compose")
+    debugImplementation("androidx.compose.ui:ui-tooling")
 }

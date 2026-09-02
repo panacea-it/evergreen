@@ -3,12 +3,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:background="@color/home_page_bg"
     android:padding="16dp">
 
     <EditText
         android:id="@+id/editText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/edit_text_background"
+        android:paddingHorizontal="@dimen/_10sdp"
+        android:paddingVertical="@dimen/_12sdp"
         android:hint="Enter your text" />
 
 </LinearLayout>

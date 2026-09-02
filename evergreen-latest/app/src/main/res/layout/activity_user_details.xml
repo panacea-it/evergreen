@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/home_page_bg"
     android:orientation="vertical">
 
     <RelativeLayout
@@ -46,7 +46,7 @@
 
         <TextView
             android:id="@+id/edit_user"
-            android:background="@color/edit_text1"
+            android:background="@drawable/bg_search_field"
             android:paddingHorizontal="@dimen/_16sdp"
             android:paddingVertical="@dimen/_8sdp"
             android:text="Edit user"
@@ -57,7 +57,7 @@
         <TextView
             android:id="@+id/delete_user"
             android:layout_marginStart="@dimen/_12sdp"
-            android:background="@color/edit_text1"
+            android:background="@drawable/bg_search_field"
             android:paddingHorizontal="@dimen/_16sdp"
             android:paddingVertical="@dimen/_8sdp"
             android:text="Delete user"

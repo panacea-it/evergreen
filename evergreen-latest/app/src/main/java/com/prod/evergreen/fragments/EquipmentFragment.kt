@@ -1,39 +1,53 @@
 package com.prod.evergreen.fragments
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
+import com.example.app.ui.equipment.EquipmentListScreen
+import com.example.app.ui.equipment.findByUiId
+import com.example.app.ui.equipment.toUiEquipment
+import com.prod.evergreen.R
 import com.prod.evergreen.XApplication
-import com.prod.evergreen.adapters.EquipmentListAdapter
-import com.prod.evergreen.helper.EquipmentEditor
-import com.prod.evergreen.models.Data
-
+import com.prod.evergreen.activities.MainActivity
+import com.prod.evergreen.activities.NotificationList
+import com.prod.evergreen.activities.QrScanner
 import com.prod.evergreen.api.MainRepository
 import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
-import com.prod.evergreen.databinding.FragmentEquipmentBinding
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.EquipmentEditor
 import com.prod.evergreen.helper.ProgressDialogUtil
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
-
+import com.prod.evergreen.models.Data
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
+
 class EquipmentFragment : Fragment() {
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private lateinit var viewModel: MainViewModel
-    lateinit var equipmentlistAdapter: EquipmentListAdapter
-    // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
-lateinit var binding:FragmentEquipmentBinding
+    private val allEquipment = mutableStateOf<List<Data>>(emptyList())
+    private val searchQuery = mutableStateOf("")
+    private val filterMode = mutableStateOf(FilterMode.ALL)
+
+    private enum class FilterMode { ALL, ACTIVE, INACTIVE }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -43,63 +57,75 @@ lateinit var binding:FragmentEquipmentBinding
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // Inflate the layout for this fragment
-        binding= FragmentEquipmentBinding.inflate(layoutInflater, container, false)
-        sharedPreferencesHelper= SharedPreferencesHelper(requireActivity())
-
-        return binding.root
+        sharedPreferencesHelper = SharedPreferencesHelper(requireActivity())
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val source by allEquipment
+                val query by searchQuery
+                val mode by filterMode
+                val activeOnly = when (mode) {
+                    FilterMode.ALL -> null
+                    FilterMode.ACTIVE -> true
+                    FilterMode.INACTIVE -> false
+                }
+                EquipmentListScreen(
+                    equipments = source.toUiEquipment(query, activeOnly),
+                    searchQuery = query,
+                    onSearchQueryChange = { searchQuery.value = it },
+                    onEquipmentClick = { item ->
+                        source.findByUiId(item)?.let {
+                            EquipmentEditor.openDetails(requireActivity(), it)
+                        }
+                    },
+                    onEquipmentLongClick = { item ->
+                        source.findByUiId(item)?.let {
+                            showEquipmentActions(it)
+                        }
+                    },
+                    onFilterClick = { showFilterDialog() },
+                    onAddClick = { onAddEquipment() },
+                    onHomeClick = { goTo(R.id.homeFragment, "Home") },
+                    onMessagesClick = {
+                        startActivity(Intent(requireActivity(), NotificationList::class.java))
+                    },
+                    onProfileClick = {
+                        startActivity(Intent(requireActivity(), com.prod.evergreen.activities.UserDetails::class.java))
+                    },
+                    onScanClick = {
+                        startActivity(Intent(requireActivity(), QrScanner::class.java))
+                    },
+                    onNotificationClick = {
+                        startActivity(Intent(requireActivity(), NotificationList::class.java))
+                    },
+                    onMenuClick = { openDrawer() }
+                )
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setViewmodel()
-
-        equipmentlistAdapter = EquipmentListAdapter(
-            sharedPreferencesHelper,
-            onViewClick = { data -> EquipmentEditor.openDetails(requireActivity(), data) },
-            onActionClick = { data -> showEquipmentActions(data) }
-        )
-
-        binding.recyclerCompanies.adapter=equipmentlistAdapter
-        binding.etSearch.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                equipmentlistAdapter.filter.filter(s.toString())
-            }
-
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
         viewModel.loading.observe(viewLifecycleOwner) { data ->
-            if (data){
-                ProgressDialogUtil.showProgressDialog(requireActivity(),"Loading")
-            }
-            else{
+            if (data) {
+                ProgressDialogUtil.showProgressDialog(requireActivity(), "Loading")
+            } else {
                 ProgressDialogUtil.hideProgressDialog()
             }
         }
         viewModel.changePasswordDataResponse.observe(viewLifecycleOwner) { data ->
-            android.widget.Toast.makeText(requireActivity(), data.message ?: "Updated", android.widget.Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireActivity(), data.message ?: "Updated", Toast.LENGTH_SHORT).show()
             loadEquipments()
         }
         viewModel.allequipmentsDataResponse.observe(viewLifecycleOwner) { data ->
-            if (data.status==200){
-                equipmentlistAdapter.addData(data.data)
-
-                if (data.data!!.isEmpty()){
-                    binding.etSearch.visibility=View.GONE
-                    binding.noDataLayout!!.visibility=View.VISIBLE
-                }
-                else{
-                    binding.etSearch.visibility=View.VISIBLE
-                    binding.noDataLayout!!.visibility=View.GONE
-                }
+            if (data.status == 200 || data.data != null) {
+                allEquipment.value = data.data.orEmpty().toList()
             }
-
         }
         loadEquipments()
     }
@@ -116,11 +142,32 @@ lateinit var binding:FragmentEquipmentBinding
         viewModel.getAllEquipments(token)
     }
 
+    private fun showFilterDialog() {
+        val options = arrayOf("All equipment", "Active", "Inactive")
+        AlertDialog.Builder(requireActivity())
+            .setTitle("Filter")
+            .setSingleChoiceItems(options, filterMode.value.ordinal) { dialog, which ->
+                filterMode.value = FilterMode.entries[which]
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun onAddEquipment() {
+        val role = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        if (RoleAccess.canManageEquipment(role)) {
+            goTo(R.id.addEquipmentFragment, "Add Equipment")
+        } else {
+            Toast.makeText(requireActivity(), "You cannot add equipment", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun showEquipmentActions(equipment: Data) {
         val name = equipment.name?.takeIf { it.isNotBlank() } ?: "Equipment"
         val role = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
         val options = mutableListOf("View Equipment")
-        if (com.prod.evergreen.helper.RoleAccess.canManageEquipment(role)) {
+        if (RoleAccess.canManageEquipment(role)) {
             options.add("Edit Equipment")
             options.add(if (equipment.isActive()) "Mark Inactive" else "Mark Active")
         }
@@ -137,12 +184,24 @@ lateinit var binding:FragmentEquipmentBinding
             }
             .show()
     }
+
     private fun toggleEquipmentActive(equipment: Data) {
         val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken) ?: return
         val body = com.google.gson.JsonObject()
         body.addProperty("equipment_link", equipment.id)
         body.addProperty("action", if (equipment.isActive()) "delete" else "activate")
         viewModel.deleteEquipment(body, token)
+    }
+
+    private fun goTo(destinationId: Int, title: String) {
+        findNavController().navigate(destinationId)
+        (activity as? MainActivity)?.setTitleTextView(title)
+    }
+
+    private fun openDrawer() {
+        (activity as? MainActivity)
+            ?.findViewById<androidx.drawerlayout.widget.DrawerLayout>(R.id.drawer_layout)
+            ?.openDrawer(GravityCompat.START)
     }
 
     companion object {
@@ -155,9 +214,14 @@ lateinit var binding:FragmentEquipmentBinding
                 }
             }
     }
+
     private fun setViewmodel() {
-        val repository = MainRepository(RetrofitService.getInstance(requireActivity()),XApplication.database.newsDao(),XApplication.database.companyDao())
+        val repository = MainRepository(
+            RetrofitService.getInstance(requireActivity()),
+            XApplication.database.newsDao(),
+            XApplication.database.companyDao()
+        )
         val viewModelFactory = MyViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
+        viewModel = ViewModelProvider(this, viewModelFactory)[MainViewModel::class.java]
     }
 }

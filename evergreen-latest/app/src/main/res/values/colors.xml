@@ -23,4 +23,14 @@
     <color name="colorRed">#FF0000</color>
     <color name="gray3">#6D6869</color>
     <color name="background">#dddddd</color>
+    <color name="home_page_bg">#F3F5F7</color>
+    <color name="home_card_stroke">#EEF1F4</color>
+    <color name="chip_green">#E7F6E3</color>
+    <color name="chip_blue">#E4EEFF</color>
+    <color name="chip_purple">#EEE8FF</color>
+    <color name="chip_orange">#FFE8D4</color>
+    <color name="accent_green">#4CB528</color>
+    <color name="accent_blue">#226DFF</color>
+    <color name="accent_purple">#7B61FF</color>
+    <color name="accent_orange">#FF9246</color>
 </resources>

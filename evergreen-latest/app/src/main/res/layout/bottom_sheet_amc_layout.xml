@@ -8,7 +8,7 @@
     android:padding="16dp">
 <LinearLayout
     android:layout_marginTop="@dimen/_10sdp"
-    android:background="@color/edit_text1"
+    android:background="@drawable/bg_search_field"
     android:layout_width="match_parent"
     android:orientation="horizontal"
     android:layout_height="wrap_content">

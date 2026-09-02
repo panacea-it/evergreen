@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:layout_gravity="center"
     android:minHeight="@dimen/_300sdp"
-    android:background="@color/white"
+    android:background="@color/home_page_bg"
     android:padding="16dp">
 
     <TextView

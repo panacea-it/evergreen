@@ -92,6 +92,7 @@ class CreateTask : AppCompatActivity() {
     private var token: String? = null
     private var isSubmitting = false
     private var company_link: Int? = null
+    private var companyEquipments: List<Data> = emptyList()
 
 
     val pickImageFromGalleryForResult =
@@ -209,6 +210,9 @@ class CreateTask : AppCompatActivity() {
         }
 
         viewModel.getAllAmc(token!!)
+        viewModel.companyEquipmentsDataResponse.observe(this) { data ->
+            companyEquipments = data.data.orEmpty().toList()
+        }
 
         val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
         if (RoleAccess.lockToAttachedCompany(accessType) && companyLink != 0) {
@@ -401,21 +405,19 @@ class CreateTask : AppCompatActivity() {
     }
 
     private fun showBottomSheetDialogEquipments(onItemSelected: (Data) -> Unit) {
+        val active = companyEquipments.filter { it.isActive() }
+        if (active.isEmpty()) {
+            Toast.makeText(this, "No equipment found for this company", Toast.LENGTH_SHORT).show()
+            return
+        }
         val dialog = BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.bottom_sheet_amc_layout, null)
         val recyclerView: RecyclerView = view.findViewById(R.id.recyclerView)
-        viewModel.allequipmentsDataResponse.observe(this) { data ->
-
-            val adapter = EquipmentsDialogAdapter(data.data.orEmpty().filter { it.isActive() }) { selectedItem ->
-                onItemSelected(selectedItem)
-                dialog.dismiss()
-            }
-
-            recyclerView.layoutManager = LinearLayoutManager(this)
-            recyclerView.adapter = adapter
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = EquipmentsDialogAdapter(active) { selectedItem ->
+            onItemSelected(selectedItem)
+            dialog.dismiss()
         }
-
-
         dialog.setContentView(view)
         dialog.show()
     }
