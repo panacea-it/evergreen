@@ -19,6 +19,8 @@ import com.prod.evergreen.models.EquipmentInfo
 import com.prod.evergreen.models.ForgotPasswordData
 import com.prod.evergreen.models.LoginData
 import com.prod.evergreen.models.NotificationsListResponse
+import com.prod.evergreen.models.ServiceReportResponse
+import com.prod.evergreen.models.ServiceReportsResponse
 import com.prod.evergreen.models.UserStatsResponse
 import com.prod.evergreen.models.VerifyData
 import okhttp3.MultipartBody
@@ -344,6 +346,62 @@ class MainRepository(private val retrofitService: RetrofitService, private val n
             val response = retrofitService.getServiceReport(body,"Bearer "+authenticator)
             response.parseResponse()
 
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun getAllServiceReports(body: JsonObject, authenticator: String): NetworkState<ServiceReportsResponse> {
+        return try {
+            retrofitService.getAllServiceReports(body, "Bearer $authenticator").parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun getServiceReportDetails(body: JsonObject, authenticator: String): NetworkState<ServiceReportResponse> {
+        return try {
+            retrofitService.getServiceReportDetails(body, "Bearer $authenticator").parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun createServiceReport(body: JsonObject, authenticator: String): NetworkState<ServiceReportResponse> {
+        return try {
+            retrofitService.createServiceReport(body, "Bearer $authenticator").parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun updateServiceReport(body: JsonObject, authenticator: String): NetworkState<ServiceReportResponse> {
+        return try {
+            retrofitService.updateServiceReport(body, "Bearer $authenticator").parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun deleteServiceReport(body: JsonObject, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            retrofitService.deleteServiceReport(body, "Bearer $authenticator").parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun downloadServiceReportPdf(body: JsonObject, authenticator: String): NetworkState<ChangePasswordData> {
+        return try {
+            retrofitService.downloadServiceReportPdf(body, "Bearer $authenticator").parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
+  suspend fun getServiceReportPrefill(body: JsonObject, authenticator: String): NetworkState<ServiceReportResponse> {
+        return try {
+            retrofitService.getServiceReportPrefill(body, "Bearer $authenticator").parseResponse()
         } catch (e: Exception) {
             NetworkState.Error(e.message)
         }

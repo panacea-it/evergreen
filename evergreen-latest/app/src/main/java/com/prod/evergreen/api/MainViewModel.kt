@@ -17,6 +17,8 @@ import com.prod.evergreen.models.EquipmentInfo
 import com.prod.evergreen.models.ForgotPasswordData
 import com.prod.evergreen.models.LoginData
 import com.prod.evergreen.models.NotificationsListResponse
+import com.prod.evergreen.models.ServiceReportResponse
+import com.prod.evergreen.models.ServiceReportsResponse
 import com.prod.evergreen.models.UserStatsResponse
 import com.prod.evergreen.models.VerifyData
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -45,6 +47,10 @@ class MainViewModel(private val mainRepository: MainRepository) : ViewModel() {
     val taskUpdateFeedbackDataResponse :MutableLiveData<ChangePasswordData> = MutableLiveData()
     val genaratepdffile :MutableLiveData<ChangePasswordData> = MutableLiveData()
     val downloadpdf :MutableLiveData<ChangePasswordData> = MutableLiveData()
+    val serviceReportsResponse :MutableLiveData<ServiceReportsResponse> = MutableLiveData()
+    val serviceReportDetailsResponse :MutableLiveData<ServiceReportResponse> = MutableLiveData()
+    val serviceReportSaveResponse :MutableLiveData<ServiceReportResponse> = MutableLiveData()
+    val serviceReportPrefillResponse :MutableLiveData<ServiceReportResponse> = MutableLiveData()
     val downloadQrDataResponse :MutableLiveData<ResponseBody> = MutableLiveData()
     val notificationsListResponse :MutableLiveData<NotificationsListResponse> = MutableLiveData()
     val createTaskDataResponse :MutableLiveData<ChangePasswordData> = MutableLiveData()
@@ -868,6 +874,107 @@ if (response.data.status==200) {
                     Log.d("errors",response.message.toString())
                     loading.value = false
                     onError(response.message ?: "Unable to generate service report")
+                }
+            }
+        }
+    }
+
+    fun getAllServiceReports(authenticator: String) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            when (val response = mainRepository.getAllServiceReports(JsonObject(), authenticator)) {
+                is NetworkState.Success -> {
+                    serviceReportsResponse.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(response.message ?: "Unable to load service reports")
+                }
+            }
+        }
+    }
+
+    fun getServiceReportDetails(body: JsonObject, authenticator: String) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            when (val response = mainRepository.getServiceReportDetails(body, authenticator)) {
+                is NetworkState.Success -> {
+                    serviceReportDetailsResponse.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(response.message ?: "Unable to load service report")
+                }
+            }
+        }
+    }
+
+    fun saveServiceReport(body: JsonObject, authenticator: String, isUpdate: Boolean) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            val result = if (isUpdate) {
+                mainRepository.updateServiceReport(body, authenticator)
+            } else {
+                mainRepository.createServiceReport(body, authenticator)
+            }
+            when (result) {
+                is NetworkState.Success -> {
+                    serviceReportSaveResponse.postValue(result.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(result.message ?: "Unable to save service report")
+                }
+            }
+        }
+    }
+
+    fun deleteServiceReport(body: JsonObject, authenticator: String) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            when (val response = mainRepository.deleteServiceReport(body, authenticator)) {
+                is NetworkState.Success -> {
+                    changePasswordDataResponse.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(response.message ?: "Unable to delete service report")
+                }
+            }
+        }
+    }
+
+    fun downloadSavedServiceReport(body: JsonObject, authenticator: String) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            when (val response = mainRepository.downloadServiceReportPdf(body, authenticator)) {
+                is NetworkState.Success -> {
+                    downloadpdf.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(response.message ?: "Unable to generate service report PDF")
+                }
+            }
+        }
+    }
+
+    fun getServiceReportPrefill(body: JsonObject, authenticator: String) {
+        loading.value = true
+        viewModelScope.launch(exceptionHandler) {
+            when (val response = mainRepository.getServiceReportPrefill(body, authenticator)) {
+                is NetworkState.Success -> {
+                    serviceReportPrefillResponse.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(response.message ?: "Unable to load task details")
                 }
             }
         }

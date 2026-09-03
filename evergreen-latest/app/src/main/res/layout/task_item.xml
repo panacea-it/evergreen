@@ -427,7 +427,7 @@
         android:gravity="center"
         android:fontFamily="@font/roboto_medium"
         android:textColor="@color/white"
-        android:text="Service Report"
+        android:text="Generate Service Report"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 

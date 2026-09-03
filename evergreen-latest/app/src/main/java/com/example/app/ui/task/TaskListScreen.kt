@@ -535,7 +535,7 @@ private fun TaskCard(
                         }
                         if (showReport) {
                             TaskActionChip(
-                                label = "Report",
+                                label = "Generate Report",
                                 color = Blue,
                                 modifier = Modifier.weight(1f),
                                 onClick = onReportClick

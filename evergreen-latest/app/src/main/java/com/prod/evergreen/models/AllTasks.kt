@@ -97,6 +97,8 @@ data class Equipment(
     val model: String,
     @SerializedName("serial_number")
     val serialNumber: String,
+    @SerializedName("eg_serial_number")
+    val egSerialNumber: String? = null,
     val specifications: String,
     @SerializedName("manufacturer_date")
     val manufacturerDate: String,

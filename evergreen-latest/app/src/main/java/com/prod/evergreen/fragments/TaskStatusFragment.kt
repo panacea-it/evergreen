@@ -34,6 +34,7 @@ import com.prod.evergreen.databinding.FragmentTaskStatusBinding
 import com.prod.evergreen.dialogs.MoreEqInfoFragment
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.ProgressDialogUtil
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.customdialog.PopupDialog
 import com.prod.evergreen.helper.customdialog.Styles
@@ -176,14 +177,10 @@ lateinit var bindin:FragmentTaskStatusBinding
                 reasonDialog.setListener(this)
                 reasonDialog.show(childFragmentManager,"")
             },downloadfile={ item ->
-                val taskId = item.taskLink ?: item.task?.id
-                if (taskId == null || taskId == 0) {
-                    Toast.makeText(requireActivity(), "Unable to generate service report", Toast.LENGTH_SHORT).show()
+                if (!RoleAccess.canManageServiceReports(currentAccessType)) {
+                    Toast.makeText(requireActivity(), "You are not authorized to generate a service report", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(requireActivity(), "Generating service report...", Toast.LENGTH_SHORT).show()
-                    val object1 = JsonObject()
-                    object1.addProperty("task_link", taskId)
-                    viewModel.getServiceReport(object1, authToken)
+                    com.prod.evergreen.helper.ServiceReportNav.openFromTask(this@TaskStatusFragment, item)
                 }
             }, editReson = { responseData ->
 

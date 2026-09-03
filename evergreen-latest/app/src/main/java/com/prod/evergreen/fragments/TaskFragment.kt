@@ -136,7 +136,9 @@ class TaskFragment : Fragment() {
                         allTasks.value.firstOrNull { it.id == item.id }?.let { showTechnicianPicker(it) }
                     },
                     onReportClick = { item ->
-                        allTasks.value.firstOrNull { it.id == item.id }?.let { requestServiceReport(it) }
+                        allTasks.value.firstOrNull { it.id == item.id }?.let {
+                            com.prod.evergreen.helper.ServiceReportNav.openFromTask(this@TaskFragment, it)
+                        }
                     }
                 )
             }

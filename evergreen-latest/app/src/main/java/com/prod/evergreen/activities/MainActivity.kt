@@ -110,6 +110,9 @@ class MainActivity : AppCompatActivity() {
         if (intent.getBooleanExtra("open_create_amc", false)) {
             navigateToDestination(R.id.createAmcFragment, "Create AMC")
         }
+        if (intent.getBooleanExtra("open_service_report_form", false)) {
+            navigateToDestination(R.id.serviceReportFormFragment, "Generate Service Report")
+        }
 
         binding.navHeader.userName.text=sharedPreferencesHelper.getValueString(ConstantValues.PREF_USERNAME)
         binding.navHeader.mobileNumber.text=sharedPreferencesHelper.getValueString(ConstantValues.PREF_MOBILE)
@@ -179,6 +182,7 @@ class MainActivity : AppCompatActivity() {
             ListItem("Create Task", R.drawable.ic_create_task_icon, R.id.createTaskFragment, "Create Task"),
             ListItem("Users", R.drawable.ic_users_list_icon, R.id.amc_mangers, "Users List"),
             ListItem("Assign Tasks", R.drawable.ic_assign_tasks_to_technician_icon, R.id.taskFragment, "Assign Tasks to Technician"),
+            ListItem("Service Reports", R.drawable.task_square, R.id.serviceReportsFragment, "Service Reports"),
             ListItem("Create AMC", R.drawable.ic_create_amc_icon, R.id.createAmcFragment, "Create AMC"),
             ListItem("Upload Equipment", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadEqpmntExcelData, "Upload Equipments Excel Data"),
             ListItem("Upload AMCs", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadAmcExcelData, "Upload AMCs Excel Data"),
@@ -222,6 +226,9 @@ class MainActivity : AppCompatActivity() {
         }.filter { item ->
             item.key != "Assign Tasks to Technician" ||
                 RoleAccess.canAssignTechnician(accessLevel.name)
+        }.filter { item ->
+            item.key != "Service Reports" ||
+                RoleAccess.canManageServiceReports(accessLevel.name)
         }
     }
 
@@ -250,6 +257,9 @@ class MainActivity : AppCompatActivity() {
         }
         if (intent.getBooleanExtra("open_create_amc", false)) {
             navigateToDestination(R.id.createAmcFragment, "Create AMC")
+        }
+        if (intent.getBooleanExtra("open_service_report_form", false)) {
+            navigateToDestination(R.id.serviceReportFormFragment, "Generate Service Report")
         }
         handleNotificationIntent(intent)
     }

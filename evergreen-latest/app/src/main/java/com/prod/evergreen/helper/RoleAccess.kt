@@ -51,6 +51,13 @@ object RoleAccess {
     }
 
     fun canGenerateServiceReport(role: String?): Boolean {
-        return !role.isNullOrBlank() && !role.equals("technician", ignoreCase = true)
+        return canManageServiceReports(role)
+    }
+
+    fun canManageServiceReports(role: String?): Boolean {
+        return when (role?.lowercase()) {
+            "eg_super_admin", "eg_admin" -> true
+            else -> false
+        }
     }
 }

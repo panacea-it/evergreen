@@ -18,6 +18,8 @@ import com.prod.evergreen.models.EquipmentInfo
 import com.prod.evergreen.models.ForgotPasswordData
 import com.prod.evergreen.models.LoginData
 import com.prod.evergreen.models.NotificationsListResponse
+import com.prod.evergreen.models.ServiceReportResponse
+import com.prod.evergreen.models.ServiceReportsResponse
 import com.prod.evergreen.models.UserStatsResponse
 import com.prod.evergreen.models.VerifyData
 import okhttp3.MultipartBody
@@ -155,6 +157,27 @@ interface RetrofitService {
 
     @POST(Constants.getServiceReport)
     suspend fun getServiceReport(@Body equipment:JsonObject, @Header("Authorization") authorization: String?,): Response<ChangePasswordData>
+
+    @POST(Constants.GET_ALL_SERVICE_REPORTS)
+    suspend fun getAllServiceReports(@Body body: JsonObject, @Header("Authorization") authorization: String?): Response<ServiceReportsResponse>
+
+    @POST(Constants.GET_SERVICE_REPORT_DETAILS)
+    suspend fun getServiceReportDetails(@Body body: JsonObject, @Header("Authorization") authorization: String?): Response<ServiceReportResponse>
+
+    @POST(Constants.CREATE_SERVICE_REPORT)
+    suspend fun createServiceReport(@Body body: JsonObject, @Header("Authorization") authorization: String?): Response<ServiceReportResponse>
+
+    @POST(Constants.UPDATE_SERVICE_REPORT)
+    suspend fun updateServiceReport(@Body body: JsonObject, @Header("Authorization") authorization: String?): Response<ServiceReportResponse>
+
+    @POST(Constants.DELETE_SERVICE_REPORT)
+    suspend fun deleteServiceReport(@Body body: JsonObject, @Header("Authorization") authorization: String?): Response<ChangePasswordData>
+
+    @POST(Constants.DOWNLOAD_SERVICE_REPORT_PDF)
+    suspend fun downloadServiceReportPdf(@Body body: JsonObject, @Header("Authorization") authorization: String?): Response<ChangePasswordData>
+
+    @POST(Constants.GET_SERVICE_REPORT_PREFILL)
+    suspend fun getServiceReportPrefill(@Body body: JsonObject, @Header("Authorization") authorization: String?): Response<ServiceReportResponse>
 
 
 

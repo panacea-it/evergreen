@@ -12,6 +12,7 @@ object TabNav {
     fun createAmc(fragment: Fragment) = go(fragment, R.id.createAmcFragment, "Create AMC")
     fun tasks(fragment: Fragment) = go(fragment, R.id.taskFragment, "Tasks List")
     fun profile(fragment: Fragment) = go(fragment, R.id.profileFragment, "Profile")
+    fun serviceReports(fragment: Fragment) = go(fragment, R.id.serviceReportsFragment, "Service Reports")
 
     private fun go(fragment: Fragment, destinationId: Int, title: String) {
         val options = NavOptions.Builder()

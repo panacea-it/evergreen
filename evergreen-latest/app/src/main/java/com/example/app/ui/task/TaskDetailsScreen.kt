@@ -140,7 +140,7 @@ fun TaskDetailsScreen(
             }
             if (showReport) {
                 ActionButton(
-                    label = "Service Report",
+                    label = "Generate Service Report",
                     background = Brush.horizontalGradient(listOf(Color(0xFF226DFF), Color(0xFF2057A6))),
                     textColor = Color.White,
                     onClick = onReportClick

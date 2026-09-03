@@ -84,7 +84,12 @@ class MoreEqInfoFragment : DialogFragment() {
                     onEditTaskClick = { openEditTaskForm() },
                     onDeleteTaskClick = { confirmDeleteTask() },
                     onAssignClick = { showTechnicianPicker() },
-                    onReportClick = { requestServiceReport() }
+                    onReportClick = {
+                        createdTask?.let { task ->
+                            dismiss()
+                            com.prod.evergreen.helper.ServiceReportNav.openFromTask(requireActivity(), task)
+                        } ?: requestServiceReport()
+                    }
                 )
             }
         }

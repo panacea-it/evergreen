@@ -98,6 +98,14 @@
         android:label="fragment_download_qr"
         tools:layout="@layout/fragment_download_qr" />
     <fragment
+        android:id="@+id/serviceReportsFragment"
+        android:name="com.prod.evergreen.fragments.ServiceReportsFragment"
+        android:label="Service Reports" />
+    <fragment
+        android:id="@+id/serviceReportFormFragment"
+        android:name="com.prod.evergreen.fragments.ServiceReportFormFragment"
+        android:label="Service Report" />
+    <fragment
         android:id="@+id/profileFragment"
         android:name="com.prod.evergreen.fragments.ProfileFragment"
         android:label="fragment_profile" />

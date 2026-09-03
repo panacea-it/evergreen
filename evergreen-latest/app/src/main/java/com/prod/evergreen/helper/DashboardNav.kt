@@ -9,4 +9,7 @@ object DashboardNav {
     var pendingEquipmentJson: String? = null
     var pendingCompanyJson: String? = null
     var pendingTaskJson: String? = null
+    var pendingServiceReportId: Int? = null
+    var pendingServiceReportViewOnly: Boolean = false
+    var pendingServiceReportTaskJson: String? = null
 }
