@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -49,21 +50,24 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.prod.evergreen.helper.MediaUrl
+import com.example.app.ui.theme.AppColors
+import com.example.app.ui.theme.AppHeader
+import com.example.app.ui.theme.AppIcons
 import com.example.app.ui.theme.EvergreenTheme
 
-private val Background = Color(0xFFF8FAFE)
-private val White = Color.White
-private val DarkText = Color(0xFF1D2447)
-private val SecondaryText = Color(0xFF747C98)
-private val Purple = Color(0xFF5A4CF5)
-private val PurpleLight = Color(0xFFF1EFFF)
-private val Blue = Color(0xFF4389F5)
-private val Green = Color(0xFF18A957)
-private val GreenLight = Color(0xFFF0FBF5)
-private val Red = Color(0xFFF33E42)
-private val RedLight = Color(0xFFFFEEEE)
-private val Orange = Color(0xFFFF921E)
-private val OrangeLight = Color(0xFFFFF4E8)
+private val Background = AppColors.background
+private val White = AppColors.surface
+private val DarkText = AppColors.textPrimary
+private val SecondaryText = AppColors.textSecondary
+private val Purple = AppColors.purple
+private val PurpleLight = AppColors.purpleLight
+private val Blue = AppColors.blue
+private val Green = AppColors.green
+private val GreenLight = AppColors.greenLight
+private val Red = AppColors.red
+private val RedLight = AppColors.redLight
+private val Orange = AppColors.orange
+private val OrangeLight = AppColors.orangeLight
 
 data class TaskDetailsData(
     val companyName: String = "",
@@ -86,9 +90,14 @@ data class TaskDetailsData(
 fun TaskDetailsScreen(
     task: TaskDetailsData,
     showActions: Boolean = false,
+    showAssign: Boolean = false,
+    showReport: Boolean = false,
+    assignLabel: String = "Assign Technician",
     onCloseClick: () -> Unit = {},
     onEditTaskClick: () -> Unit = {},
-    onDeleteTaskClick: () -> Unit = {}
+    onDeleteTaskClick: () -> Unit = {},
+    onAssignClick: () -> Unit = {},
+    onReportClick: () -> Unit = {}
 ) {
     EvergreenTheme {
     Column(
@@ -96,11 +105,21 @@ fun TaskDetailsScreen(
             .fillMaxSize()
             .background(Background)
             .statusBarsPadding()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 18.dp, vertical = 15.dp)
+            .navigationBarsPadding()
     ) {
-        TaskDetailsHeader(onCloseClick = onCloseClick)
-        Spacer(modifier = Modifier.height(16.dp))
+        AppHeader(
+            title = "Task Details",
+            subtitle = "Overview of this ticket",
+            leadingIcon = AppIcons.close,
+            leadingDescription = "Close",
+            onLeadingClick = onCloseClick
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 14.dp, vertical = 10.dp)
+        ) {
         TaskImage(task = task)
         Spacer(modifier = Modifier.height(17.dp))
         CompanyDetailsCard(task = task)
@@ -108,6 +127,26 @@ fun TaskDetailsScreen(
         ClientAdminCard(task = task)
         Spacer(modifier = Modifier.height(17.dp))
         TaskInformationCard(task = task)
+        if (showAssign || showReport) {
+            Spacer(modifier = Modifier.height(14.dp))
+            if (showAssign) {
+                ActionButton(
+                    label = assignLabel,
+                    background = Brush.horizontalGradient(listOf(Color(0xFF7166FF), Color(0xFF4A42ED))),
+                    textColor = Color.White,
+                    onClick = onAssignClick
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+            if (showReport) {
+                ActionButton(
+                    label = "Service Report",
+                    background = Brush.horizontalGradient(listOf(Color(0xFF226DFF), Color(0xFF2057A6))),
+                    textColor = Color.White,
+                    onClick = onReportClick
+                )
+            }
+        }
         if (showActions) {
             Spacer(modifier = Modifier.height(20.dp))
             Row(
@@ -119,6 +158,7 @@ fun TaskDetailsScreen(
             }
         }
         Spacer(modifier = Modifier.height(15.dp))
+        }
     }
     }
 }
@@ -131,28 +171,27 @@ private fun TaskDetailsHeader(onCloseClick: () -> Unit) {
     ) {
         Box(
             modifier = Modifier
-                .size(67.dp)
-                .clip(RoundedCornerShape(20.dp))
+                .size(40.dp)
+                .clip(RoundedCornerShape(12.dp))
                 .background(PurpleLight)
-                .border(1.dp, Color(0xFFE1DCFF), RoundedCornerShape(20.dp)),
+                .border(1.dp, Color(0xFFE1DCFF), RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.TaskAlt,
                 contentDescription = null,
                 tint = Purple,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
-        Spacer(modifier = Modifier.width(17.dp))
+        Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Task Details", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = DarkText)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "Overview of task information", fontSize = 16.sp, color = SecondaryText)
+            Text(text = "Task Details", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = DarkText)
+            Text(text = "Overview of task information", fontSize = 13.sp, color = SecondaryText)
         }
         Box(
             modifier = Modifier
-                .size(50.dp)
+                .size(40.dp)
                 .shadow(elevation = 2.dp, shape = RoundedCornerShape(15.dp))
                 .clip(RoundedCornerShape(15.dp))
                 .background(White)
@@ -163,7 +202,7 @@ private fun TaskDetailsHeader(onCloseClick: () -> Unit) {
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
                 tint = DarkText,
-                modifier = Modifier.size(27.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
     }
@@ -175,8 +214,8 @@ private fun TaskImage(task: TaskDetailsData) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(207.dp)
-            .clip(RoundedCornerShape(29.dp))
+            .height(120.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(Color(0xFFE6EEF7))
     ) {
         when {
@@ -230,7 +269,7 @@ private fun CompanyDetailsCard(task: TaskDetailsData) {
             LargeSectionIcon(icon = Icons.Default.Business, tint = Purple)
             Spacer(modifier = Modifier.width(18.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Company Details", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = DarkText)
+                Text(text = "Company Details", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkText)
                 Spacer(modifier = Modifier.height(15.dp))
                 DetailsRow(Icons.Default.Business, "Company Name", task.companyName, Purple)
                 Spacer(modifier = Modifier.height(11.dp))
@@ -252,7 +291,7 @@ private fun ClientAdminCard(task: TaskDetailsData) {
             LargeSectionIcon(icon = Icons.Default.Person, tint = Green)
             Spacer(modifier = Modifier.width(18.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Client Admin Details", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = DarkText)
+                Text(text = "Client Admin Details", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkText)
                 Spacer(modifier = Modifier.height(15.dp))
                 DetailsRow(Icons.Default.Person, "Name", task.clientAdminName, Purple)
                 Spacer(modifier = Modifier.height(11.dp))
@@ -278,7 +317,7 @@ private fun TaskInformationCard(task: TaskDetailsData) {
                 Icon(imageVector = Icons.Default.TaskAlt, contentDescription = null, tint = Blue, modifier = Modifier.size(24.dp))
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Text(text = "Task Details", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = DarkText)
+            Text(text = "Task Details", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkText)
         }
         Spacer(modifier = Modifier.height(18.dp))
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -328,10 +367,10 @@ private fun DetailsCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(29.dp))
+            .clip(RoundedCornerShape(13.dp))
             .background(background)
-            .border(1.dp, Color(0xFFE7EAF3), RoundedCornerShape(29.dp))
-            .padding(20.dp),
+            .border(1.dp, Color(0xFFE7EAF3), RoundedCornerShape(13.dp))
+            .padding(12.dp),
         content = content
     )
 }
@@ -340,14 +379,14 @@ private fun DetailsCard(
 private fun LargeSectionIcon(icon: ImageVector, tint: Color) {
     Box(
         modifier = Modifier
-            .size(65.dp)
-            .shadow(elevation = 3.dp, shape = CircleShape)
+            .size(40.dp)
+            .shadow(elevation = 2.dp, shape = CircleShape)
             .clip(CircleShape)
             .background(Color.White)
             .border(1.dp, Color(0xFFEDEDF5), CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = tint, modifier = Modifier.size(32.dp))
+        Icon(imageVector = icon, contentDescription = null, tint = tint, modifier = Modifier.size(18.dp))
     }
 }
 
@@ -480,6 +519,26 @@ private fun StatusBadge(status: String, statusKey: String) {
         )
         Spacer(modifier = Modifier.width(9.dp))
         Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = color)
+    }
+}
+
+@Composable
+private fun ActionButton(
+    label: String,
+    background: Brush,
+    textColor: Color,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(background)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = textColor)
     }
 }
 

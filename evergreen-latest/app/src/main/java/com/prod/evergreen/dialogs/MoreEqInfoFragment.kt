@@ -43,6 +43,9 @@ class MoreEqInfoFragment : DialogFragment() {
     private var pendingMutation: String? = null
     private val detailsState = mutableStateOf(TaskDetailsData())
     private val canManage = mutableStateOf(false)
+    private val canAssign = mutableStateOf(false)
+    private val canReport = mutableStateOf(false)
+    private var pendingAssign = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,21 +62,29 @@ class MoreEqInfoFragment : DialogFragment() {
         savedInstanceState: Bundle?
     ): View {
         sharedPreferencesHelper = SharedPreferencesHelper(requireActivity())
-        canManage.value = RoleAccess.canManageTasks(
-            sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
-        )
+        val role = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        canManage.value = RoleAccess.canManageTasks(role)
+        canAssign.value = RoleAccess.canAssignTechnician(role)
+        canReport.value = RoleAccess.canGenerateServiceReport(role)
         detailsState.value = parseDetails()
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 val task by detailsState
                 val showActions by canManage
+                val assign by canAssign
+                val report by canReport
                 TaskDetailsScreen(
                     task = task,
                     showActions = showActions,
+                    showAssign = assign && task.statusKey != "closed",
+                    showReport = report,
+                    assignLabel = if (task.technician.isBlank()) "Assign Technician" else "Reassign Technician",
                     onCloseClick = { dismiss() },
-                    onEditTaskClick = { showEditTaskDialog() },
-                    onDeleteTaskClick = { confirmDeleteTask() }
+                    onEditTaskClick = { openEditTaskForm() },
+                    onDeleteTaskClick = { confirmDeleteTask() },
+                    onAssignClick = { showTechnicianPicker() },
+                    onReportClick = { requestServiceReport() }
                 )
             }
         }
@@ -103,7 +114,51 @@ class MoreEqInfoFragment : DialogFragment() {
         }
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
             pendingMutation = null
+            pendingAssign = false
             Toast.makeText(requireActivity(), message, Toast.LENGTH_SHORT).show()
+        }
+        viewModel.assignTechnicianDataResponse.observe(viewLifecycleOwner) { data ->
+            if (!isAdded) return@observe
+            Toast.makeText(requireActivity(), data.message ?: "Technician assigned", Toast.LENGTH_SHORT).show()
+            if (data.status_code == 200) {
+                dismiss()
+            }
+        }
+        viewModel.allUsersDataResponse.observe(viewLifecycleOwner) { data ->
+            if (!pendingAssign) return@observe
+            pendingAssign = false
+            val technicians = data.data.orEmpty().filter {
+                it.access_level.equals("technician", ignoreCase = true)
+            }
+            if (technicians.isEmpty()) {
+                Toast.makeText(requireActivity(), "No technicians available to assign", Toast.LENGTH_SHORT).show()
+                return@observe
+            }
+            val labels = technicians.map { tech ->
+                val phone = tech.phone.orEmpty()
+                if (phone.isBlank()) tech.name.orEmpty() else "${tech.name} ($phone)"
+            }.toTypedArray()
+            AlertDialog.Builder(requireActivity())
+                .setTitle("Assign Technician")
+                .setItems(labels) { _, which ->
+                    val chosen = technicians[which]
+                    val taskId = resolveTaskId()
+                    val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
+                    if (token.isNullOrBlank() || taskId == 0 || chosen.id == null) {
+                        Toast.makeText(requireActivity(), "Unable to assign this task", Toast.LENGTH_SHORT).show()
+                        return@setItems
+                    }
+                    val body = JsonObject()
+                    body.addProperty("task_link", taskId)
+                    body.addProperty("technician_link", chosen.id)
+                    viewModel.assignTechnician(body, token)
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+        viewModel.downloadpdf.observe(viewLifecycleOwner) { response ->
+            if (!isAdded) return@observe
+            com.prod.evergreen.helper.ServiceReportHelper.offer(requireActivity(), response)
         }
     }
 
@@ -179,6 +234,25 @@ class MoreEqInfoFragment : DialogFragment() {
         return listOfNotNull(task.task?.id, task.taskLink).firstOrNull { it != 0 } ?: task.id
     }
 
+    private fun openEditTaskForm() {
+        if (!canManage.value) {
+            Toast.makeText(requireActivity(), "You cannot edit this task", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val payload = createdTask?.let { Gson().toJson(it) } ?: tasksItem
+        if (payload.isNullOrBlank()) {
+            Toast.makeText(requireActivity(), "Unable to edit this task", Toast.LENGTH_SHORT).show()
+            return
+        }
+        com.prod.evergreen.helper.DashboardNav.pendingTaskJson = payload
+        dismiss()
+        startActivity(
+            android.content.Intent(requireActivity(), com.prod.evergreen.activities.MainActivity::class.java)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                .putExtra("open_create_task", true)
+        )
+    }
+
     private fun showEditTaskDialog() {
         if (!canManage.value) {
             Toast.makeText(requireActivity(), "You cannot edit this task", Toast.LENGTH_SHORT).show()
@@ -225,6 +299,39 @@ class MoreEqInfoFragment : DialogFragment() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun showTechnicianPicker() {
+        if (!canAssign.value) {
+            Toast.makeText(requireActivity(), "You cannot assign this task", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
+        if (token.isNullOrBlank()) {
+            Toast.makeText(requireActivity(), "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        pendingAssign = true
+        val body = JsonObject()
+        body.addProperty("access_level", "technician")
+        viewModel.getAllUsers(token, body)
+    }
+
+    private fun requestServiceReport() {
+        if (!canReport.value) {
+            Toast.makeText(requireActivity(), "You cannot generate a service report", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
+        val taskId = resolveTaskId()
+        if (token.isNullOrBlank() || taskId == 0) {
+            Toast.makeText(requireActivity(), "Unable to generate service report", Toast.LENGTH_SHORT).show()
+            return
+        }
+        Toast.makeText(requireActivity(), "Generating service report...", Toast.LENGTH_SHORT).show()
+        val body = JsonObject()
+        body.addProperty("task_link", taskId)
+        viewModel.getServiceReport(body, token)
     }
 
     private fun confirmDeleteTask() {

@@ -39,7 +39,9 @@ import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.api.SharedViewModel
 import com.prod.evergreen.dialogs.MoreEqInfoFragment
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.DashboardNav
 import com.prod.evergreen.helper.DateConverter
+import com.prod.evergreen.helper.TabNav
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
@@ -65,6 +67,9 @@ class TaskFragment : Fragment() {
     private val holdCount = mutableIntStateOf(0)
     private val inProgressCount = mutableIntStateOf(0)
     private val closedCount = mutableIntStateOf(0)
+    private val companyFilterId = mutableStateOf<Int?>(null)
+    private val companyFilterName = mutableStateOf<String?>(null)
+    private var pendingAssignTask: TaskCreated? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,14 +86,19 @@ class TaskFragment : Fragment() {
     ): View {
         sharedPreferencesHelper = SharedPreferencesHelper(requireActivity())
         token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
+        val role = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        val canAssign = RoleAccess.canAssignTechnician(role)
+        val canReport = RoleAccess.canGenerateServiceReport(role)
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 val tab by selectedTab
                 val query by searchQuery
                 val source by allTasks
+                val companyId by companyFilterId
+                val companyName by companyFilterName
                 TaskListScreen(
-                    tasks = source.toUiTasks(query),
+                    tasks = source.toUiTasks(query, companyId),
                     statusCounts = defaultStatusCounts(
                         open = openCount.intValue,
                         hold = holdCount.intValue,
@@ -102,22 +112,32 @@ class TaskFragment : Fragment() {
                     onTaskClick = { item -> openTaskDetails(item.id) },
                     onStatusClick = { selectTab(it) },
                     onFilterClick = { showCompanyFilter() },
-                    onAddClick = { onAddTask() },
-                    onHomeClick = { goTo(R.id.homeFragment, "Home") },
-                    onMessagesClick = {
-                        startActivity(Intent(requireActivity(), NotificationList::class.java))
-                    },
+                    onAddClick = { TabNav.createAmc(this@TaskFragment) },
+                    onCreateTaskClick = { onAddTask() },
+                    onHomeClick = { TabNav.home(this@TaskFragment) },
+                    onMessagesClick = { TabNav.equipment(this@TaskFragment) },
                     onTasksClick = {},
-                    onProfileClick = {
-                        startActivity(Intent(requireActivity(), com.prod.evergreen.activities.UserDetails::class.java))
-                    },
+                    onProfileClick = { TabNav.profile(this@TaskFragment) },
                     onScanClick = {
                         startActivity(Intent(requireActivity(), QrScanner::class.java))
                     },
                     onNotificationClick = {
                         startActivity(Intent(requireActivity(), NotificationList::class.java))
                     },
-                    onMenuClick = { openDrawer() }
+                    onMenuClick = { openDrawer() },
+                    filterLabel = companyName,
+                    onClearFilter = {
+                        companyFilterId.value = null
+                        companyFilterName.value = null
+                    },
+                    showAssignButton = canAssign,
+                    showReportButton = canReport,
+                    onAssignClick = { item ->
+                        allTasks.value.firstOrNull { it.id == item.id }?.let { showTechnicianPicker(it) }
+                    },
+                    onReportClick = { item ->
+                        allTasks.value.firstOrNull { it.id == item.id }?.let { requestServiceReport(it) }
+                    }
                 )
             }
         }
@@ -128,7 +148,7 @@ class TaskFragment : Fragment() {
         setViewmodel()
 
         viewModel.loading.observe(viewLifecycleOwner) { loading ->
-            if (loading) {
+            if (loading && allTasks.value.isEmpty()) {
                 ProgressDialogUtil.showProgressDialog(requireActivity(), "Loading")
             } else {
                 ProgressDialogUtil.hideProgressDialog()
@@ -158,7 +178,68 @@ class TaskFragment : Fragment() {
             closedCount.intValue = count.closed
         }
 
+        DashboardNav.pendingTaskTab?.let { tab ->
+            selectedTab.intValue = tab.coerceIn(0, 3)
+            DashboardNav.pendingTaskTab = null
+        }
+        viewModel.assignTechnicianDataResponse.observe(viewLifecycleOwner) { response ->
+            if (!isAdded) return@observe
+            Toast.makeText(requireActivity(), response.message ?: "Technician assigned", Toast.LENGTH_SHORT).show()
+            if (response.status_code == 200) {
+                loadTasks(selectedTab.intValue)
+            }
+        }
+        viewModel.allUsersDataResponse.observe(viewLifecycleOwner) { data ->
+            val task = pendingAssignTask ?: return@observe
+            pendingAssignTask = null
+            val technicians = data.data.orEmpty().filter {
+                it.access_level.equals("technician", ignoreCase = true)
+            }
+            if (technicians.isEmpty()) {
+                Toast.makeText(requireActivity(), "No technicians available to assign", Toast.LENGTH_SHORT).show()
+                return@observe
+            }
+            val labels = technicians.map { tech ->
+                val phone = tech.phone.orEmpty()
+                if (phone.isBlank()) tech.name.orEmpty() else "${tech.name} ($phone)"
+            }.toTypedArray()
+            androidx.appcompat.app.AlertDialog.Builder(requireActivity())
+                .setTitle("Assign Technician")
+                .setItems(labels) { _, which ->
+                    val chosen = technicians[which]
+                    val taskId = com.prod.evergreen.helper.ServiceReportHelper.taskId(task)
+                    if (taskId == 0 || chosen.id == null) {
+                        Toast.makeText(requireActivity(), "Unable to assign this task", Toast.LENGTH_SHORT).show()
+                        return@setItems
+                    }
+                    val authToken = token
+                    if (authToken.isNullOrBlank()) return@setItems
+                    val body = JsonObject()
+                    body.addProperty("task_link", taskId)
+                    body.addProperty("technician_link", chosen.id)
+                    viewModel.assignTechnician(body, authToken)
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+        viewModel.downloadpdf.observe(viewLifecycleOwner) { response ->
+            if (!isAdded) return@observe
+            com.prod.evergreen.helper.ServiceReportHelper.offer(requireActivity(), response)
+        }
         loadTasks(selectedTab.intValue)
+    }
+
+    private var tasksReady = false
+
+    override fun onResume() {
+        super.onResume()
+        if (!tasksReady) {
+            tasksReady = true
+            return
+        }
+        if (::viewModel.isInitialized) {
+            loadTasks(selectedTab.intValue)
+        }
     }
 
     companion object {
@@ -190,15 +271,23 @@ class TaskFragment : Fragment() {
         viewModel.getAllTasks(authToken, body)
     }
 
-    private fun List<TaskCreated>.toUiTasks(query: String): List<TaskItem> {
+    private fun List<TaskCreated>.toUiTasks(query: String, companyId: Int?): List<TaskItem> {
         val needle = query.trim()
-        return map { it.toUiTask() }.filter { task ->
-            needle.isEmpty() ||
-                task.title.contains(needle, ignoreCase = true) ||
-                task.equipmentName.contains(needle, ignoreCase = true) ||
-                task.serialNumber.contains(needle, ignoreCase = true) ||
-                task.company.contains(needle, ignoreCase = true)
-        }
+        return asSequence()
+            .filter { created ->
+                companyId == null ||
+                    created.task?.equipment?.company?.id == companyId ||
+                    created.task?.equipment?.companyLink == companyId
+            }
+            .map { it.toUiTask() }
+            .filter { task ->
+                needle.isEmpty() ||
+                    task.title.contains(needle, ignoreCase = true) ||
+                    task.equipmentName.contains(needle, ignoreCase = true) ||
+                    task.serialNumber.contains(needle, ignoreCase = true) ||
+                    task.company.contains(needle, ignoreCase = true)
+            }
+            .toList()
     }
 
     private fun TaskCreated.toUiTask(): TaskItem {
@@ -220,8 +309,34 @@ class TaskFragment : Fragment() {
             serialNumber = task?.equipment?.serialNumber.orEmpty(),
             company = task?.equipment?.company?.name.orEmpty(),
             createdAt = DateConverter.convertToLocalUtcAndFormat(task?.createdAt),
-            imageUrl = task?.image?.firstOrNull()
+            imageUrl = task?.image?.firstOrNull(),
+            technicianAssigned = !RoleAccess.isUnassigned(technicianLink)
         )
+    }
+
+    private fun showTechnicianPicker(task: TaskCreated) {
+        val authToken = token
+        if (authToken.isNullOrBlank()) {
+            Toast.makeText(requireActivity(), "Session expired. Please login again.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        pendingAssignTask = task
+        val body = JsonObject()
+        body.addProperty("access_level", "technician")
+        viewModel.getAllUsers(authToken, body)
+    }
+
+    private fun requestServiceReport(task: TaskCreated) {
+        val authToken = token
+        val taskId = com.prod.evergreen.helper.ServiceReportHelper.taskId(task)
+        if (authToken.isNullOrBlank() || taskId == 0) {
+            Toast.makeText(requireActivity(), "Unable to generate service report", Toast.LENGTH_SHORT).show()
+            return
+        }
+        Toast.makeText(requireActivity(), "Generating service report...", Toast.LENGTH_SHORT).show()
+        val body = JsonObject()
+        body.addProperty("task_link", taskId)
+        viewModel.getServiceReport(body, authToken)
     }
 
     private fun openTaskDetails(taskId: Int) {
@@ -256,7 +371,10 @@ class TaskFragment : Fragment() {
             ).show()
             return
         }
-        showBottomSheetDialog { }
+        showBottomSheetDialog { company ->
+            companyFilterId.value = company.id
+            companyFilterName.value = company.name?.takeIf { it.isNotBlank() } ?: "Company"
+        }
     }
 
     private fun goTo(destinationId: Int, title: String) {

@@ -52,6 +52,7 @@ import com.prod.evergreen.helper.CameraCaptureHelper
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.RoleAccess
+import com.prod.evergreen.helper.TabNav
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.YearPickerHelper
 import com.prod.evergreen.helper.compressor.Compressor
@@ -246,14 +247,10 @@ class AddEquipmentFragment : Fragment() {
                         }
                     },
                     onPmFrequencyClick = { showFrequencyDialog() },
-                    onHomeClick = { goTo(R.id.homeFragment, "Home") },
-                    onMessagesClick = {
-                        startActivity(Intent(requireActivity(), NotificationList::class.java))
-                    },
-                    onTasksClick = { goTo(R.id.taskFragment, "Tasks List") },
-                    onProfileClick = {
-                        startActivity(Intent(requireActivity(), com.prod.evergreen.activities.UserDetails::class.java))
-                    },
+                    onHomeClick = { TabNav.home(this@AddEquipmentFragment) },
+                    onMessagesClick = { TabNav.equipment(this@AddEquipmentFragment) },
+                    onTasksClick = { TabNav.tasks(this@AddEquipmentFragment) },
+                    onProfileClick = { TabNav.profile(this@AddEquipmentFragment) },
                     onMenuClick = { openDrawer() },
                     onNotificationClick = {
                         startActivity(Intent(requireActivity(), NotificationList::class.java))

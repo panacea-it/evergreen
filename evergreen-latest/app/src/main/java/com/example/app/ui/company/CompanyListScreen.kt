@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.NotificationsNone
@@ -60,15 +61,18 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.prod.evergreen.R
 import com.prod.evergreen.helper.MediaUrl
+import com.example.app.ui.theme.AppBottomBar
+import com.example.app.ui.theme.AppColors
+import com.example.app.ui.theme.AppTab
 import com.example.app.ui.theme.EvergreenTheme
 
-private val PageBackground = Color(0xFFF8F9FC)
-private val DarkText = Color(0xFF20243D)
-private val GrayText = Color(0xFF7B8195)
-private val Purple = Color(0xFF635BFF)
-private val LightPurple = Color(0xFFF3F0FF)
-private val CardBorder = Color(0xFFECECF3)
-private val Green = Color(0xFF22B573)
+private val PageBackground = AppColors.background
+private val DarkText = AppColors.textPrimary
+private val GrayText = AppColors.textSecondary
+private val Purple = AppColors.purple
+private val LightPurple = AppColors.purpleLight
+private val CardBorder = AppColors.border
+private val Green = AppColors.green
 
 data class Company(
     val id: Int? = null,
@@ -111,11 +115,17 @@ fun CompanyListScreen(
             .statusBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            CompanyHeader(
-                greetingName = greetingName,
-                onMenuClick = onMenuClick,
-                onScanClick = onScanClick,
-                onNotificationClick = onNotificationClick
+            com.example.app.ui.theme.AppHeader(
+                title = "Companies",
+                subtitle = "AMC sites and branches",
+                leadingIcon = com.example.app.ui.theme.AppIcons.menu,
+                leadingDescription = "Menu",
+                onLeadingClick = onMenuClick,
+                actions = listOf(
+                    com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.add, "Create AMC", onAddClick),
+                    com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.scan, "Scan", onScanClick),
+                    com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.notifications, "Notifications", onNotificationClick)
+                )
             )
 
             SearchBar(
@@ -125,45 +135,60 @@ fun CompanyListScreen(
                 onFilterClick = onFilterClick
             )
 
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(
-                    start = 12.dp,
-                    end = 12.dp,
-                    top = 8.dp,
-                    bottom = 95.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(
-                    items = companies,
-                    key = { company -> company.id ?: "${company.name}-${company.email}" }
-                ) { company ->
-                    CompanyCard(
-                        company = company,
-                        onClick = { onCompanyClick(company) },
-                        onLongClick = { onCompanyLongClick(company) }
+            if (companies.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    com.example.app.ui.theme.AppEmptyState(
+                        title = if (searchQuery.isNotBlank()) "No matching companies" else "No companies yet",
+                        subtitle = if (searchQuery.isNotBlank()) {
+                            "Try a different name or location."
+                        } else {
+                            "Create an AMC company to get started."
+                        },
+                        actionLabel = if (searchQuery.isBlank()) "Create AMC" else null,
+                        onAction = if (searchQuery.isBlank()) onAddClick else null
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(
+                        start = 12.dp,
+                        end = 12.dp,
+                        top = 8.dp,
+                        bottom = 16.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = companies,
+                        key = { company -> company.id ?: "${company.name}-${company.email}" }
+                    ) { company ->
+                        CompanyCard(
+                            company = company,
+                            onClick = { onCompanyClick(company) },
+                            onLongClick = { onCompanyLongClick(company) }
+                        )
+                    }
                 }
             }
 
-            BottomNavigation(
+            AppBottomBar(
+                selected = AppTab.HOME,
                 onHomeClick = onHomeClick,
-                onMessagesClick = onMessagesClick,
+                onEquipmentClick = onMessagesClick,
                 onAddClick = onAddClick,
                 onTasksClick = onTasksClick,
                 onProfileClick = onProfileClick
             )
         }
 
-        FloatingAddButton(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 30.dp, bottom = 78.dp),
-            onClick = onAddClick
-        )
     }
     }
 }
@@ -184,19 +209,18 @@ private fun CompanyHeader(
     ) {
         Box(
             modifier = Modifier
-                .size(42.dp)
-                .shadow(elevation = 3.dp, shape = RoundedCornerShape(12.dp))
+                .size(40.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color.White)
-                .border(1.dp, Color(0xFFF0F1F5), RoundedCornerShape(12.dp))
+                .border(1.dp, CardBorder, RoundedCornerShape(12.dp))
                 .clickable(onClick = onMenuClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.GridView,
+                imageVector = Icons.Default.Menu,
                 contentDescription = "Menu",
                 tint = DarkText,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
 
@@ -207,7 +231,9 @@ private fun CompanyHeader(
                 text = "Hello, $greetingName! 👋",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = DarkText
+                color = DarkText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = "Dashboard Overview",
@@ -255,11 +281,11 @@ private fun SearchBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp)
-            .height(39.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)
+            .height(44.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
-            .border(1.dp, Color(0xFFE8E8F1), RoundedCornerShape(8.dp)),
+            .border(1.dp, CardBorder, RoundedCornerShape(12.dp)),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -329,7 +355,7 @@ private fun CompanyCard(
             .background(Color.White)
             .border(1.dp, CardBorder, RoundedCornerShape(14.dp))
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(10.dp)
+            .padding(8.dp)
     ) {
         Column {
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -398,8 +424,8 @@ private fun CompanyCard(
 private fun CompanyImage(company: Company) {
     Box(
         modifier = Modifier
-            .width(84.dp)
-            .height(130.dp)
+            .width(56.dp)
+            .height(80.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(Color(0xFFD9D1C3)),
         contentAlignment = Alignment.Center
@@ -435,7 +461,7 @@ private fun CompanyImage(company: Company) {
                 val initial = company.name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "C"
                 Text(
                     text = initial,
-                    fontSize = 25.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF244341)
                 )
@@ -563,9 +589,15 @@ private fun DateRow(
             modifier = Modifier.size(14.dp)
         )
         Spacer(modifier = Modifier.width(6.dp))
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(text = "Start Date", fontSize = 12.sp, color = GrayText)
-            Text(text = startDate, fontSize = 12.sp, color = DarkText)
+            Text(
+                text = startDate.ifBlank { "-" },
+                fontSize = 12.sp,
+                color = DarkText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
         Spacer(modifier = Modifier.weight(1f))
         Box(
@@ -575,9 +607,15 @@ private fun DateRow(
                 .background(Color(0xFFE0DDF0))
         )
         Spacer(modifier = Modifier.weight(1f))
-        Column(horizontalAlignment = Alignment.End) {
+        Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(1f)) {
             Text(text = "End Date", fontSize = 12.sp, color = GrayText)
-            Text(text = endDate, fontSize = 12.sp, color = DarkText)
+            Text(
+                text = endDate.ifBlank { "-" },
+                fontSize = 12.sp,
+                color = DarkText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
         Spacer(modifier = Modifier.width(6.dp))
         Icon(

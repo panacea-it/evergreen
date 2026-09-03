@@ -4,46 +4,52 @@ import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModelProvider
-import com.bumptech.glide.Glide
+import com.example.app.ui.equipment.EquipmentDetailsData
+import com.example.app.ui.equipment.EquipmentDetailsScreen
+import com.example.app.ui.equipment.EquipmentHistoryItem
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.prod.evergreen.R
 import com.prod.evergreen.XApplication
-import com.prod.evergreen.adapters.EqupmentHistroyAdapter
-import com.prod.evergreen.api.Constants
 import com.prod.evergreen.api.MainRepository
 import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
-import com.prod.evergreen.databinding.ActivityEquipmentDetailsBinding
 import com.prod.evergreen.dialogs.MoreEqInfoFragment
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.DateConverter
 import com.prod.evergreen.helper.ProgressDialogUtil
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import com.prod.evergreen.helper.YearPickerHelper
 import com.prod.evergreen.helper.customdialog.PopupDialog
 import com.prod.evergreen.helper.customdialog.Styles
 import com.prod.evergreen.helper.customdialog.listener.OnDialogButtonClickListener
 import com.prod.evergreen.models.CompanyDataResponse
 import com.prod.evergreen.models.ResponseData
+import com.prod.evergreen.models.TasksItem
 
 class EquipmentDetails : AppCompatActivity() {
 
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private lateinit var viewModel: MainViewModel
-    lateinit var equipmentAdapter: EqupmentHistroyAdapter
     var companyData: CompanyDataResponse? = null
     var accessType: String? = null
     var userid: Int? = null
-    var equipmentData = ResponseData();
-    lateinit var binding: ActivityEquipmentDetailsBinding
+    var equipmentData = ResponseData()
+    private val detailsState = mutableStateOf(EquipmentDetailsData())
+    private val showEdit = mutableStateOf(false)
+    private val showCreateTask = mutableStateOf(false)
+    private val loadError = mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-       // enableEdgeToEdge()
-        binding = ActivityEquipmentDetailsBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        enableEdgeToEdge()
         setViewmodel()
         sharedPreferencesHelper = SharedPreferencesHelper(this)
         val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
@@ -52,38 +58,68 @@ class EquipmentDetails : AppCompatActivity() {
         val equipment = intent.getIntExtra("eq_id", 0)
         val eq_sn = intent.getStringExtra("eq_sn")
         val screentype = intent.getIntExtra("screentype", 0)
+        showEdit.value = RoleAccess.canManageEquipment(accessType)
+        showCreateTask.value = accessType != "technician"
+
+        setContent {
+            val details by detailsState
+            val error by loadError
+            val editEnabled by showEdit
+            val createTaskEnabled by showCreateTask
+            EquipmentDetailsScreen(
+                equipment = details,
+                errorMessage = error,
+                showEdit = editEnabled,
+                showCreateTask = createTaskEnabled,
+                onBackClick = { onBackPressedDispatcher.onBackPressed() },
+                onEditClick = {
+                    val data = Gson().toJson(equipmentData)
+                    startActivity(Intent(this, AddEquipment::class.java).putExtra("equipment_data", data))
+                },
+                onCreateTaskClick = {
+                    val data = Gson().toJson(equipmentData)
+                    com.prod.evergreen.helper.DashboardNav.pendingEquipmentJson = data
+                    startActivity(
+                        Intent(this, MainActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                            .putExtra("open_create_task", true)
+                            .putExtra("equipment_data", data)
+                    )
+                },
+                onDownloadQrClick = {
+                    val currentId = equipmentData.id ?: equipment
+                    val currentSn = equipmentData.egserialnumber ?: eq_sn
+                    startActivity(
+                        Intent(this, IndividualQRDownloader::class.java)
+                            .putExtra("eq_id", currentId)
+                            .putExtra("id", currentId)
+                            .putExtra("eq_sn", currentSn)
+                    )
+                },
+                onHistoryClick = { item ->
+                    equipmentData.tasks?.firstOrNull { "${it.taskLink ?: it.task?.id}" == item.id }?.let { task ->
+                        MoreEqInfoFragment.newInstance(Gson().toJson(task), Gson().toJson(companyData))
+                            .show(supportFragmentManager, "")
+                    }
+                },
+                onSelfAssignClick = { item ->
+                    equipmentData.tasks?.firstOrNull { "${it.taskLink ?: it.task?.id}" == item.id }?.let { task ->
+                        val body = JsonObject()
+                        body.addProperty("task_link", task.taskLink)
+                        body.addProperty("technician_link", userid)
+                        viewModel.assignTechnician(body, token!!)
+                    }
+                }
+            )
+        }
 
         viewModel.loading.observe(this) { data ->
-            if (data) {
+            if (data && detailsState.value.name.isBlank()) {
                 ProgressDialogUtil.showProgressDialog(this, "Loading")
             } else {
                 ProgressDialogUtil.hideProgressDialog()
             }
         }
-
-        if (accessType == "technician") {
-            binding.createtask.visibility = View.INVISIBLE
-        }
-        equipmentAdapter = EqupmentHistroyAdapter(data = { responseData ->
-            val gson = Gson()
-            val responseTask = gson.toJson(responseData)
-            val responseCompany = gson.toJson(companyData)
-            MoreEqInfoFragment.newInstance(responseTask, responseCompany)
-                .show(supportFragmentManager, "")
-        }, selfAssign = { responseData ->
-            val object1 = JsonObject()
-            object1.addProperty("task_link", responseData.taskLink)
-            object1.addProperty("technician_link", userid)
-            viewModel.assignTechnician(object1, token!!)
-
-        }, downloadFile = { downloadfile ->
-            val taskId = downloadfile.taskLink ?: downloadfile.task?.id
-            val object1 = JsonObject()
-            object1.addProperty("task_link", taskId)
-            viewModel.getServiceReport(object1, token!!)
-        }
-        )
-
         viewModel.downloadpdf.observe(this) { response ->
             if (response.status_code == 200 && !response.url.isNullOrBlank()) {
                 val pdfUrl = com.prod.evergreen.helper.MediaUrl.resolve(response.url)
@@ -104,109 +140,91 @@ class EquipmentDetails : AppCompatActivity() {
             } else {
                 showDialog(response.message ?: "Unable to download report")
             }
-
         }
         viewModel.assignTechnicianDataResponse.observe(this) { response ->
             if (response.status_code == 200) {
                 showDialog(response.message!!)
-                val object1 = JsonObject()
-                object1.addProperty("equipment_link", equipment)
-                object1.addProperty("self_assign", true)
-                viewModel.GetEquipmentInfo(object1, token!!)
+                loadEquipment()
             } else {
                 showDialog(response.message!!)
             }
-
         }
-
-        binding.editEqip.setOnClickListener {
-            val gson = Gson()
-            val data = gson.toJson(equipmentData).toString()
-            startActivity(
-                Intent(
-                    this@EquipmentDetails,
-                    AddEquipment::class.java
-                ).putExtra("equipment_data", data)
-            )
-        }
-
-//        equipmentAdapter= EqupmentHistroyAdapter { responseData ->
-//            val gson = Gson()
-//            val responseTask = gson.toJson(responseData)
-//            val responseCompany = gson.toJson(companyData)
-//
-//            MoreEqInfoFragment.newInstance(responseTask, responseCompany)
-//                .show(supportFragmentManager, "")
-//        }
-
-        binding.back.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
-        binding.createtask.setOnClickListener {
-            val gson = Gson()
-            val data = gson.toJson(equipmentData).toString()
-            val intent = Intent(this@EquipmentDetails, CreateTask::class.java)
-            intent.putExtra("equipment_data", data)
-            startActivity(intent)
-        }
-        binding.specificationLayout.download.setOnClickListener {
-            startActivity(Intent(this@EquipmentDetails, IndividualQRDownloader::class.java).putExtra("id",equipment).putExtra("eq_sn",eq_sn))
-
-        }
-
-        binding.recyclerviewHistroy.adapter = equipmentAdapter
         viewModel.equipmentDataResponse.observe(this) { data ->
-            if (data.success == 200) {
-                equipmentData = data.data!!
-                companyData = equipmentData.company
-                binding.specificationLayout.eqName.text = equipmentData.name
-                binding.specificationLayout.tvMake.text = equipmentData.make?.takeIf { it.isNotBlank() } ?: "-"
-                binding.specificationLayout.tvMfd.text =
-                    com.prod.evergreen.helper.YearPickerHelper.displayYear(equipmentData.manufacturerDate)
-                binding.specificationLayout.tvModelNum.text = equipmentData.model
-                binding.specificationLayout.tvSNumber.text = equipmentData.serialNumber
-                binding.specificationLayout.tvLocation.text = equipmentData.location
-                binding.specificationLayout.tvFreqency.text = equipmentData.tmFrequency
-                binding.specificationLayout.tvDescr.text = equipmentData.egserialnumber
-                if (equipmentData.imageUrl != null) {
-                    Glide.with(this).load(com.prod.evergreen.helper.MediaUrl.resolve(equipmentData.imageUrl))
-                        .into(binding.backdrop)
-                }
-                if (equipmentData.tasks!!.isEmpty()) {
-                    binding.tvNoTask.visibility = View.VISIBLE
-                } else {
-                    if (screentype == 1) {
-                        equipmentAdapter.addData(equipmentData.tasks, accessType, userid)
-
-                    } else {
-                        equipmentAdapter.addData(equipmentData.tasks)
-
-                    }
-
-                    binding.tvNoTask.visibility = View.GONE
-                }
-
-
+            val payload = data.data
+            if (payload != null) {
+                equipmentData = payload
+                companyData = payload.company
+                loadError.value = null
+                detailsState.value = payload.toDetails(screentype)
+            } else {
+                loadError.value = data.message ?: "Equipment details were not found."
             }
         }
-
+        viewModel.errorMessage.observe(this) { message ->
+            loadError.value = message
+        }
         loadEquipment()
     }
 
+    private var detailsReady = false
+
     override fun onResume() {
         super.onResume()
+        if (!detailsReady) {
+            detailsReady = true
+            return
+        }
         if (::viewModel.isInitialized) {
             loadEquipment()
         }
     }
 
+    private fun ResponseData.toDetails(screentype: Int): EquipmentDetailsData {
+        return EquipmentDetailsData(
+            name = name.orEmpty(),
+            companyName = company?.name.orEmpty(),
+            make = make.orEmpty(),
+            model = model.orEmpty(),
+            serialNumber = serialNumber.orEmpty(),
+            egSerial = egserialnumber.orEmpty(),
+            year = YearPickerHelper.displayYear(manufacturerDate),
+            location = location.orEmpty(),
+            frequency = tmFrequency.orEmpty(),
+            description = description.orEmpty(),
+            imageUrl = imageUrl,
+            history = tasks.orEmpty().map { it.toHistory(screentype) }
+        )
+    }
+
+    private fun TasksItem.toHistory(screentype: Int): EquipmentHistoryItem {
+        val assigned = technicianLink != null
+        val canSelf = screentype == 1 && accessType == "technician" && (
+            !assigned || (technicianLink != userid && (status == "open" || status == "hold"))
+        )
+        return EquipmentHistoryItem(
+            id = "${taskLink ?: task?.id}",
+            date = DateConverter.convertToLocalUtcAndFormat(createdAt),
+            technician = technician?.name.orEmpty(),
+            title = task?.name.orEmpty(),
+            status = status.orEmpty(),
+            canSelfAssign = canSelf
+        )
+    }
+
     private fun loadEquipment() {
         val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken) ?: return
         val equipment = intent.getIntExtra("eq_id", 0)
-        if (equipment == 0) return
-        val object1 = JsonObject()
-        object1.addProperty("equipment_link", equipment)
-        viewModel.GetEquipmentInfo(object1, token)
+        val serial = intent.getStringExtra("eq_sn")?.trim().orEmpty()
+        val body = JsonObject()
+        when {
+            equipment > 0 -> body.addProperty("equipment_link", equipment)
+            serial.isNotBlank() -> body.addProperty("equipment_link", serial)
+            else -> {
+                loadError.value = "This QR code is not a valid equipment code"
+                return
+            }
+        }
+        viewModel.GetEquipmentInfo(body, token)
     }
 
     private fun setViewmodel() {
@@ -215,8 +233,7 @@ class EquipmentDetails : AppCompatActivity() {
             XApplication.database.newsDao(),
             XApplication.database.companyDao()
         )
-        val viewModelFactory = MyViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
+        viewModel = ViewModelProvider(this, MyViewModelFactory(repository))[MainViewModel::class.java]
     }
 
     fun showDialog(message: String) {
@@ -225,20 +242,15 @@ class EquipmentDetails : AppCompatActivity() {
             .setHeading("Message")!!
             .setDescription(message)!!
             .setCancelable(false)!!
-            .setPositiveButtonText(getString(R.string.positive))!!
+            .setPositiveButtonText(getString(android.R.string.ok))!!
             .showDialog(object : OnDialogButtonClickListener() {
                 override fun onPositiveClicked(dialog: Dialog?) {
                     super.onPositiveClicked(dialog)
-
                 }
             }, true)
     }
 
     private fun openPdfInBrowser(pdfUrl: String) {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse(pdfUrl)
-        }
-
-        startActivity(intent)
+        startActivity(Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(pdfUrl) })
     }
 }

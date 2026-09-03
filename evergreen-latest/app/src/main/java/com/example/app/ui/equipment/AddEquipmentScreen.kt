@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -55,22 +56,25 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.prod.evergreen.helper.MediaUrl
+import com.example.app.ui.theme.AppColors
+import com.example.app.ui.theme.AppIcons
 import com.example.app.ui.theme.EvergreenTheme
 
-private val Background = Color(0xFFF9FAFE)
-private val White = Color.White
-private val DarkText = Color(0xFF192047)
-private val SecondaryText = Color(0xFF8187A0)
-private val Purple = Color(0xFF5D54F5)
-private val PurpleLight = Color(0xFFF3F1FF)
-private val Border = Color(0xFFE7E8F1)
-private val RequiredRed = Color(0xFFE54855)
-private val Blue = Color(0xFF2670F5)
+private val Background = AppColors.background
+private val White = AppColors.surface
+private val DarkText = AppColors.textPrimary
+private val SecondaryText = AppColors.textSecondary
+private val Purple = AppColors.purple
+private val PurpleLight = AppColors.purpleLight
+private val Border = AppColors.border
+private val RequiredRed = AppColors.red
+private val Blue = AppColors.blue
 
 data class AddEquipmentFormState(
     val title: String = "Equipments Details",
@@ -117,14 +121,13 @@ fun AddEquipmentScreen(
             .fillMaxSize()
             .background(Background)
             .statusBarsPadding()
+            .navigationBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            EquipmentDetailsHeader(
+            com.example.app.ui.theme.AppHeader(
                 title = state.title,
                 subtitle = state.subtitle,
-                onBackClick = onBackClick,
-                onMenuClick = onMenuClick,
-                onNotificationClick = onNotificationClick
+                onLeadingClick = onBackClick
             )
             Column(
                 modifier = Modifier
@@ -147,13 +150,6 @@ fun AddEquipmentScreen(
                 )
                 Spacer(modifier = Modifier.height(15.dp))
             }
-            BottomNavigation(
-                onHomeClick = onHomeClick,
-                onMessagesClick = onMessagesClick,
-                onAddClick = onAddClick,
-                onTasksClick = onTasksClick,
-                onProfileClick = onProfileClick
-            )
         }
     }
     }
@@ -251,25 +247,7 @@ private fun EquipmentInformationCard(
                 modifier = Modifier.size(27.dp)
             )
         }
-        Spacer(modifier = Modifier.height(14.dp))
-        Text(
-            text = "Equipment Information",
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = DarkText
-        )
-        Text(
-            text = "Provide basic details about the Equipment",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 3.dp),
-            textAlign = TextAlign.Center,
-            fontSize = 14.sp,
-            color = SecondaryText
-        )
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         if (!state.hideCompany) {
             InputField(
                 icon = Icons.Default.Business,
@@ -410,7 +388,7 @@ private fun InputField(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(42.dp)
+                    .heightIn(min = 52.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color(0xFFFCFCFF))
                     .border(1.dp, Border, RoundedCornerShape(8.dp))
@@ -427,6 +405,8 @@ private fun InputField(
                             text = value.ifBlank { placeholder },
                             fontSize = 14.sp,
                             color = if (value.isBlank()) Color(0xFF969CAE) else DarkText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
                         )
                         if (dropdown) {
@@ -443,7 +423,13 @@ private fun InputField(
                         value = value,
                         onValueChange = onValueChange,
                         placeholder = {
-                            Text(text = placeholder, fontSize = 14.sp, color = Color(0xFF969CAE))
+                            Text(
+                                text = placeholder,
+                                fontSize = 14.sp,
+                                color = Color(0xFF969CAE),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         },
                         singleLine = true,
                         trailingIcon = if (dropdown) {
@@ -467,7 +453,9 @@ private fun InputField(
                             unfocusedIndicatorColor = Color.Transparent,
                             disabledIndicatorColor = Color.Transparent
                         ),
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp)
                     )
                 }
             }
@@ -496,7 +484,7 @@ private fun DescriptionField(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(92.dp)
+                    .heightIn(min = 110.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color(0xFFFCFCFF))
                     .border(1.dp, Border, RoundedCornerShape(8.dp))
@@ -505,7 +493,11 @@ private fun DescriptionField(
                     value = value,
                     onValueChange = onValueChange,
                     placeholder = {
-                        Text(text = placeholder, fontSize = 14.sp, color = Color(0xFF969CAE))
+                        Text(
+                            text = placeholder,
+                            fontSize = 14.sp,
+                            color = Color(0xFF969CAE)
+                        )
                     },
                     textStyle = TextStyle(fontSize = 14.sp, color = DarkText),
                     colors = TextFieldDefaults.colors(
@@ -516,7 +508,9 @@ private fun DescriptionField(
                         unfocusedIndicatorColor = Color.Transparent,
                         disabledIndicatorColor = Color.Transparent
                     ),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
                 )
             }
         }
@@ -678,7 +672,12 @@ private fun CancelButton(
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "⊗", fontSize = 15.sp, color = Purple)
+            Icon(
+                imageVector = AppIcons.close,
+                contentDescription = null,
+                tint = Purple,
+                modifier = Modifier.size(AppIcons.header)
+            )
             Spacer(modifier = Modifier.width(6.dp))
             Text(text = "Cancel", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Purple)
         }

@@ -372,6 +372,18 @@ class MainRepository(private val retrofitService: RetrofitService, private val n
         }
     }
 
+  suspend fun getNotificationsPage(
+      authenticator: String,
+      body: JsonObject
+  ): NetworkState<NotificationsListResponse> {
+        return try {
+            val response = retrofitService.getNotificationsPage(body, "Bearer $authenticator")
+            response.parseResponse()
+        } catch (e: Exception) {
+            NetworkState.Error(e.message)
+        }
+    }
+
   suspend fun upsertToken(body: JsonObject, authenticator: String): NetworkState<ChangePasswordData> {
         return try {
             val response = retrofitService.upsertToken(body, "Bearer $authenticator")

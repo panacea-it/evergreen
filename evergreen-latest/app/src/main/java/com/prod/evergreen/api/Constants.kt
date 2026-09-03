@@ -35,6 +35,7 @@ class Constants {
         const val getServiceReport = "user/getServiceReport"
         const val EQUIPMENT_QR_DOWNLOAD = "user/qrCodeGenerator"
         const val NOTIFICATIONS_LIST = "user/getNotificationsByUserId"
+        const val NOTIFICATIONS_PAGE = "user/getNotificationsPage"
         const val COMPANIES_STATS = "user/companiesStats"
         const val USER_STATS = "user/getUserStats"
         const val GET_ALL_TASKS_COUNT = "user/getAllTasksCount"

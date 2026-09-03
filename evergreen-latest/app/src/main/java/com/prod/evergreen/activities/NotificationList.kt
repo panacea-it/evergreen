@@ -7,111 +7,152 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModelProvider
-import com.bumptech.glide.Glide
+import com.example.app.ui.notifications.NotificationListScreen
+import com.example.app.ui.notifications.NotificationUiItem
 import com.google.gson.JsonObject
 import com.prod.evergreen.R
 import com.prod.evergreen.XApplication
-import com.prod.evergreen.adapters.NotificationsAdapter
 import com.prod.evergreen.api.MainRepository
 import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
-import com.prod.evergreen.databinding.ActivityNotificationListBinding
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.DateConverter
 import com.prod.evergreen.helper.ProgressDialogUtil
+import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.customdialog.PopupDialog
 import com.prod.evergreen.helper.customdialog.Styles
 import com.prod.evergreen.helper.customdialog.listener.OnDialogButtonClickListener
+import com.prod.evergreen.models.DataItem
 
 class NotificationList : AppCompatActivity() {
-
-    lateinit var notificationsAdapter: NotificationsAdapter
-
     private var token: String? = ""
-    private var userid: Int? =null
-
+    private var userid: Int? = null
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
-
     private lateinit var viewModel: MainViewModel
-    lateinit var binding: ActivityNotificationListBinding
+    private val itemsState = mutableStateOf<List<NotificationUiItem>>(emptyList())
+    private val loadingMore = mutableStateOf(false)
+    private val emptyState = mutableStateOf(false)
+    private var page = 1
+    private var hasMore = true
+    private var requestInFlight = false
+    private val rawItems = mutableListOf<DataItem>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        sharedPreferencesHelper= SharedPreferencesHelper(this)
-        token=sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
-        userid=sharedPreferencesHelper.getValueInt(ConstantValues.USER_ID)
-        binding= ActivityNotificationListBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        sharedPreferencesHelper = SharedPreferencesHelper(this)
+        token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
+        userid = sharedPreferencesHelper.getValueInt(ConstantValues.USER_ID)
         setViewmodel()
-
-//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-//            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-//            insets
-//        }
-
+        setContent {
+            val items by itemsState
+            val more by loadingMore
+            val empty by emptyState
+            NotificationListScreen(
+                items = items,
+                loading = false,
+                loadingMore = more,
+                empty = empty,
+                onBackClick = { onBackPressedDispatcher.onBackPressed() },
+                onItemClick = { item ->
+                    val raw = rawItems.firstOrNull { it.id == item.id }
+                    showNotificationDialog(raw?.title, raw?.description, raw?.taskLink, raw?.title, raw?.title, userid)
+                },
+                onAcceptClick = { item -> accept(item.id) },
+                onLoadMore = { loadPage(false) }
+            )
+        }
         viewModel.loading.observe(this) { data ->
-            if (data){
-                ProgressDialogUtil.showProgressDialog(this,"Loading")
-            }
-            else{
+            if (data && page == 1) {
+                ProgressDialogUtil.showProgressDialog(this, "Loading")
+            } else {
                 ProgressDialogUtil.hideProgressDialog()
             }
         }
-
         viewModel.errorMessage.observe(this) { response ->
+            requestInFlight = false
+            loadingMore.value = false
             showDialog(response)
-
         }
         viewModel.assignTechnicianDataResponse.observe(this) { response ->
             if (response.status_code == 200) {
                 showDialog(response.message!!)
-                viewModel.getNotifications(token!!)
+                page = 1
+                hasMore = true
+                rawItems.clear()
+                loadPage(true)
             }
         }
         viewModel.notificationsListResponse.observe(this) { responseData ->
-            if (responseData.status==200){
-                if (responseData.data!!.isEmpty()){
-                    binding.noDataLayout.visibility=View.VISIBLE
-                    Glide.with(this)
-                        .load(R.drawable.no_notification)
-                        .into(binding.animationView)
-                }
-                else{
-                    binding.noDataLayout.visibility=View.GONE
-                    notificationsAdapter=NotificationsAdapter(sharedPreferencesHelper,responseData.data, { item ->
-                        showNotificationDialog(item.title,item.description,item.taskLink,item.title,item.title,userid)
-                    }) { item ->
-                        if (item.taskLink != null && userid != null) {
-                            val body = JsonObject()
-                            body.addProperty("task_link", item.taskLink)
-                            body.addProperty("technician_link", userid)
-                            viewModel.assignTechnician(body, token!!)
-                        }
-                    }
-                    binding.rvNotification.adapter= notificationsAdapter
-                }
-
+            requestInFlight = false
+            loadingMore.value = false
+            if (responseData.status != 200) return@observe
+            val incoming = responseData.data.orEmpty()
+            if (page == 1) {
+                rawItems.clear()
             }
-
+            rawItems.addAll(incoming)
+            itemsState.value = rawItems.map { it.toUi() }
+            emptyState.value = rawItems.isEmpty()
+            hasMore = responseData.hasMore == true
+            if (incoming.isNotEmpty()) {
+                page += 1
+            }
         }
-
-        viewModel.getNotifications(token!!)
-
-binding.back.setOnClickListener {
-    onBackPressedDispatcher.onBackPressed()
-}
+        loadPage(true)
     }
+
+    private fun loadPage(reset: Boolean) {
+        val auth = token ?: return
+        if (requestInFlight) return
+        if (!reset && !hasMore) return
+        if (reset) {
+            page = 1
+            hasMore = true
+        }
+        requestInFlight = true
+        loadingMore.value = page > 1
+        viewModel.getNotificationsPage(auth, page)
+    }
+
+    private fun accept(id: Int) {
+        val raw = rawItems.firstOrNull { it.id == id } ?: return
+        if (raw.taskLink == null || userid == null) return
+        val body = JsonObject()
+        body.addProperty("task_link", raw.taskLink)
+        body.addProperty("technician_link", userid)
+        viewModel.assignTechnician(body, token!!)
+    }
+
+    private fun DataItem.toUi(): NotificationUiItem {
+        val canAccept = RoleAccess.canAcceptTask(
+            sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        ) && taskLink != null
+        return NotificationUiItem(
+            id = id ?: 0,
+            title = title.orEmpty(),
+            description = description.orEmpty(),
+            time = DateConverter.convertToLocalUtcAndFormat(createdAt),
+            unread = isRead != true,
+            canAccept = canAccept
+        )
+    }
+
     private fun setViewmodel() {
-        val repository = MainRepository(RetrofitService.getInstance(this), XApplication.database.newsDao(), XApplication.database.companyDao())
-        val viewModelFactory = MyViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, viewModelFactory)[MainViewModel::class.java]
+        val repository = MainRepository(
+            RetrofitService.getInstance(this),
+            XApplication.database.newsDao(),
+            XApplication.database.companyDao()
+        )
+        viewModel = ViewModelProvider(this, MyViewModelFactory(repository))[MainViewModel::class.java]
     }
 
     private fun showNotificationDialog(
@@ -122,50 +163,32 @@ binding.back.setOnClickListener {
         location: String?,
         userid: Int?
     ) {
-        val dialog = Dialog(this,R.style.FullScreenDialogStyle)
+        val dialog = Dialog(this, R.style.FullScreenDialogStyle)
         dialog.requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY)
         dialog.setCancelable(true)
         dialog.setContentView(R.layout.custom_notification_dialog)
-
-        val textViewTitle = dialog.findViewById<TextView>(R.id.textViewTitle)
-        val textViewBody = dialog.findViewById<TextView>(R.id.textViewBody)
-        // val textViewDescription = dialog.findViewById<TextView>(R.id.textViewDescription)
-        val tvsn = dialog.findViewById<TextView>(R.id.tv_sn)
-        val location1  = dialog.findViewById<TextView>(R.id.location)
-
-
-        textViewTitle.text = title ?: ""
-        textViewBody.text = body ?: ""
-
-//        textViewDescription.text = description ?: ""
-        tvsn.text = "S.NO : "+sno ?: ""
-        location1.text = "Location : "+location ?: ""
-
-
-
+        dialog.findViewById<TextView>(R.id.textViewTitle).text = title ?: ""
+        dialog.findViewById<TextView>(R.id.textViewBody).text = body ?: ""
+        dialog.findViewById<TextView>(R.id.tv_sn).text = "S.NO : ${sno ?: ""}"
+        dialog.findViewById<TextView>(R.id.location).text = "Location : ${location ?: ""}"
         val buttonAccept = dialog.findViewById<Button>(R.id.buttonAccept)
-        val canAccept = com.prod.evergreen.helper.RoleAccess.canAcceptTask(
+        val canAccept = RoleAccess.canAcceptTask(
             sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
         ) && taskLink != null
         buttonAccept.visibility = if (canAccept) View.VISIBLE else View.GONE
         buttonAccept.text = "Accept"
         buttonAccept.setOnClickListener {
             val object1 = JsonObject()
-            object1.addProperty("task_link", taskLink!!.toInt())
+            object1.addProperty("task_link", taskLink!!)
             object1.addProperty("technician_link", userid)
             viewModel.assignTechnician(object1, token!!)
             dialog.dismiss()
         }
-
-        val buttonDismiss = dialog.findViewById<Button>(R.id.buttonDismiss)
-        buttonDismiss.setOnClickListener {
-            dialog.dismiss()
-        }
-
+        dialog.findViewById<Button>(R.id.buttonDismiss).setOnClickListener { dialog.dismiss() }
         dialog.show()
-        val window = dialog.window
-        window?.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
+        dialog.window?.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT)
     }
+
     fun showDialog(message: String) {
         PopupDialog.getInstance(this)!!
             .setStyle(Styles.IOS)!!
@@ -176,7 +199,6 @@ binding.back.setOnClickListener {
             .showDialog(object : OnDialogButtonClickListener() {
                 override fun onPositiveClicked(dialog: Dialog?) {
                     super.onPositiveClicked(dialog)
-
                 }
             }, true)
     }

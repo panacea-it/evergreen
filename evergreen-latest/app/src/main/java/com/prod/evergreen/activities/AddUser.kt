@@ -37,6 +37,7 @@ import com.prod.evergreen.helper.customdialog.listener.OnDialogButtonClickListen
 import com.prod.evergreen.models.AMCData
 import com.prod.evergreen.models.Users
 import com.prod.evergreen.models.activeCompanies
+import com.prod.evergreen.models.attachedCompanyLabel
 
 class AddUser : AppCompatActivity() {
     private var companyLinksArray: JsonArray = JsonArray()
@@ -62,7 +63,9 @@ class AddUser : AppCompatActivity() {
         viewModel.getAllAmc(token!!)
         prepareRoles(creatorAccessType)
         applyEditState()
-        applyCompanyPickerForRole(selected_accessleve, creatorAccessType)
+        if (!formState.value.hideAmc) {
+            applyCompanyPickerForRole(selected_accessleve, creatorAccessType)
+        }
 
         setContent {
             val state by formState
@@ -102,13 +105,7 @@ class AddUser : AppCompatActivity() {
     }
 
     private fun prepareRoles(accessType: String?) {
-        val spinnerItems = listOf(
-            Pair("eg_super_admin", "Super Admin"),
-            Pair("eg_admin", "Manager"),
-            Pair("client_admin", "Client Admin"),
-            Pair("client", "Client"),
-            Pair("technician", "Technician")
-        )
+        val spinnerItems = com.prod.evergreen.helper.RoleLabels.pairs()
         var labels = spinnerItems.map { it.second }
         var keys = spinnerItems.map { it.first }
         if (accessType.equals("client_admin", ignoreCase = true)) {
@@ -117,9 +114,9 @@ class AddUser : AppCompatActivity() {
         }
         if (accessType.equals("eg_admin", ignoreCase = true)) {
             labels = labels.filter {
-                it.equals("Client Admin", ignoreCase = true) ||
-                    it.equals("Client", ignoreCase = true) ||
-                    it.equals("Technician", ignoreCase = true)
+                it.equals(com.prod.evergreen.helper.RoleLabels.CLIENT_ADMIN, ignoreCase = true) ||
+                    it.equals(com.prod.evergreen.helper.RoleLabels.CLIENT, ignoreCase = true) ||
+                    it.equals(com.prod.evergreen.helper.RoleLabels.TECHNICIAN, ignoreCase = true)
             }
             keys = keys.filter {
                 it.equals("client_admin", ignoreCase = true) ||
@@ -142,22 +139,36 @@ class AddUser : AppCompatActivity() {
         } else {
             selected_accessleve = existing.access_level
         }
+        val currentUserId = sharedPreferencesHelper.getValueInt(ConstantValues.USER_ID)
+        val isSelf = existing.id != null && existing.id == currentUserId
+        val isSuperAdminSelf = isSelf && existing.access_level.equals("eg_super_admin", ignoreCase = true)
+        val company = existing.companies?.firstOrNull()
+        if (company?.id != null) {
+            amc_id = company.id.toString()
+        }
         formState.value = formState.value.copy(
-            title = "User Details",
-            subtitle = "Edit user",
+            title = "Edit User",
+            subtitle = "Update user details",
             saveLabel = "Update User",
             name = existing.name.orEmpty(),
             email = existing.email.orEmpty(),
             mobile = existing.phone.orEmpty(),
             accessType = roleLabels.getOrNull(roleIndex)
-                ?: existing.access_level.orEmpty().replace('_', ' '),
+                ?: com.prod.evergreen.helper.RoleLabels.display(existing.access_level),
             passwordPlaceholder = "Leave blank to keep password",
-            passwordRequired = false
+            passwordRequired = false,
+            hideAccessType = false,
+            amc = existing.attachedCompanyLabel().takeIf { it != "-" }.orEmpty()
+                .ifBlank { company?.name.orEmpty() },
+            hideAmc = isSuperAdminSelf || existing.access_level.equals("technician", ignoreCase = true),
+            amcLocked = isSelf || RoleAccess.lockToAttachedCompany(creatorAccessType)
         )
     }
 
     private fun showAccessTypePicker() {
-        if (roleLabels.isEmpty()) return
+        if (formState.value.hideAccessType || roleLabels.isEmpty()) return
+        val currentUserId = sharedPreferencesHelper.getValueInt(ConstantValues.USER_ID)
+        if (editUserId != null && editUserId == currentUserId) return
         AlertDialog.Builder(this)
             .setTitle("Select access type")
             .setItems(roleLabels.toTypedArray()) { dialog, which ->
@@ -183,8 +194,8 @@ class AddUser : AppCompatActivity() {
             email.isBlank() -> "Please enter email address"
             !Validator.isEmailValid(email) -> "Please enter valid email address"
             editUserId == null && password.isBlank() -> "Please enter password"
-            selected_accessleve.isNullOrBlank() -> "Please select access type"
-            !selected_accessleve.equals("technician", ignoreCase = true) && amc_id == null ->
+            !state.hideAccessType && selected_accessleve.isNullOrBlank() -> "Please select access type"
+            !state.hideAmc && !selected_accessleve.equals("technician", ignoreCase = true) && amc_id == null ->
                 "Please select company"
             else -> null
         }

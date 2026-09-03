@@ -32,9 +32,11 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Message
@@ -47,6 +49,11 @@ import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,19 +71,27 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.prod.evergreen.R
 import com.prod.evergreen.helper.MediaUrl
+import com.example.app.ui.theme.AppBottomBar
+import com.example.app.ui.theme.AppColors
+import com.example.app.ui.theme.AppFloatingAdd
+import com.example.app.ui.theme.AppHeader
+import com.example.app.ui.theme.AppHeaderAction
+import com.example.app.ui.theme.AppIcons
+import com.example.app.ui.theme.AppTab
+import com.example.app.ui.theme.AppType
 import com.example.app.ui.theme.EvergreenTheme
 
-private val Background = Color(0xFFF9FAFD)
-private val White = Color.White
-private val DarkText = Color(0xFF17204A)
-private val Blue = Color(0xFF246BFF)
-private val BlueLight = Color(0xFFF2F6FF)
-private val Green = Color(0xFF159447)
-private val GreenLight = Color(0xFFEDF9F1)
-private val Red = Color(0xFFB42318)
-private val RedLight = Color(0xFFFEECEC)
-private val Border = Color(0xFFE7E9F1)
-private val Purple = Color(0xFF635BFF)
+private val Background = AppColors.background
+private val White = AppColors.surface
+private val DarkText = AppColors.textPrimary
+private val Blue = AppColors.blue
+private val BlueLight = AppColors.blueLight
+private val Green = AppColors.green
+private val GreenLight = AppColors.greenLight
+private val Red = AppColors.red
+private val RedLight = AppColors.redLight
+private val Border = AppColors.border
+private val Purple = AppColors.purple
 
 data class EquipmentItem(
     val id: String,
@@ -88,7 +103,8 @@ data class EquipmentItem(
     val maintenanceFrequency: String,
     val imageUrl: String? = null,
     val imageRes: Int? = null,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val companyName: String = ""
 )
 
 @Composable
@@ -102,9 +118,11 @@ fun EquipmentListScreen(
     onSearchClick: () -> Unit = {},
     onFilterClick: () -> Unit = {},
     onAddClick: () -> Unit = {},
+    onCreateEquipmentClick: () -> Unit = {},
     onHomeClick: () -> Unit = {},
     onMessagesClick: () -> Unit = {},
     onEquipmentTabClick: () -> Unit = {},
+    onTasksClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onScanClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
@@ -119,12 +137,16 @@ fun EquipmentListScreen(
             .statusBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            EquipmentHeader(
+            AppHeader(
                 title = title,
-                onMenuClick = onMenuClick,
-                onScanClick = onScanClick,
-                onNotificationClick = onNotificationClick,
-                onBackClick = onBackClick
+                leadingIcon = if (onBackClick != null) AppIcons.back else AppIcons.menu,
+                leadingDescription = if (onBackClick != null) "Back" else "Menu",
+                onLeadingClick = onBackClick ?: onMenuClick,
+                actions = listOf(
+                    AppHeaderAction(AppIcons.add, "Add equipment", onCreateEquipmentClick),
+                    AppHeaderAction(AppIcons.scan, "Scan", onScanClick),
+                    AppHeaderAction(AppIcons.notifications, "Notifications", onNotificationClick)
+                )
             )
             EquipmentSearchBar(
                 query = searchQuery,
@@ -139,10 +161,15 @@ fun EquipmentListScreen(
                         .fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "No equipment found",
-                        fontSize = 16.sp,
-                        color = Color(0xFF8990A8)
+                    com.example.app.ui.theme.AppEmptyState(
+                        title = if (searchQuery.isBlank()) "No equipment yet" else "No matching equipment",
+                        subtitle = if (searchQuery.isBlank()) {
+                            "Add equipment to a company to see it here."
+                        } else {
+                            "Try a different equipment or company name."
+                        },
+                        actionLabel = if (searchQuery.isBlank()) "Add equipment" else null,
+                        onAction = if (searchQuery.isBlank()) onCreateEquipmentClick else null
                     )
                 }
             } else {
@@ -150,8 +177,8 @@ fun EquipmentListScreen(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
-                    contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 90.dp),
-                    verticalArrangement = Arrangement.spacedBy(11.dp)
+                    contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     itemsIndexed(
                         items = equipments,
@@ -165,20 +192,15 @@ fun EquipmentListScreen(
                     }
                 }
             }
-            EquipmentBottomNavigation(
+            AppBottomBar(
+                selected = AppTab.EQUIPMENT,
                 onHomeClick = onHomeClick,
-                onMessagesClick = onMessagesClick,
+                onEquipmentClick = onMessagesClick,
                 onAddClick = onAddClick,
-                onEquipmentClick = onEquipmentTabClick,
+                onTasksClick = onTasksClick,
                 onProfileClick = onProfileClick
             )
         }
-        FloatingAddButton(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 18.dp, bottom = 82.dp),
-            onClick = onAddClick
-        )
     }
     }
 }
@@ -199,11 +221,11 @@ private fun EquipmentHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = if (onBackClick != null) Icons.Default.ArrowBack else Icons.Default.GridView,
+            imageVector = if (onBackClick != null) Icons.Default.ArrowBack else Icons.Default.Menu,
             contentDescription = if (onBackClick != null) "Back" else "Menu",
             tint = DarkText,
             modifier = Modifier
-                .size(27.dp)
+                .size(20.dp)
                 .clickable(onClick = onBackClick ?: onMenuClick)
         )
         Spacer(modifier = Modifier.width(14.dp))
@@ -212,7 +234,9 @@ private fun EquipmentHeader(
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = DarkText,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Icon(
             imageVector = Icons.Default.QrCodeScanner,
@@ -262,7 +286,7 @@ private fun EquipmentSearchBar(
                 contentDescription = null,
                 tint = Color(0xFF78819D),
                 modifier = Modifier
-                    .size(27.dp)
+                    .size(AppIcons.header)
                     .clickable(onClick = onSearchClick)
             )
             Spacer(modifier = Modifier.width(11.dp))
@@ -276,8 +300,8 @@ private fun EquipmentSearchBar(
                 decorationBox = { inner ->
                     if (query.isEmpty()) {
                         Text(
-                            text = "Search equipments by name, model or location...",
-                            fontSize = 14.sp,
+                            text = "Search by equipment or company name",
+                            style = AppType.body,
                             color = Color(0xFF8990A8),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -301,9 +325,71 @@ private fun EquipmentSearchBar(
                 imageVector = Icons.Default.FilterList,
                 contentDescription = "Filter",
                 tint = Purple,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(AppIcons.header)
             )
         }
+    }
+}
+
+@Composable
+private fun EquipmentPager(
+    page: Int,
+    pageCount: Int,
+    total: Int,
+    onPageChange: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Background)
+            .padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        PagerButton(
+            label = "Prev",
+            enabled = page > 0,
+            modifier = Modifier.weight(1f),
+            onClick = { onPageChange(page - 1) }
+        )
+        Text(
+            text = "${page + 1} / $pageCount · $total",
+            style = AppType.caption,
+            color = Color(0xFF687080),
+            modifier = Modifier.weight(1.2f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        PagerButton(
+            label = "Next",
+            enabled = page < pageCount - 1,
+            modifier = Modifier.weight(1f),
+            onClick = { onPageChange(page + 1) }
+        )
+    }
+}
+
+@Composable
+private fun PagerButton(
+    label: String,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .height(36.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (enabled) Blue.copy(alpha = 0.12f) else Color(0xFFF0F2F5))
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            style = AppType.cardTitle,
+            color = if (enabled) Blue else Color(0xFF9AA3B2)
+        )
     }
 }
 
@@ -318,11 +404,11 @@ private fun EquipmentCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
-            .clip(RoundedCornerShape(17.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(White)
-            .border(1.dp, Color(0xFFE9EBF2), RoundedCornerShape(17.dp))
+            .border(1.dp, Color(0xFFE9EBF2), RoundedCornerShape(12.dp))
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(12.dp)
+            .padding(8.dp)
     ) {
         EquipmentImage(equipment = equipment)
         Spacer(modifier = Modifier.width(13.dp))
@@ -340,10 +426,9 @@ private fun EquipmentCard(
 private fun EquipmentImage(equipment: EquipmentItem) {
     Box(
         modifier = Modifier
-            .width(118.dp)
-            .fillMaxHeight()
-            .heightIn(min = 148.dp)
-            .clip(RoundedCornerShape(11.dp))
+            .width(44.dp)
+            .height(56.dp)
+            .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFFE7E4DF)),
         contentAlignment = Alignment.Center
     ) {
@@ -378,7 +463,7 @@ private fun EquipmentImage(equipment: EquipmentItem) {
                         imageVector = Icons.Default.Settings,
                         contentDescription = null,
                         tint = Color(0xFF687080),
-                        modifier = Modifier.size(45.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.height(7.dp))
                     Text(
@@ -410,8 +495,7 @@ private fun EquipmentTitle(equipment: EquipmentItem) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = equipment.name,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
+                    style = AppType.cardTitle,
                     color = DarkText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -422,8 +506,8 @@ private fun EquipmentTitle(equipment: EquipmentItem) {
             }
             Spacer(modifier = Modifier.height(5.dp))
             Text(
-                text = equipment.description,
-                fontSize = 14.sp,
+                text = equipment.description.ifBlank { equipment.companyName }.ifBlank { "-" },
+                style = AppType.body,
                 color = DarkText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -459,8 +543,7 @@ private fun ActiveBadge(isActive: Boolean) {
         Spacer(modifier = Modifier.width(5.dp))
         Text(
             text = if (isActive) "Active" else "Inactive",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = AppType.caption,
             color = color
         )
     }
@@ -477,7 +560,7 @@ private fun DetailsHeader() {
     ) {
         Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = Blue, modifier = Modifier.size(15.dp))
         Spacer(modifier = Modifier.width(6.dp))
-        Text(text = "Details", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Blue)
+        Text(text = "Details", style = AppType.cardTitle, color = Blue)
     }
 }
 
@@ -490,6 +573,7 @@ private fun EquipmentDetails(equipment: EquipmentItem) {
             .background(BlueLight)
             .padding(horizontal = 10.dp, vertical = 8.dp)
     ) {
+        EquipmentDetailRow(Icons.Default.Business, "Company", equipment.companyName)
         EquipmentDetailRow(Icons.Default.Settings, "Model Number", equipment.modelNumber)
         EquipmentDetailRow(Icons.Default.LocationOn, "Location", equipment.location)
         EquipmentDetailRow(Icons.Default.Tag, "Serial Number", equipment.serialNumber)
@@ -505,21 +589,21 @@ private fun EquipmentDetailRow(icon: ImageVector, label: String, value: String) 
             .padding(vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = Blue, modifier = Modifier.size(15.dp))
+        Icon(imageVector = icon, contentDescription = null, tint = Blue, modifier = Modifier.size(AppIcons.row))
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = label,
-            fontSize = 14.sp,
+            style = AppType.body,
             color = DarkText,
             modifier = Modifier.width(112.dp),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        Text(text = ":", fontSize = 14.sp, color = DarkText)
+        Text(text = ":", style = AppType.body, color = DarkText)
         Spacer(modifier = Modifier.width(9.dp))
         Text(
             text = value.ifBlank { "-" },
-            fontSize = 14.sp,
+            style = AppType.body,
             color = DarkText,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

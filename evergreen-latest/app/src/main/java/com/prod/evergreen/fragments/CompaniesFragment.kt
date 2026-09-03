@@ -37,6 +37,7 @@ import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.DateConverter
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import com.prod.evergreen.helper.TabNav
 import com.prod.evergreen.helper.Validator
 import com.prod.evergreen.models.AMCData
 import com.prod.evergreen.models.isCompanyActive
@@ -71,7 +72,7 @@ class CompaniesFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         sharedPreferencesHelper = SharedPreferencesHelper(requireActivity())
-        val greeting = greetingForRole(sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE))
+        val greeting = displayName(sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE))
 
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -96,15 +97,11 @@ class CompaniesFragment : Fragment() {
                         source.firstOrNull { it.id == company.id }?.let { showCompanyActions(it) }
                     },
                     onFilterClick = { showFilterDialog() },
-                    onAddClick = { goTo(R.id.createAmcFragment, "Create AMC") },
-                    onHomeClick = { goTo(R.id.homeFragment, "Home") },
-                    onMessagesClick = {
-                        startActivity(Intent(requireActivity(), NotificationList::class.java))
-                    },
-                    onTasksClick = { goTo(R.id.taskFragment, "Tasks List") },
-                    onProfileClick = {
-                        startActivity(Intent(requireActivity(), com.prod.evergreen.activities.UserDetails::class.java))
-                    },
+                    onAddClick = { TabNav.createAmc(this@CompaniesFragment) },
+                    onHomeClick = { TabNav.home(this@CompaniesFragment) },
+                    onMessagesClick = { TabNav.equipment(this@CompaniesFragment) },
+                    onTasksClick = { TabNav.tasks(this@CompaniesFragment) },
+                    onProfileClick = { TabNav.profile(this@CompaniesFragment) },
                     onScanClick = {
                         startActivity(Intent(requireActivity(), QrScanner::class.java))
                     },
@@ -122,7 +119,7 @@ class CompaniesFragment : Fragment() {
         setViewmodel()
 
         viewModel.loading.observe(viewLifecycleOwner) { loading ->
-            if (loading) {
+            if (loading && allCompanies.value.isEmpty()) {
                 ProgressDialogUtil.showProgressDialog(requireActivity(), "Loading")
             } else {
                 ProgressDialogUtil.hideProgressDialog()
@@ -154,6 +151,19 @@ class CompaniesFragment : Fragment() {
         }
 
         refreshCompanies()
+    }
+
+    private var companiesReady = false
+
+    override fun onResume() {
+        super.onResume()
+        if (!companiesReady) {
+            companiesReady = true
+            return
+        }
+        if (::viewModel.isInitialized) {
+            refreshCompanies()
+        }
     }
 
     private fun List<AMCData>.toUiCompanies(query: String, filter: FilterMode): List<Company> {
@@ -189,14 +199,13 @@ class CompaniesFragment : Fragment() {
         )
     }
 
-    private fun greetingForRole(role: String?): String {
-        return when (role) {
-            "eg_super_admin" -> "Admin"
-            "eg_admin" -> "Manager"
-            "client_admin", "client" -> "Client"
-            "technician" -> "Technician"
-            else -> sharedPreferencesHelper.getValueString(ConstantValues.PREF_USERNAME) ?: "Admin"
-        }
+    private fun displayName(role: String?): String {
+        val stored = sharedPreferencesHelper.getValueString(ConstantValues.PREF_USERNAME)
+            ?.trim()
+            ?.substringBefore(" ")
+            ?.takeIf { it.isNotBlank() }
+        if (!stored.isNullOrBlank()) return stored
+        return com.prod.evergreen.helper.RoleLabels.display(role).takeIf { it != "-" } ?: "there"
     }
 
     private fun showFilterDialog() {
@@ -240,12 +249,18 @@ class CompaniesFragment : Fragment() {
             .setTitle(companyName)
             .setItems(arrayOf("Edit Company", statusAction, "Cancel")) { dialog, which ->
                 when (which) {
-                    0 -> showEditCompanyDialog(company)
+                    0 -> openEditCompany(company)
                     1 -> showCompanyStatusDialog(company)
                     else -> dialog.dismiss()
                 }
             }
             .show()
+    }
+
+    private fun openEditCompany(company: AMCData) {
+        com.prod.evergreen.helper.DashboardNav.pendingCompanyJson =
+            com.google.gson.Gson().toJson(company)
+        goTo(R.id.createAmcFragment, "Edit AMC")
     }
 
     private fun showEditCompanyDialog(company: AMCData) {

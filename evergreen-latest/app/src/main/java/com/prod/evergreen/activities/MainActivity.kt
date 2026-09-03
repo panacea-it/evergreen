@@ -79,43 +79,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         navController = findNavController(R.id.nav_host_fragment)
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            setHomeChrome(
-                destination.id == R.id.homeFragment ||
-                    destination.id == R.id.companiesFragment ||
-                    destination.id == R.id.createAmcFragment ||
-                    destination.id == R.id.taskFragment ||
-                    destination.id == R.id.createTaskFragment ||
-                    destination.id == R.id.equipmentFragment ||
-                    destination.id == R.id.addEquipmentFragment ||
-                    destination.id == R.id.amc_mangers
-            )
+        navController.addOnDestinationChangedListener { _, _, _ ->
+            setHomeChrome(true)
         }
         val accessLevel = getAccessLevelFromString(sharedPreferencesHelper.getValueString(
             ConstantValues.TYPE_ROLE
         ))
         val items = getItemsForAccessLevel(accessLevel)
 
-        when(accessLevel.toString()){
-            "eg_admin"->{
-             binding.navHeader.accessLevel.text="Manager"
-             }
-            "client_admin"->{
-                binding.navHeader.accessLevel.text="Client"
-            }
-            "technician"->{
-                binding.navHeader.accessLevel.text="Technician"
-            }
-            "eg_super_admin"->{
-                binding.navHeader.accessLevel.text="Admin"
-            }
-            "client"->{
-                binding.navHeader.accessLevel.text="Client"
-            }
-            else -> {
-                println("Unknown access level.")
-            }
-        }
+        binding.navHeader.accessLevel.text = com.prod.evergreen.helper.RoleLabels.display(
+            sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        )
 
         binding.navigationRv.adapter = CustomMenuAdapter(items) { selectedItem ->
             navigateToDestination(selectedItem.destinationId, selectedItem.name)
@@ -127,28 +101,19 @@ class MainActivity : AppCompatActivity() {
         if (intent.getBooleanExtra("open_users", false)) {
             navigateToDestination(R.id.amc_mangers, "Users List")
         }
+        if (intent.getBooleanExtra("open_create_task", false)) {
+            intent.getStringExtra("equipment_data")?.let {
+                com.prod.evergreen.helper.DashboardNav.pendingEquipmentJson = it
+            }
+            navigateToDestination(R.id.createTaskFragment, "Create Task")
+        }
+        if (intent.getBooleanExtra("open_create_amc", false)) {
+            navigateToDestination(R.id.createAmcFragment, "Create AMC")
+        }
 
         binding.navHeader.userName.text=sharedPreferencesHelper.getValueString(ConstantValues.PREF_USERNAME)
         binding.navHeader.mobileNumber.text=sharedPreferencesHelper.getValueString(ConstantValues.PREF_MOBILE)
-        binding.navHeader.logout.setOnClickListener {
-            PopupDialog.getInstance(this)!!
-                .setStyle(Styles.IOS)!!
-                .setHeading("Logout")!!
-                .setDescription("Are you sure want to logout")!!
-                .setCancelable(false)!!
-                .setPositiveButtonText(getString(R.string.positive))!!
-                .showDialog(object : OnDialogButtonClickListener() {
-                    override fun onPositiveClicked(dialog: Dialog?) {
-                        super.onPositiveClicked(dialog)
-                       // removeFirebaseMessage()
-                        sharedPreferencesHelper.clearSharedPreferences()
-                        startActivity(Intent(this@MainActivity, Login::class.java))
-                        finishAffinity()
-                    }
-                }, false)
-
-
-        }
+        binding.logout.setOnClickListener { confirmLogout() }
         viewModel.assignTechnicianDataResponse.observe(this) { response ->
             if (response.status_code==200)
             showDialog(response.message!!)
@@ -207,51 +172,55 @@ class MainActivity : AppCompatActivity() {
 
     private fun getItemsForAccessLevel(accessLevel: Enums.Companion.ClientRole): List<ListItem> {
         val allItems = listOf(
-            ListItem("Home", R.drawable.home_nav, R.id.homeFragment),
-            ListItem("Company’s List", R.drawable.ic_companys_list_icon, R.id.companiesFragment),
-            ListItem("Equipments List", R.drawable.ic_equipments_list_icon, R.id.equipmentFragment),
-            ListItem("Tasks List", R.drawable.ic_tasks_list_icon, R.id.taskFragment),
-            ListItem("Create Task", R.drawable.ic_create_task_icon, R.id.createTaskFragment),
-           // ListItem("Add Users", R.drawable.ic_add_user_icon, R.id.createManagerFragment),
-            ListItem("Users List", R.drawable.ic_users_list_icon, R.id.amc_mangers),
-            ListItem("Assign Tasks to Technician", R.drawable.ic_assign_tasks_to_technician_icon, R.id.taskFragment),
-        //    ListItem("Create Technian ", R.drawable.ic_create_techni_n_icon, R.id.amc_mangers),
-       //     ListItem("Create  Manager", R.drawable.ic_create_manager_icon, R.id.amc_mangers),
-            ListItem("Create AMC", R.drawable.ic_create_amc_icon, R.id.createAmcFragment),
-            ListItem("Upload Equipments Excel Data", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadEqpmntExcelData),
-            ListItem("Upload AMCs Excel Data", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadAmcExcelData),
-            ListItem("Upload Technicians Excel Data", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadTechnicianExcelData),
-            ListItem("Download QR", R.drawable.ic_pending_task_list_icon, R.id.downloadQrFragment),
-         //   ListItem("Notifications", R.drawable.ic_notifications_icon, R.id.uploadEqpmntExcelData),
-            ListItem("Add Equipment", R.drawable.ic_add_equipment_icon, R.id.addEquipmentFragment)
+            ListItem("Home", R.drawable.home_nav, R.id.homeFragment, "Home"),
+            ListItem("Companies", R.drawable.ic_companys_list_icon, R.id.companiesFragment, "Company’s List"),
+            ListItem("Equipment", R.drawable.ic_equipments_list_icon, R.id.equipmentFragment, "Equipments List"),
+            ListItem("Tasks", R.drawable.ic_tasks_list_icon, R.id.taskFragment, "Tasks List"),
+            ListItem("Create Task", R.drawable.ic_create_task_icon, R.id.createTaskFragment, "Create Task"),
+            ListItem("Users", R.drawable.ic_users_list_icon, R.id.amc_mangers, "Users List"),
+            ListItem("Assign Tasks", R.drawable.ic_assign_tasks_to_technician_icon, R.id.taskFragment, "Assign Tasks to Technician"),
+            ListItem("Create AMC", R.drawable.ic_create_amc_icon, R.id.createAmcFragment, "Create AMC"),
+            ListItem("Upload Equipment", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadEqpmntExcelData, "Upload Equipments Excel Data"),
+            ListItem("Upload AMCs", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadAmcExcelData, "Upload AMCs Excel Data"),
+            ListItem("Upload Technicians", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadTechnicianExcelData, "Upload Technicians Excel Data"),
+            ListItem("Download QR", R.drawable.ic_pending_task_list_icon, R.id.downloadQrFragment, "Download QR"),
+            ListItem("Add Equipment", R.drawable.ic_add_equipment_icon, R.id.addEquipmentFragment, "Add Equipment")
         )
 
         return when (accessLevel) {
             Enums.Companion.ClientRole.eg_super_admin -> allItems.filter {
-                it.name != "Equipments List"
+                it.key != "Equipments List"
             }
             Enums.Companion.ClientRole.eg_admin -> allItems.filter {
-                it.name != "Equipments List"
+                it.key != "Equipments List"
             }
 
             Enums.Companion.ClientRole.technician -> allItems.filter {
-                it.name in listOf("Home","Equipments List", "Tasks List")
+                it.key in listOf("Home", "Equipments List", "Tasks List")
             }
 
             Enums.Companion.ClientRole.client -> allItems.filter {
-               // navController.navigate(R.id.equipmentFragment)
-                it.name in listOf("Home","Equipments List", "Tasks List","Create Task","Add Equipment","Download QR")
+                it.key in listOf("Home", "Equipments List", "Tasks List", "Create Task", "Add Equipment", "Download QR")
             }
 
             Enums.Companion.ClientRole.client_admin -> allItems.filter {
-                it.name in listOf("Home","Equipments List", "Tasks List","Create Task","Upload Equipments Excel Data","Add Equipment","Download QR","Users List")
+                it.key in listOf(
+                    "Home",
+                    "Equipments List",
+                    "Tasks List",
+                    "Create Task",
+                    "Upload Equipments Excel Data",
+                    "Add Equipment",
+                    "Download QR",
+                    "Users List"
+                )
             }
 
             Enums.Companion.ClientRole.others -> allItems.filter {
-                it.name in listOf("Home", "Notifications")
+                it.key in listOf("Home", "Notifications")
             }
         }.filter { item ->
-            item.name != "Assign Tasks to Technician" ||
+            item.key != "Assign Tasks to Technician" ||
                 RoleAccess.canAssignTechnician(accessLevel.name)
         }
     }
@@ -272,6 +241,15 @@ class MainActivity : AppCompatActivity() {
         setIntent(intent)
         if (intent.getBooleanExtra("open_users", false)) {
             navigateToDestination(R.id.amc_mangers, "Users List")
+        }
+        if (intent.getBooleanExtra("open_create_task", false)) {
+            intent.getStringExtra("equipment_data")?.let {
+                com.prod.evergreen.helper.DashboardNav.pendingEquipmentJson = it
+            }
+            navigateToDestination(R.id.createTaskFragment, "Create Task")
+        }
+        if (intent.getBooleanExtra("open_create_amc", false)) {
+            navigateToDestination(R.id.createAmcFragment, "Create AMC")
         }
         handleNotificationIntent(intent)
     }
@@ -405,6 +383,23 @@ private fun handleNotificationIntent(intent: Intent) {
                 ContextCompat.getDrawable(this, R.drawable.top_rounded_corners)
             binding.mainActivityContentId.setBackgroundResource(R.drawable.kitechn_back)
         }
+    }
+
+    fun confirmLogout() {
+        PopupDialog.getInstance(this)!!
+            .setStyle(Styles.IOS)!!
+            .setHeading("Logout")!!
+            .setDescription("Are you sure want to logout")!!
+            .setCancelable(false)!!
+            .setPositiveButtonText(getString(R.string.positive))!!
+            .showDialog(object : OnDialogButtonClickListener() {
+                override fun onPositiveClicked(dialog: Dialog?) {
+                    super.onPositiveClicked(dialog)
+                    sharedPreferencesHelper.clearSharedPreferences()
+                    startActivity(Intent(this@MainActivity, Login::class.java))
+                    finishAffinity()
+                }
+            }, false)
     }
 
 }

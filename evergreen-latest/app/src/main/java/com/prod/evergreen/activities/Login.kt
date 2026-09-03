@@ -8,9 +8,14 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.example.app.ui.auth.LoginScreen
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.tasks.OnCompleteListener
@@ -30,7 +35,6 @@ import com.prod.evergreen.api.MainRepository
 import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
-import com.prod.evergreen.databinding.ActivityLoginBinding
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
@@ -43,8 +47,9 @@ class Login : AppCompatActivity() {
 
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private lateinit var viewModel: MainViewModel
-    lateinit var bindingLoginBinding: ActivityLoginBinding
     private var fcmToken:String=""
+    private var phoneState = mutableStateOf("")
+    private var passwordState = mutableStateOf("")
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -67,8 +72,18 @@ class Login : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        bindingLoginBinding = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(bindingLoginBinding.root)
+        setContent {
+            val phone by phoneState
+            val password by passwordState
+            LoginScreen(
+                phone = phone,
+                password = password,
+                onPhoneChange = { phoneState.value = it },
+                onPasswordChange = { passwordState.value = it },
+                onSignInClick = { submitLogin() },
+                onForgotClick = { startActivity(Intent(this@Login, ForgotPassword::class.java)) }
+            )
+        }
 //        database = FirebaseDatabase.getInstance(this).reference
 
 
@@ -203,58 +218,37 @@ class Login : AppCompatActivity() {
 
 
         viewModel.errorMessage.observe(this) { errorMessage ->
-            // Show error message to user
             Toast.makeText(this, errorMessage.toString(), Toast.LENGTH_SHORT).show()
         }
-        bindingLoginBinding.apply {
+    }
 
-            signincard.setOnClickListener {
-                val email = editTextPhone.text.toString()
-                val password = editTextTextPassword.text.toString()
-
-                if (email.isEmpty()){
-                    Toast.makeText(this@Login,"Please Enter Mobile Number",Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-
-                else if(!Validator.isMobileValid(email)){
-                    Toast.makeText(this@Login,"Please Enter Valid Mobile Number",Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-
-                }
-                else if (password.isEmpty()){
-                    Toast.makeText(this@Login,"Please Enter password",Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-
-                }
-
-
-
-                val object1 = JsonObject()
-                object1.addProperty("phone", email)
-                object1.addProperty("password", password)
-                if (fcmToken.isNotBlank()) {
-                    object1.addProperty("fcm_id", fcmToken)
-                }
-                if (!androidId.isNullOrBlank()) {
-                    object1.addProperty("device_id", androidId)
-                }
-                Log.d("Login", "signIn phone=$email fcm=${fcmToken.isNotBlank()} device=${!androidId.isNullOrBlank()}")
-                viewModel.userLogin(object1)
-
-
-            }
-
-
-            tvForgot.setOnClickListener {
-
-
-               startActivity(Intent(this@Login, ForgotPassword::class.java))
-            }
-
-
+    private fun submitLogin() {
+        val email = phoneState.value
+        val password = passwordState.value
+        if (email.isEmpty()) {
+            Toast.makeText(this, "Please Enter Mobile Number", Toast.LENGTH_SHORT).show()
+            return
         }
-
+        if (!Validator.isMobileValid(email)) {
+            Toast.makeText(this, "Please Enter Valid Mobile Number", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (password.isEmpty()) {
+            Toast.makeText(this, "Please Enter password", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        val object1 = JsonObject()
+        object1.addProperty("phone", email)
+        object1.addProperty("password", password)
+        if (fcmToken.isNotBlank()) {
+            object1.addProperty("fcm_id", fcmToken)
+        }
+        if (!androidId.isNullOrBlank()) {
+            object1.addProperty("device_id", androidId)
+        }
+        Log.d("Login", "signIn phone=$email fcm=${fcmToken.isNotBlank()} device=${!androidId.isNullOrBlank()}")
+        viewModel.userLogin(object1)
     }
 
     fun isValidPhoneNumber(phoneNumber: String): Boolean {

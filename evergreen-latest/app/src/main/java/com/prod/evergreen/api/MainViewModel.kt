@@ -749,6 +749,9 @@ if (response.data.status==200) {
                 is NetworkState.Success -> {
                     equipmentDataResponse.postValue(response.data)
                     loading.value = false
+                    if (response.data.data == null) {
+                        onError(response.data.message ?: "Equipment details were not found.")
+                    }
                 }
                is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
@@ -903,6 +906,25 @@ if (response.data.status==200) {
 
 
 
+
+    fun getNotificationsPage(authenticator: String, page: Int, limit: Int = 20) {
+        loading.value = page == 1
+        viewModelScope.launch(exceptionHandler) {
+            val body = JsonObject()
+            body.addProperty("page", page)
+            body.addProperty("limit", limit)
+            when (val response = mainRepository.getNotificationsPage(authenticator, body)) {
+                is NetworkState.Success -> {
+                    notificationsListResponse.postValue(response.data)
+                    loading.value = false
+                }
+                is NetworkState.Error -> {
+                    loading.value = false
+                    onError(response.message ?: "Unable to load notifications")
+                }
+            }
+        }
+    }
 
     fun getNotifications(authenticator: String) {
         loading.value = true

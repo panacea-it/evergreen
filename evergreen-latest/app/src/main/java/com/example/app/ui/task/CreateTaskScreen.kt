@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -54,22 +55,27 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
+import com.example.app.ui.theme.AppColors
 import com.example.app.ui.theme.EvergreenTheme
 
-private val Background = Color(0xFFF9FAFD)
-private val White = Color.White
-private val DarkText = Color(0xFF202443)
-private val SecondaryText = Color(0xFF858BA0)
-private val Purple = Color(0xFF5C52F5)
-private val PurpleLight = Color(0xFFF3F1FF)
-private val Border = Color(0xFFE7E8F1)
-private val RequiredRed = Color(0xFFE34251)
+private val Background = AppColors.background
+private val White = AppColors.surface
+private val DarkText = AppColors.textPrimary
+private val SecondaryText = AppColors.textSecondary
+private val Purple = AppColors.purple
+private val PurpleLight = AppColors.purpleLight
+private val Border = AppColors.border
+private val RequiredRed = AppColors.red
 
 data class CreateTaskFormState(
+    val title: String = "Create Task",
+    val subtitle: String = "Add new task",
+    val saveLabel: String = "Create Task",
     val companyName: String = "",
     val branchName: String = "",
     val location: String = "",
@@ -109,12 +115,13 @@ fun CreateTaskScreen(
             .fillMaxSize()
             .background(Background)
             .statusBarsPadding()
+            .navigationBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            CreateTaskHeader(
-                onBackClick = onBackClick,
-                onMenuClick = onMenuClick,
-                onNotificationClick = onNotificationClick
+            com.example.app.ui.theme.AppHeader(
+                title = state.title,
+                subtitle = state.subtitle,
+                onLeadingClick = onBackClick
             )
             Column(
                 modifier = Modifier
@@ -137,13 +144,6 @@ fun CreateTaskScreen(
                 )
                 Spacer(modifier = Modifier.height(15.dp))
             }
-            BottomNavigation(
-                onHomeClick = onHomeClick,
-                onMessagesClick = onMessagesClick,
-                onAddClick = onAddClick,
-                onTasksClick = onTasksClick,
-                onProfileClick = onProfileClick
-            )
         }
     }
     }
@@ -301,13 +301,8 @@ private fun TaskInformationCard(
             onClick = onEquipmentClick
         )
         if (state.equipmentSummary.isNotBlank()) {
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = state.equipmentSummary,
-                fontSize = 14.sp,
-                color = SecondaryText,
-                modifier = Modifier.padding(start = 53.dp)
-            )
+            Spacer(modifier = Modifier.height(8.dp))
+            EquipmentSummaryCard(summary = state.equipmentSummary)
         }
         Spacer(modifier = Modifier.height(12.dp))
         SelectField(
@@ -348,8 +343,57 @@ private fun TaskInformationCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            CreateTaskButton(modifier = Modifier.weight(1f), onClick = onCreateTaskClick)
+            CreateTaskButton(modifier = Modifier.weight(1f), label = state.saveLabel, onClick = onCreateTaskClick)
             CancelButton(modifier = Modifier.weight(1f), onClick = onCancelClick)
+        }
+    }
+}
+
+@Composable
+private fun EquipmentSummaryCard(summary: String) {
+    val rows = summary
+        .split("  ·  ", "\n", " · ")
+        .map { it.trim() }
+        .filter { it.isNotBlank() }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xFFF7F8FB))
+            .border(1.dp, Border, RoundedCornerShape(10.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+    ) {
+        rows.forEachIndexed { index, row ->
+            val label = row.substringBefore(":", missingDelimiterValue = "").trim().ifBlank { "Info" }
+            val value = row.substringAfter(":", missingDelimiterValue = row).trim()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = label,
+                    fontSize = 12.sp,
+                    color = SecondaryText,
+                    modifier = Modifier.width(88.dp)
+                )
+                Text(
+                    text = value.ifBlank { "-" },
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = DarkText,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            if (index != rows.lastIndex) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(Border)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
     }
 }
@@ -393,12 +437,12 @@ private fun SelectField(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(42.dp)
+                    .heightIn(min = 56.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color(0xFFFCFCFF))
                     .border(1.dp, Border, RoundedCornerShape(8.dp))
                     .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
-                    .padding(horizontal = 11.dp),
+                    .padding(horizontal = 11.dp, vertical = 10.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -406,6 +450,8 @@ private fun SelectField(
                         text = value.ifEmpty { placeholder },
                         fontSize = 14.sp,
                         color = if (value.isEmpty()) Color(0xFF8E95A8) else DarkText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
                     Icon(
@@ -438,7 +484,7 @@ private fun DescriptionField(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(91.dp)
+                    .heightIn(min = 110.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .border(1.dp, Border, RoundedCornerShape(8.dp))
             ) {
@@ -455,7 +501,9 @@ private fun DescriptionField(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
                 )
             }
         }
@@ -495,7 +543,7 @@ private fun TextFieldContainer(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(42.dp)
+            .heightIn(min = 56.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFFFCFCFF))
             .border(1.dp, Border, RoundedCornerShape(8.dp))
@@ -504,7 +552,13 @@ private fun TextFieldContainer(
             value = value,
             onValueChange = onValueChange,
             placeholder = {
-                Text(text = placeholder, fontSize = 14.sp, color = Color(0xFF969CAE))
+                Text(
+                    text = placeholder,
+                    fontSize = 14.sp,
+                    color = Color(0xFF969CAE),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             },
             singleLine = true,
             textStyle = TextStyle(fontSize = 14.sp, color = DarkText),
@@ -514,7 +568,9 @@ private fun TextFieldContainer(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent
             ),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp)
         )
     }
 }
@@ -614,7 +670,7 @@ private fun UploadPhotoSection(
 }
 
 @Composable
-private fun CreateTaskButton(modifier: Modifier, onClick: () -> Unit) {
+private fun CreateTaskButton(modifier: Modifier, label: String, onClick: () -> Unit) {
     Box(
         modifier = modifier
             .height(42.dp)
@@ -626,7 +682,7 @@ private fun CreateTaskButton(modifier: Modifier, onClick: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(imageVector = Icons.Default.TaskAlt, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(7.dp))
-            Text(text = "Create Task", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.White)
+            Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.White)
         }
     }
 }

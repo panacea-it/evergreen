@@ -11,7 +11,19 @@ data class NotificationsListResponse(
 	val message: String? = null,
 
 	@field:SerializedName("status")
-	val status: Int? = null
+	val status: Int? = null,
+
+    @field:SerializedName("page")
+    val page: Int? = null,
+
+    @field:SerializedName("limit")
+    val limit: Int? = null,
+
+    @field:SerializedName("total")
+    val total: Int? = null,
+
+    @field:SerializedName("has_more")
+    val hasMore: Boolean? = null
 )
 
 data class DataItem(

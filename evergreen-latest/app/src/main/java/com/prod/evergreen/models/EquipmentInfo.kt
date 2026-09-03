@@ -8,7 +8,10 @@ data class EquipmentInfo(
 	val data: ResponseData? = null,
 
 	@field:SerializedName("success")
-	val success: Int? = null
+	val success: Int? = null,
+
+	@field:SerializedName("message")
+	val message: String? = null
 )
 
 data class TaskData(

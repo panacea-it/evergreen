@@ -50,6 +50,7 @@ import com.prod.evergreen.helper.CameraCaptureHelper
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.FormValidator
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import com.prod.evergreen.helper.TabNav
 import com.prod.evergreen.helper.Validator
 import com.prod.evergreen.helper.compressor.Compressor
 import com.prod.evergreen.helper.compressor.FileUtil
@@ -88,6 +89,7 @@ class CreateAmcFragment : Fragment() {
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private lateinit var viewModel: MainViewModel
     private val formState = mutableStateOf(CreateAmcFormState())
+    private var editCompanyId: Int? = null
 
     val pickImageFromGalleryForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
@@ -115,6 +117,7 @@ class CreateAmcFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         sharedPreferencesHelper = SharedPreferencesHelper(requireActivity())
+        applyPendingCompany()
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
@@ -149,14 +152,10 @@ class CreateAmcFragment : Fragment() {
                     onLogoClick = { showImageSourceDialog() },
                     onClearLogoClick = { clearLogo() },
                     onSaveClick = { submitAmc() },
-                    onHomeClick = { goTo(R.id.homeFragment, "Home") },
-                    onMessagesClick = {
-                        startActivity(Intent(requireActivity(), NotificationList::class.java))
-                    },
-                    onTasksClick = { goTo(R.id.taskFragment, "Tasks List") },
-                    onProfileClick = {
-                        startActivity(Intent(requireActivity(), com.prod.evergreen.activities.UserDetails::class.java))
-                    }
+                    onHomeClick = { TabNav.home(this@CreateAmcFragment) },
+                    onMessagesClick = { TabNav.equipment(this@CreateAmcFragment) },
+                    onTasksClick = { TabNav.tasks(this@CreateAmcFragment) },
+                    onProfileClick = { TabNav.profile(this@CreateAmcFragment) }
                 )
             }
         }
@@ -214,7 +213,7 @@ class CreateAmcFragment : Fragment() {
             siteBranch.isBlank() -> "Please enter branch name"
             startDate.isBlank() -> "Select start date"
             endDate.isBlank() -> "Select end date"
-            compressedImage == null || file_name.isNullOrBlank() -> "Please select image"
+            file_name.isNullOrBlank() && compressedImage == null -> "Please select image"
             !FormValidator.cardCompleteOrEmpty(pocName, pocMobile, pocMail, password) ->
                 "Please fill all Client Admin details or leave them empty"
             pocMobile.isNotBlank() && !Validator.isMobileValid(pocMobile) ->
@@ -251,7 +250,55 @@ class CreateAmcFragment : Fragment() {
             return
         }
         isSubmitting = true
-        viewModel.createAMC(object1, token)
+        val companyId = editCompanyId
+        if (companyId != null) {
+            if (password.isBlank()) {
+                object1.remove("password")
+            }
+            viewModel.updateAMC(companyId, object1, token)
+        } else {
+            viewModel.createAMC(object1, token)
+        }
+    }
+
+    private fun applyPendingCompany() {
+        val json = com.prod.evergreen.helper.DashboardNav.pendingCompanyJson ?: return
+        com.prod.evergreen.helper.DashboardNav.pendingCompanyJson = null
+        try {
+            val company = com.google.gson.Gson().fromJson(json, com.prod.evergreen.models.AMCData::class.java)
+            editCompanyId = company.id
+            file_name = company.logo
+            val poc = company.pocDetails?.user
+            val start = dateOnly(company.startDate)
+            val end = dateOnly(company.endDate)
+            if (start.isNotBlank()) {
+                runCatching {
+                    selectedStartDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(start)?.time
+                }
+            }
+            formState.value = CreateAmcFormState(
+                title = "Edit AMC",
+                subtitle = "Update company details",
+                saveLabel = "Update AMC",
+                siteName = company.name.orEmpty(),
+                branchName = company.branchName.orEmpty(),
+                companyEmail = company.email.orEmpty(),
+                siteLocation = company.location.orEmpty(),
+                startDate = start,
+                endDate = end,
+                clientName = poc?.name.orEmpty(),
+                mobileNumber = poc?.phone.orEmpty(),
+                email = poc?.email.orEmpty(),
+                logoRemoteUrl = company.logo
+            )
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun dateOnly(raw: String?): String {
+        if (raw.isNullOrBlank()) return ""
+        val date = raw.trim()
+        return if (date.contains("T") && date.length >= 10) date.substring(0, 10) else date
     }
 
     private fun showDatePicker(minDate: Long? = null, onDateSelected: (String, Long) -> Unit) {
@@ -448,7 +495,11 @@ class CreateAmcFragment : Fragment() {
                     super.onPositiveClicked(dialog)
                     isSubmitting = false
                     if (status) {
-                        clearFormAfterSuccess()
+                        if (editCompanyId != null) {
+                            findNavController().popBackStack()
+                        } else {
+                            clearFormAfterSuccess()
+                        }
                     }
                 }
             }, true)
@@ -459,6 +510,7 @@ class CreateAmcFragment : Fragment() {
         compressedImage = null
         actualImage = null
         file_name = null
+        editCompanyId = null
         formState.value = CreateAmcFormState()
     }
 

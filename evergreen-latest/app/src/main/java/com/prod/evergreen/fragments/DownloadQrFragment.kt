@@ -12,6 +12,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.navigation.fragment.findNavController
+import com.example.app.ui.qr.DownloadQrScreen
 import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -28,7 +34,6 @@ import com.prod.evergreen.api.MainRepository
 import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
-import com.prod.evergreen.databinding.FragmentDownloadQrBinding
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.ProgressDialogUtil
@@ -44,7 +49,10 @@ private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
 class DownloadQrFragment : Fragment() {
-    lateinit var binding: FragmentDownloadQrBinding
+    private val companyName = mutableStateOf("")
+    private val companyLocked = mutableStateOf(false)
+    private val canViewFile = mutableStateOf(false)
+    private var downloadedFile: File? = null
     private var param1: String? = null
     private var param2: String? = null
     var company_link_id: Int? = null
@@ -66,10 +74,38 @@ class DownloadQrFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        binding = FragmentDownloadQrBinding.inflate(layoutInflater, container, false)
         sharedPreferencesHelper = SharedPreferencesHelper(requireActivity())
         token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
-        return binding.root
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val company by companyName
+                val locked by companyLocked
+                val viewFile by canViewFile
+                DownloadQrScreen(
+                    companyName = company,
+                    companyLocked = locked,
+                    canViewFile = viewFile,
+                    onBackClick = { findNavController().popBackStack() },
+                    onCompanyClick = {
+                        showBottomSheetDialog { selectedItem ->
+                            companyName.value = selectedItem.name.orEmpty()
+                            company_link_id = selectedItem.id
+                        }
+                    },
+                    onDownloadClick = {
+                        if (companyName.value.isNotEmpty()) {
+                            downloadEquipment()
+                        } else {
+                            Toast.makeText(requireActivity(), "Please Select company", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onViewFileClick = {
+                        downloadedFile?.let { openPdfInSystemViewer(it) }
+                    }
+                )
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -83,9 +119,8 @@ class DownloadQrFragment : Fragment() {
             val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
             if (attachedId != 0) {
                 company_link_id = attachedId
-                binding.companySearc.setText(attachedName)
-                binding.companySearc.isEnabled = false
-                binding.companySearc.isClickable = false
+                companyName.value = attachedName.orEmpty()
+                companyLocked.value = true
             }
         }
 
@@ -98,26 +133,8 @@ class DownloadQrFragment : Fragment() {
             }
         }
 
-        if (!RoleAccess.lockToAttachedCompany(accessType)) {
-            binding.companySearc.setOnClickListener {
-                showBottomSheetDialog { selectedItem ->
-                    binding.companySearc.setText(selectedItem.name)
-                    binding.branchSearc.setText(selectedItem.branchName)
-                    company_link_id = selectedItem.id
-                }
-            }
-        }
-
         viewModel.downloadQrDataResponse.observe(viewLifecycleOwner) { response ->
             saveToFile(response)
-        }
-
-        binding.downloadDocument.setOnClickListener {
-            if (binding.companySearc.text.isNotEmpty()) {
-                downloadEquipment()
-            } else {
-                Toast.makeText(requireActivity(), "Please Select company", Toast.LENGTH_SHORT).show()
-            }
         }
     }
 
@@ -200,10 +217,8 @@ class DownloadQrFragment : Fragment() {
             }
 
             showToast("Downloaded to Downloads:\n${file.absolutePath}")
-            binding.viewfile.visibility = View.VISIBLE
-            binding.viewfile.setOnClickListener {
-                openPdfInSystemViewer(file)
-            }
+            downloadedFile = file
+            canViewFile.value = true
             openDownloadsFolder()
         } catch (e: Exception) {
             println(e.message)
@@ -285,7 +300,7 @@ class DownloadQrFragment : Fragment() {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             if (isStoragePermissionGranted()) {
-                binding.viewfile.visibility = View.GONE
+                canViewFile.value = false
                 val object1 = JsonObject()
                 object1.addProperty("company_link", company_link_id)
                 viewModel.downloadAllEquipment(object1, token!!)
@@ -293,7 +308,7 @@ class DownloadQrFragment : Fragment() {
                 requestStoragePermission()
             }
         } else {
-            binding.viewfile.visibility = View.GONE
+            canViewFile.value = false
             val object1 = JsonObject()
             object1.addProperty("company_link", company_link_id)
             viewModel.downloadAllEquipment(object1, token!!)

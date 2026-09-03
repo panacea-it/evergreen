@@ -97,4 +97,8 @@
         android:name="com.prod.evergreen.fragments.DownloadQrFragment"
         android:label="fragment_download_qr"
         tools:layout="@layout/fragment_download_qr" />
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.prod.evergreen.fragments.ProfileFragment"
+        android:label="fragment_profile" />
 </navigation>

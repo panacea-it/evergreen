@@ -12,6 +12,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.navigation.fragment.findNavController
+import com.example.app.ui.upload.UploadExcelScreen
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
@@ -28,7 +34,6 @@ import com.prod.evergreen.api.MainRepository
 import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
-import com.prod.evergreen.databinding.FragmentUploadEqpmntExcelDataBinding
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.ProgressDialogUtil
@@ -58,14 +63,16 @@ class UploadEqpmntExcelData : Fragment() {
     private var token: String? = null
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private lateinit var viewModel: MainViewModel
-    lateinit var binding:FragmentUploadEqpmntExcelDataBinding
+    private val companyName = mutableStateOf("")
+    private val selectedFileName = mutableStateOf<String?>(null)
+    private val companyLocked = mutableStateOf(false)
 
 
 
     private val pickFile = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             // Handle the selected file URI here
-         binding.fileName.text=getFileName(it)
+         selectedFileName.value = getFileName(it)
             fileName=getFileName(it)
             uri_document=it
         }
@@ -85,11 +92,64 @@ class UploadEqpmntExcelData : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        binding= FragmentUploadEqpmntExcelDataBinding.inflate(layoutInflater, container, false)
         sharedPreferencesHelper = SharedPreferencesHelper(requireActivity())
         token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
-
-        return  binding.root
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                val company by companyName
+                val file by selectedFileName
+                val locked by companyLocked
+                val type = uploadType
+                UploadExcelScreen(
+                    title = when (type) {
+                        "amc" -> "Upload AMCs"
+                        "technician" -> "Upload Technicians"
+                        else -> "Upload Equipment"
+                    },
+                    subtitle = "Import from an Excel file",
+                    companyName = company,
+                    showCompany = type == "equipment",
+                    companyLocked = locked,
+                    fileName = file,
+                    templateLabel = when (type) {
+                        "amc" -> "Download AMC template"
+                        "technician" -> "Download technician template"
+                        else -> "Download Excel template"
+                    },
+                    onBackClick = { findNavController().popBackStack() },
+                    onCompanyClick = {
+                        showBottomSheetDialog { selectedItem ->
+                            companyName.value = selectedItem.name.orEmpty()
+                            company_link_id = selectedItem.id
+                        }
+                    },
+                    onChooseFileClick = {
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                            if (ContextCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                                == PackageManager.PERMISSION_GRANTED
+                            ) {
+                                openFilePicker()
+                            } else {
+                                Toast.makeText(requireActivity(), "Permission needed to access files", Toast.LENGTH_LONG).show()
+                            }
+                        } else {
+                            openFilePicker()
+                        }
+                    },
+                    onDownloadTemplateClick = { copyExcelTemplate() },
+                    onUploadClick = {
+                        if (needsCompany() && company_link_id == null) {
+                            Toast.makeText(requireActivity(), "Please select company", Toast.LENGTH_SHORT).show()
+                        } else if (uri_document == null) {
+                            Toast.makeText(requireActivity(), "Please choose an Excel file", Toast.LENGTH_SHORT).show()
+                        } else {
+                            uploadFile(uri_document!!, fileName, company_link_id)
+                        }
+                    }
+                )
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -106,9 +166,8 @@ class UploadEqpmntExcelData : Fragment() {
             val attachedName = sharedPreferencesHelper.getValueString(ConstantValues.COMPANYNAME)
             if (attachedId != 0) {
                 company_link_id = attachedId
-                binding.companySearc.setText(attachedName)
-                binding.companySearc.isEnabled = false
-                binding.companySearc.isClickable = false
+                companyName.value = attachedName.orEmpty()
+                companyLocked.value = true
             }
         }
         viewModel.loading.observe(viewLifecycleOwner) { data ->
@@ -134,54 +193,8 @@ class UploadEqpmntExcelData : Fragment() {
                 if (data.status_code == 200) Styles.SUCCESS else Styles.FAILED
             )
         }
-        if (!needsCompany()) {
-            binding.companySearc.visibility = View.GONE
-            binding.branchSearc.visibility = View.GONE
-        }
-        binding.downloadTemplate.text = when (uploadType) {
-            "amc" -> "Download AMC Excel template"
-            "technician" -> "Download technician Excel template"
-            else -> "Download Excel template"
-        }
-        binding.downloadTemplate.setOnClickListener { copyExcelTemplate() }
-        binding.uploadDocument.setOnClickListener {
-            if (needsCompany() && company_link_id == null) {
-                Toast.makeText(requireActivity(), "Please select company", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            if (uri_document == null) {
-                Toast.makeText(requireActivity(), "Please choose an Excel file", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            uploadFile(uri_document!!,fileName, company_link_id);
-        }
         if (needsCompany() && !RoleAccess.lockToAttachedCompany(accessType)) {
-            binding.companySearc.setOnClickListener {
-                showBottomSheetDialog { selectedItem ->
-                    binding.companySearc.setText(selectedItem.name)
-                    binding.branchSearc.setText(selectedItem.branchName)
-                    company_link_id=selectedItem.id
-                }
-            }
-        }
-        binding.chooseFile.setOnClickListener {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                if (ContextCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.READ_EXTERNAL_STORAGE)
-                    == PackageManager.PERMISSION_GRANTED
-                ) {
-                    openFilePicker()
-                } else {
-                    Toast.makeText(
-                        requireActivity(),
-                        "Permission needed to access files",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-                } else {
-                openFilePicker()
-                }
-
-
+            // Company picker is handled by UploadExcelScreen.
         }
        // viewModel.upLoadFile(token)
         if (ContextCompat.checkSelfPermission(requireActivity(), android.Manifest.permission.READ_EXTERNAL_STORAGE)

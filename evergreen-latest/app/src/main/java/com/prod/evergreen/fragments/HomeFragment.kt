@@ -30,7 +30,9 @@ import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.NetworkState
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.DashboardNav
 import com.prod.evergreen.helper.ProgressDialogUtil
+import com.prod.evergreen.helper.TabNav
 import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.models.DataItem1
@@ -62,7 +64,7 @@ class HomeFragment : Fragment() {
         sharedPreferencesHelper = SharedPreferencesHelper(requireActivity())
         val role = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
         homeState.value = homeState.value.copy(
-            greetingName = greetingForRole(role),
+            greetingName = displayName(role),
             showAccessStats = role == "eg_super_admin" || role == "eg_admin"
         )
 
@@ -80,17 +82,13 @@ class HomeFragment : Fragment() {
                         onNotificationsClick = {
                             startActivity(Intent(requireActivity(), NotificationList::class.java))
                         },
-                        onAccessStatClick = { goTo(R.id.amc_mangers, "Users List") },
-                        onStatusStatClick = { goTo(R.id.taskFragment, "Tasks List") },
+                        onAccessStatClick = { index -> openUsers(index) },
+                        onStatusStatClick = { index -> openTasks(index) },
                         onHomeClick = {},
-                        onMessagesClick = {
-                            startActivity(Intent(requireActivity(), NotificationList::class.java))
-                        },
-                        onAddClick = { onAddTapped() },
-                        onTasksClick = { goTo(R.id.taskFragment, "Tasks List") },
-                        onProfileClick = {
-                            startActivity(Intent(requireActivity(), com.prod.evergreen.activities.UserDetails::class.java))
-                        }
+                        onEquipmentClick = { TabNav.equipment(this@HomeFragment) },
+                        onAddClick = { TabNav.createAmc(this@HomeFragment) },
+                        onTasksClick = { TabNav.tasks(this@HomeFragment) },
+                        onProfileClick = { TabNav.profile(this@HomeFragment) }
                     )
                 )
             }
@@ -120,7 +118,8 @@ class HomeFragment : Fragment() {
         }
 
         viewModel.loading.observe(viewLifecycleOwner) { data ->
-            if (data) {
+            val empty = homeState.value.statusStats.all { it.value == "0" }
+            if (data && empty) {
                 ProgressDialogUtil.showProgressDialog(requireActivity(), "Loading")
             } else {
                 ProgressDialogUtil.hideProgressDialog()
@@ -131,11 +130,10 @@ class HomeFragment : Fragment() {
             when (response) {
                 is NetworkState.Success -> {
                     val companiesStatsData = response.data
-                    if (companiesStatsData.status == 200) {
-                        val dataItems: List<DataItem1> = companiesStatsData.data.orEmpty()
+                    val dataItems: List<DataItem1> = companiesStatsData.data.orEmpty()
+                    if (dataItems.isNotEmpty()) {
                         homeState.value = homeState.value.copy(
-                            chartTitle = companiesStatsData.message
-                                ?: homeState.value.chartTitle,
+                            chartTitle = "Companies onboarded",
                             chartLabels = dataItems.map { it.month.orEmpty() },
                             chartValues = dataItems.map { it.value?.toFloat() ?: 0f }
                         )
@@ -148,22 +146,28 @@ class HomeFragment : Fragment() {
         viewModel.userStatsResponse.observe(viewLifecycleOwner) { response ->
             when (response) {
                 is NetworkState.Success -> {
-                    val companiesStatsData = response.data
-                    if (companiesStatsData.status == 200) {
-                        val dataItems: List<DataItem2> = companiesStatsData.data.orEmpty()
-                        var stats = defaultAccessStats
-                        for (entry in dataItems) {
-                            val count = (entry.count ?: 0).toString()
-                            stats = when (entry.accessLevel) {
-                                "technician" -> stats.update("Technician's", count)
-                                "client_admin" -> stats.update("POC's", count)
-                                "client" -> stats.update("Client's", count)
-                                "eg_admin" -> stats.update("Manager's", count)
-                                else -> stats
-                            }
+                    val dataItems: List<DataItem2> = response.data.data.orEmpty()
+                    val counts = mutableMapOf(
+                        "Client Admins" to 0,
+                        "Clients" to 0,
+                        "Evergreen Managers" to 0,
+                        "Technicians" to 0
+                    )
+                    for (entry in dataItems) {
+                        val count = entry.count ?: 0
+                        when (entry.accessLevel) {
+                            "technician" -> counts["Technicians"] = count
+                            "client_admin" -> counts["Client Admins"] = count
+                            "client" -> counts["Clients"] = count
+                            "eg_admin", "eg_super_admin" ->
+                                counts["Evergreen Managers"] = (counts["Evergreen Managers"] ?: 0) + count
                         }
-                        homeState.value = homeState.value.copy(accessStats = stats)
                     }
+                    homeState.value = homeState.value.copy(
+                        accessStats = defaultAccessStats.map { stat ->
+                            stat.copy(value = (counts[stat.title] ?: 0).toString())
+                        }
+                    )
                 }
                 is NetworkState.Error -> { }
             }
@@ -172,17 +176,28 @@ class HomeFragment : Fragment() {
         viewModel.getAllTaskCountResponse.observe(viewLifecycleOwner) { response ->
             when (response) {
                 is NetworkState.Success -> {
-                    val companiesStatsData = response.data
-                    if (companiesStatsData.success == 200 && companiesStatsData.data != null) {
-                        val data = companiesStatsData.data
-                        homeState.value = homeState.value.copy(
-                            statusStats = defaultStatusStats
-                                .update("Open", (data.open ?: 0).toString())
-                                .update("Hold", (data.hold ?: 0).toString())
-                                .update("In Progress", (data.inProgress ?: 0).toString())
-                                .update("Closed", (data.closed ?: 0).toString())
-                        )
-                    }
+                    val data = response.data.data ?: return@observe
+                    val open = data.open ?: 0
+                    val hold = data.hold ?: 0
+                    val inProgress = data.inProgress ?: 0
+                    val closed = data.closed ?: 0
+                    val active = open + hold + inProgress
+                    homeState.value = homeState.value.copy(
+                        statusStats = defaultStatusStats
+                            .update("Open", open.toString())
+                            .update("Hold", hold.toString())
+                            .update("In Progress", inProgress.toString())
+                            .update("Closed", closed.toString()),
+                        bannerTitle = if (active == 0) {
+                            "Everything looks good today!"
+                        } else {
+                            "You have $active active tickets"
+                        },
+                        bannerSubtitle = when {
+                            open > 0 -> "$open open · $inProgress in progress · $hold on hold"
+                            else -> "Closed $closed tickets so far this period."
+                        }
+                    )
                 }
                 is NetworkState.Error -> { }
             }
@@ -193,13 +208,46 @@ class HomeFragment : Fragment() {
         return map { if (it.title == title) it.copy(value = value) else it }
     }
 
-    private fun greetingForRole(role: String?): String {
-        return when (role) {
-            "eg_super_admin" -> "Admin"
-            "eg_admin" -> "Manager"
-            "client_admin", "client" -> "Client"
-            "technician" -> "Technician"
-            else -> sharedPreferencesHelper.getValueString(ConstantValues.PREF_USERNAME) ?: "Admin"
+    private fun displayName(role: String?): String {
+        val stored = sharedPreferencesHelper.getValueString(ConstantValues.PREF_USERNAME)
+            ?.trim()
+            ?.substringBefore(" ")
+            ?.takeIf { it.isNotBlank() }
+        if (!stored.isNullOrBlank()) return stored
+        return com.prod.evergreen.helper.RoleLabels.display(role).takeIf { it != "-" } ?: "there"
+    }
+
+    private fun openUsers(index: Int) {
+        DashboardNav.pendingUserRole = when (index) {
+            0 -> com.example.app.ui.users.UserRole.POC
+            1 -> com.example.app.ui.users.UserRole.CLIENT
+            2 -> com.example.app.ui.users.UserRole.MANAGER
+            else -> com.example.app.ui.users.UserRole.TECHNICIAN
+        }
+        goTo(R.id.amc_mangers, "Users List")
+    }
+
+    private fun openTasks(index: Int) {
+        DashboardNav.pendingTaskTab = index.coerceIn(0, 3)
+        goTo(R.id.taskFragment, "Tasks List")
+    }
+
+    private var homeReady = false
+
+    override fun onResume() {
+        super.onResume()
+        if (!homeReady) {
+            homeReady = true
+            return
+        }
+        if (::viewModel.isInitialized) {
+            val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken) ?: return
+            val role = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+            if (role == "eg_super_admin" || role == "eg_admin") {
+                viewModel.fetchStats(token)
+            } else {
+                viewModel.getAllTaskCountAPI(token)
+            }
         }
     }
 

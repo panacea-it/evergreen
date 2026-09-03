@@ -32,6 +32,7 @@ import com.prod.evergreen.helper.EquipmentEditor
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import com.prod.evergreen.helper.TabNav
 import com.prod.evergreen.models.Data
 
 private const val ARG_PARAM1 = "param1"
@@ -88,14 +89,12 @@ class EquipmentFragment : Fragment() {
                         }
                     },
                     onFilterClick = { showFilterDialog() },
-                    onAddClick = { onAddEquipment() },
-                    onHomeClick = { goTo(R.id.homeFragment, "Home") },
-                    onMessagesClick = {
-                        startActivity(Intent(requireActivity(), NotificationList::class.java))
-                    },
-                    onProfileClick = {
-                        startActivity(Intent(requireActivity(), com.prod.evergreen.activities.UserDetails::class.java))
-                    },
+                    onAddClick = { TabNav.createAmc(this@EquipmentFragment) },
+                    onCreateEquipmentClick = { onAddEquipment() },
+                    onHomeClick = { TabNav.home(this@EquipmentFragment) },
+                    onTasksClick = { TabNav.tasks(this@EquipmentFragment) },
+                    onMessagesClick = { TabNav.equipment(this@EquipmentFragment) },
+                    onProfileClick = { TabNav.profile(this@EquipmentFragment) },
                     onScanClick = {
                         startActivity(Intent(requireActivity(), QrScanner::class.java))
                     },
@@ -112,7 +111,7 @@ class EquipmentFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setViewmodel()
         viewModel.loading.observe(viewLifecycleOwner) { data ->
-            if (data) {
+            if (data && allEquipment.value.isEmpty()) {
                 ProgressDialogUtil.showProgressDialog(requireActivity(), "Loading")
             } else {
                 ProgressDialogUtil.hideProgressDialog()
@@ -130,8 +129,14 @@ class EquipmentFragment : Fragment() {
         loadEquipments()
     }
 
+    private var equipmentReady = false
+
     override fun onResume() {
         super.onResume()
+        if (!equipmentReady) {
+            equipmentReady = true
+            return
+        }
         if (::viewModel.isInitialized) {
             loadEquipments()
         }

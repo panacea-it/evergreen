@@ -44,14 +44,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.app.ui.theme.AppColors
 import com.example.app.ui.theme.EvergreenTheme
 
-private val Background = Color(0xFFFCFCFE)
-private val DarkText = Color(0xFF20203D)
-private val SecondaryText = Color(0xFF7D819A)
-private val Purple = Color(0xFF635BFF)
-private val LightPurple = Color(0xFFF4F0FF)
-private val Border = Color(0xFFECEBF5)
+private val Background = AppColors.background
+private val DarkText = AppColors.textPrimary
+private val SecondaryText = AppColors.textSecondary
+private val Purple = AppColors.purple
+private val LightPurple = AppColors.purpleLight
+private val Border = AppColors.border
 
 @Composable
 fun ScanCodeScreen(
@@ -69,32 +70,18 @@ fun ScanCodeScreen(
             .statusBarsPadding()
             .navigationBarsPadding()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp)
-        ) {
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Box(
+        Column(modifier = Modifier.fillMaxSize()) {
+            com.example.app.ui.theme.AppHeader(
+                title = "Scan Code",
+                subtitle = "Point your camera at a QR code",
+                onLeadingClick = onBackClick
+            )
+            Column(
                 modifier = Modifier
-                    .size(48.dp)
-                    .shadow(elevation = 4.dp, shape = RoundedCornerShape(15.dp))
-                    .clip(RoundedCornerShape(15.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFF1F0F7), RoundedCornerShape(15.dp))
-                    .clickable { onBackClick() },
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color(0xFF64697A),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -118,36 +105,7 @@ fun ScanCodeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = "Scan Code",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = DarkText
-            )
-
-            Spacer(modifier = Modifier.height(5.dp))
-
-            Text(
-                text = "Point your camera at a QR code.",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                fontSize = 16.sp,
-                color = SecondaryText
-            )
-
-            Text(
-                text = "Once it's recognized, we'll take you to the link.",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                fontSize = 16.sp,
-                color = SecondaryText
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             ScannerViewport(
                 modifier = Modifier

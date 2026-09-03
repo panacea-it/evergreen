@@ -65,7 +65,15 @@ class EquipmentsList : AppCompatActivity() {
                     source.findByUiId(item)?.let { showEquipmentActions(it) }
                 },
                 onFilterClick = { showFilterDialog() },
-                onAddClick = { onAddEquipment() },
+                onAddClick = {
+                    startActivity(
+                        Intent(this, MainActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                            .putExtra("open_create_amc", true)
+                    )
+                    finish()
+                },
+                onCreateEquipmentClick = { onAddEquipment() },
                 onHomeClick = {
                     startActivity(
                         Intent(this, MainActivity::class.java)
@@ -73,8 +81,13 @@ class EquipmentsList : AppCompatActivity() {
                     )
                     finish()
                 },
-                onMessagesClick = {
-                    startActivity(Intent(this, NotificationList::class.java))
+                onMessagesClick = {},
+                onTasksClick = {
+                    startActivity(
+                        Intent(this, MainActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    )
+                    finish()
                 },
                 onProfileClick = {
                     startActivity(Intent(this, UserDetails::class.java))

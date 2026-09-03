@@ -36,7 +36,8 @@ fun Data.toEquipmentItem(): EquipmentItem {
         serialNumber = serial_number.orEmpty(),
         maintenanceFrequency = pmFrequencyLabel(tm_frequency),
         imageUrl = image_url,
-        isActive = isActive()
+        isActive = isActive(),
+        companyName = company?.name.orEmpty()
     )
 }
 
@@ -50,6 +51,7 @@ fun List<Data>.toUiEquipment(query: String, activeOnly: Boolean? = null): List<E
         }
         val matchesQuery = needle.isEmpty() ||
             equipment.name.orEmpty().contains(needle, ignoreCase = true) ||
+            equipment.company?.name.orEmpty().contains(needle, ignoreCase = true) ||
             equipment.model.orEmpty().contains(needle, ignoreCase = true) ||
             equipment.location.orEmpty().contains(needle, ignoreCase = true) ||
             equipment.serial_number.orEmpty().contains(needle, ignoreCase = true) ||

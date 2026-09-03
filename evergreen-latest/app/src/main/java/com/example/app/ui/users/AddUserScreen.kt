@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -50,17 +52,19 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.app.ui.theme.AppColors
 import com.example.app.ui.theme.EvergreenTheme
 
-private val Background = Color(0xFFF9FAFE)
-private val White = Color.White
-private val DarkText = Color(0xFF171E48)
-private val SecondaryText = Color(0xFF737BA0)
-private val Purple = Color(0xFF5548F5)
-private val Border = Color(0xFFE2E5F0)
-private val RequiredRed = Color(0xFFE9444B)
+private val Background = AppColors.background
+private val White = AppColors.surface
+private val DarkText = AppColors.textPrimary
+private val SecondaryText = AppColors.textSecondary
+private val Purple = AppColors.purple
+private val Border = AppColors.border
+private val RequiredRed = AppColors.red
 
 data class AddUserFormState(
     val title: String = "User Details",
@@ -76,7 +80,8 @@ data class AddUserFormState(
     val accessType: String = "",
     val amc: String = "",
     val hideAmc: Boolean = false,
-    val amcLocked: Boolean = false
+    val amcLocked: Boolean = false,
+    val hideAccessType: Boolean = false
 )
 
 @Composable
@@ -97,13 +102,12 @@ fun AddUserScreen(
             .fillMaxSize()
             .background(Background)
             .statusBarsPadding()
+            .navigationBarsPadding()
     ) {
-        UserDetailsHeader(
+        com.example.app.ui.theme.AppHeader(
             title = state.title,
             subtitle = state.subtitle,
-            onBackClick = onBackClick,
-            onMenuClick = onMenuClick,
-            onNotificationClick = onNotificationClick
+            onLeadingClick = onBackClick
         )
         Column(
             modifier = Modifier
@@ -205,9 +209,9 @@ private fun UserInformationCard(
     ) {
         Box(
             modifier = Modifier
-                .size(83.dp)
+                .size(48.dp)
                 .align(Alignment.CenterHorizontally)
-                .shadow(elevation = 6.dp, shape = CircleShape)
+                .shadow(elevation = 4.dp, shape = CircleShape)
                 .clip(CircleShape)
                 .background(Brush.linearGradient(listOf(Color(0xFF6F65FF), Color(0xFF4138EA)))),
             contentAlignment = Alignment.Center
@@ -216,19 +220,19 @@ private fun UserInformationCard(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
                 tint = Color.White,
-                modifier = Modifier.size(43.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
-        Spacer(modifier = Modifier.height(31.dp))
-        Text(text = "User Information", modifier = Modifier.fillMaxWidth(), fontSize = 19.sp, fontWeight = FontWeight.Bold, color = DarkText)
-        Spacer(modifier = Modifier.height(5.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(text = "User Information", modifier = Modifier.fillMaxWidth(), fontSize = 14.sp, fontWeight = FontWeight.Bold, color = DarkText)
+        Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = "Please provide basic details of user",
             modifier = Modifier.fillMaxWidth(),
-            fontSize = 16.sp,
+            fontSize = 12.sp,
             color = SecondaryText
         )
-        Spacer(modifier = Modifier.height(31.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         UserInputField(
             icon = Icons.Default.Person,
             label = "Name",
@@ -264,14 +268,16 @@ private fun UserInformationCard(
             visible = state.passwordVisible,
             onVisibilityClick = { onStateChange(state.copy(passwordVisible = !state.passwordVisible)) }
         )
-        Spacer(modifier = Modifier.height(23.dp))
-        UserDropdownField(
-            icon = Icons.Default.Badge,
-            label = "Access Type",
-            placeholder = "Select access type",
-            value = state.accessType,
-            onClick = onAccessTypeClick
-        )
+        if (!state.hideAccessType) {
+            Spacer(modifier = Modifier.height(23.dp))
+            UserDropdownField(
+                icon = Icons.Default.Badge,
+                label = "Access Type",
+                placeholder = "Select access type",
+                value = state.accessType,
+                onClick = onAccessTypeClick
+            )
+        }
         if (!state.hideAmc) {
             Spacer(modifier = Modifier.height(23.dp))
             UserDropdownField(
@@ -314,7 +320,7 @@ private fun UserInputField(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(59.dp)
+                    .heightIn(min = 56.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color(0xFFFDFDFF))
                     .border(1.dp, Border, RoundedCornerShape(10.dp))
@@ -323,7 +329,13 @@ private fun UserInputField(
                     value = value,
                     onValueChange = onValueChange,
                     placeholder = {
-                        Text(text = placeholder, fontSize = 16.sp, color = Color(0xFF8A91AC))
+                        Text(
+                            text = placeholder,
+                            fontSize = 16.sp,
+                            color = Color(0xFF8A91AC),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     },
                     singleLine = true,
                     textStyle = TextStyle(fontSize = 16.sp, color = DarkText),
@@ -335,7 +347,9 @@ private fun UserInputField(
                         unfocusedIndicatorColor = Color.Transparent,
                         disabledIndicatorColor = Color.Transparent
                     ),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
                 )
             }
         }
@@ -363,7 +377,7 @@ private fun PasswordInputField(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(59.dp)
+                    .heightIn(min = 56.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color(0xFFFDFDFF))
                     .border(1.dp, Border, RoundedCornerShape(10.dp))
@@ -372,7 +386,13 @@ private fun PasswordInputField(
                     value = value,
                     onValueChange = onValueChange,
                     placeholder = {
-                        Text(text = placeholder, fontSize = 16.sp, color = Color(0xFF8A91AC))
+                        Text(
+                            text = placeholder,
+                            fontSize = 16.sp,
+                            color = Color(0xFF8A91AC),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     },
                     singleLine = true,
                     visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -394,7 +414,9 @@ private fun PasswordInputField(
                         unfocusedIndicatorColor = Color.Transparent,
                         disabledIndicatorColor = Color.Transparent
                     ),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
                 )
             }
         }
@@ -421,7 +443,7 @@ private fun UserDropdownField(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(59.dp)
+                    .heightIn(min = 56.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color(0xFFFDFDFF))
                     .border(1.dp, Border, RoundedCornerShape(10.dp))
@@ -433,6 +455,8 @@ private fun UserDropdownField(
                     text = value.ifEmpty { placeholder },
                     fontSize = 16.sp,
                     color = if (value.isEmpty()) Color(0xFF8A91AC) else DarkText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
                 Icon(
@@ -500,7 +524,12 @@ private fun CancelUserButton(modifier: Modifier, onClick: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "⊗", fontSize = 22.sp, color = Purple)
+            Icon(
+                imageVector = com.example.app.ui.theme.AppIcons.close,
+                contentDescription = null,
+                tint = Purple,
+                modifier = Modifier.size(com.example.app.ui.theme.AppIcons.header)
+            )
             Spacer(modifier = Modifier.width(8.dp))
             Text(text = "Cancel", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Purple)
         }

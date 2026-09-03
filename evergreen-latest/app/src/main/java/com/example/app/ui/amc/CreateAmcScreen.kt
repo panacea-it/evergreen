@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -57,22 +58,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
+import com.example.app.ui.theme.AppColors
 import com.example.app.ui.theme.EvergreenTheme
+import com.prod.evergreen.helper.MediaUrl
 
-private val Background = Color(0xFFF9FAFE)
-private val DarkText = Color(0xFF202344)
-private val SecondaryText = Color(0xFF858BA1)
-private val Purple = Color(0xFF6258F5)
-private val PurpleLight = Color(0xFFF3F1FF)
-private val Border = Color(0xFFE9E8F2)
-private val InputBackground = Color(0xFFFCFCFF)
-private val RequiredRed = Color(0xFFE34D59)
+private val Background = AppColors.background
+private val DarkText = AppColors.textPrimary
+private val SecondaryText = AppColors.textSecondary
+private val Purple = AppColors.purple
+private val PurpleLight = AppColors.purpleLight
+private val Border = AppColors.border
+private val InputBackground = AppColors.surface
+private val RequiredRed = AppColors.red
 
 data class CreateAmcFormState(
+    val title: String = "Create AMC",
+    val subtitle: String = "Add new AMC company",
+    val saveLabel: String = "Save & Continue",
     val siteName: String = "",
     val branchName: String = "",
     val companyEmail: String = "",
@@ -84,7 +91,8 @@ data class CreateAmcFormState(
     val email: String = "",
     val password: String = "",
     val passwordVisible: Boolean = false,
-    val logoPreviewPath: String? = null
+    val logoPreviewPath: String? = null,
+    val logoRemoteUrl: String? = null
 )
 
 @Composable
@@ -111,12 +119,13 @@ fun CreateAmcScreen(
             .fillMaxSize()
             .background(Background)
             .statusBarsPadding()
+            .navigationBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             CreateAmcHeader(
-                onBackClick = onBackClick,
-                onMenuClick = onMenuClick,
-                onNotificationClick = onNotificationClick
+                title = state.title,
+                subtitle = state.subtitle,
+                onBackClick = onBackClick
             )
 
             Column(
@@ -143,14 +152,7 @@ fun CreateAmcScreen(
                 Spacer(modifier = Modifier.height(15.dp))
             }
 
-            SaveContinueButton(onClick = onSaveClick)
-            BottomNavigation(
-                onHomeClick = onHomeClick,
-                onMessagesClick = onMessagesClick,
-                onTasksClick = onTasksClick,
-                onProfileClick = onProfileClick,
-                onAddClick = onAddClick
-            )
+            SaveContinueButton(label = state.saveLabel, onClick = onSaveClick)
         }
     }
     }
@@ -158,65 +160,15 @@ fun CreateAmcScreen(
 
 @Composable
 private fun CreateAmcHeader(
-    onBackClick: () -> Unit,
-    onMenuClick: () -> Unit,
-    onNotificationClick: () -> Unit
+    title: String,
+    subtitle: String,
+    onBackClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .padding(start = 13.dp, end = 13.dp, top = 8.dp, bottom = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(37.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color.White)
-                .border(1.dp, Border, RoundedCornerShape(10.dp))
-                .clickable(onClick = onBackClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Back",
-                tint = DarkText,
-                modifier = Modifier.size(19.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(9.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Create AMC",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = DarkText
-            )
-            Text(
-                text = "Add new AMC company",
-                fontSize = 14.sp,
-                color = SecondaryText
-            )
-        }
-        Icon(
-            imageVector = Icons.Default.GridView,
-            contentDescription = "Menu",
-            tint = DarkText,
-            modifier = Modifier
-                .size(21.dp)
-                .clickable(onClick = onMenuClick)
-        )
-        Spacer(modifier = Modifier.width(14.dp))
-        Icon(
-            imageVector = Icons.Default.NotificationsNone,
-            contentDescription = "Notifications",
-            tint = DarkText,
-            modifier = Modifier
-                .size(21.dp)
-                .clickable(onClick = onNotificationClick)
-        )
-    }
+    com.example.app.ui.theme.AppHeader(
+        title = title,
+        subtitle = subtitle,
+        onLeadingClick = onBackClick
+    )
 }
 
 @Composable
@@ -333,6 +285,7 @@ private fun CompanyInformationSection(
         Spacer(modifier = Modifier.height(13.dp))
         UploadLogoBox(
             previewPath = state.logoPreviewPath,
+            remoteUrl = state.logoRemoteUrl,
             onClick = onLogoClick,
             onClearClick = onClearLogoClick
         )
@@ -392,7 +345,7 @@ private fun FormField(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .heightIn(min = 56.dp)
                     .clip(RoundedCornerShape(7.dp))
                     .background(InputBackground)
                     .border(1.dp, Border, RoundedCornerShape(7.dp))
@@ -401,14 +354,16 @@ private fun FormField(
                 if (readOnly) {
                     Row(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 10.dp),
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = value.ifBlank { placeholder },
                             fontSize = 14.sp,
                             color = if (value.isBlank()) Color(0xFF9DA3B3) else DarkText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
                         )
                         if (trailingIcon != null) {
@@ -425,7 +380,13 @@ private fun FormField(
                         value = value,
                         onValueChange = onValueChange,
                         placeholder = {
-                            Text(text = placeholder, fontSize = 14.sp, color = Color(0xFF9DA3B3))
+                            Text(
+                                text = placeholder,
+                                fontSize = 14.sp,
+                                color = Color(0xFF9DA3B3),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
@@ -436,7 +397,9 @@ private fun FormField(
                             unfocusedIndicatorColor = Color.Transparent
                         ),
                         textStyle = TextStyle(fontSize = 14.sp, color = DarkText),
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp)
                     )
                 }
             }
@@ -447,6 +410,7 @@ private fun FormField(
 @Composable
 private fun UploadLogoBox(
     previewPath: String?,
+    remoteUrl: String? = null,
     onClick: () -> Unit,
     onClearClick: () -> Unit
 ) {
@@ -478,7 +442,9 @@ private fun UploadLogoBox(
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
-            if (!previewPath.isNullOrBlank()) {
+            val imageSource = previewPath?.takeIf { it.isNotBlank() }
+                ?: MediaUrl.resolve(remoteUrl).takeIf { it.isNotBlank() }
+            if (!imageSource.isNullOrBlank()) {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { context ->
@@ -487,7 +453,7 @@ private fun UploadLogoBox(
                         }
                     },
                     update = { imageView ->
-                        Glide.with(imageView).load(previewPath).into(imageView)
+                        Glide.with(imageView).load(imageSource).into(imageView)
                     }
                 )
                 Box(
@@ -672,7 +638,7 @@ private fun PasswordField(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .heightIn(min = 56.dp)
                     .clip(RoundedCornerShape(7.dp))
                     .border(1.dp, Border, RoundedCornerShape(7.dp))
             ) {
@@ -680,7 +646,13 @@ private fun PasswordField(
                     value = value,
                     onValueChange = onValueChange,
                     placeholder = {
-                        Text(text = "Enter password", fontSize = 14.sp, color = Color(0xFF9DA3B3))
+                        Text(
+                            text = "Enter password",
+                            fontSize = 14.sp,
+                            color = Color(0xFF9DA3B3),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     },
                     singleLine = true,
                     visualTransformation = if (visible) {
@@ -705,7 +677,9 @@ private fun PasswordField(
                         unfocusedIndicatorColor = Color.Transparent
                     ),
                     textStyle = TextStyle(fontSize = 14.sp, color = DarkText),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
                 )
             }
         }
@@ -713,7 +687,7 @@ private fun PasswordField(
 }
 
 @Composable
-private fun SaveContinueButton(onClick: () -> Unit) {
+private fun SaveContinueButton(label: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -741,7 +715,7 @@ private fun SaveContinueButton(onClick: () -> Unit) {
             }
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "Save & Continue",
+                text = label,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.White

@@ -50,16 +50,17 @@ class UserDetails : AppCompatActivity() {
             val profile = user?.toProfileData() ?: currentUserFromPrefs()
             ProfileScreen(
                 profile = profile,
+                showBack = true,
                 showEdit = canManage && user != null,
                 onBackClick = { onBackPressedDispatcher.onBackPressed() },
-                onNotificationClick = {
-                    startActivity(Intent(this, NotificationList::class.java))
-                },
                 onMoreClick = { showMoreActions() },
                 onEditClick = { openEdit() },
-                onHomeClick = { goHome() },
-                onUsersClick = { goUsers() },
-                onAddClick = { onAddUser() }
+                onHomeClick = { returnToMain() },
+                onEquipmentClick = { returnToMain() },
+                onAddClick = { returnToMain() },
+                onTasksClick = { returnToMain() },
+                onProfileClick = { returnToMain() },
+                onScanClick = { startActivity(Intent(this, QrScanner::class.java)) }
             )
         }
 
@@ -95,8 +96,8 @@ class UserDetails : AppCompatActivity() {
 
     private fun openEdit() {
         val user = userState.value
-        if (!canManage || user == null) {
-            Toast.makeText(this, "You cannot edit users", Toast.LENGTH_SHORT).show()
+        if (user == null) {
+            Toast.makeText(this, "Unable to edit this profile", Toast.LENGTH_SHORT).show()
             return
         }
         startActivity(Intent(this, AddUser::class.java).putExtra("user_data", Gson().toJson(user)))
@@ -104,13 +105,17 @@ class UserDetails : AppCompatActivity() {
 
     private fun showMoreActions() {
         val user = userState.value
-        if (!canManage || user == null) return
+        val options = if (canManage && user != null) {
+            arrayOf("Edit details", "Delete user", "Cancel")
+        } else {
+            arrayOf("Edit details", "Cancel")
+        }
         AlertDialog.Builder(this)
-            .setTitle(user.name?.takeIf { it.isNotBlank() } ?: "User")
-            .setItems(arrayOf("Edit user", "Delete user", "Cancel")) { dialog, which ->
-                when (which) {
-                    0 -> openEdit()
-                    1 -> confirmDelete(user)
+            .setTitle(user?.name?.takeIf { it.isNotBlank() } ?: "User")
+            .setItems(options) { dialog, which ->
+                when (options[which]) {
+                    "Edit details" -> openEdit()
+                    "Delete user" -> user?.let { confirmDelete(it) }
                     else -> dialog.dismiss()
                 }
             }
@@ -131,27 +136,10 @@ class UserDetails : AppCompatActivity() {
             .show()
     }
 
-    private fun onAddUser() {
-        if (!canManage) {
-            Toast.makeText(this, "You cannot add users", Toast.LENGTH_SHORT).show()
-            return
-        }
-        startActivity(Intent(this, AddUser::class.java))
-    }
-
-    private fun goHome() {
+    private fun returnToMain() {
         startActivity(
             Intent(this, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        )
-        finish()
-    }
-
-    private fun goUsers() {
-        startActivity(
-            Intent(this, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                .putExtra("open_users", true)
         )
         finish()
     }

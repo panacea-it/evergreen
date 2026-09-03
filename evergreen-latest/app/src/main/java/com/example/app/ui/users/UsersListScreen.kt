@@ -57,23 +57,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.app.ui.theme.AppBottomBar
+import com.example.app.ui.theme.AppColors
+import com.example.app.ui.theme.AppTab
 import com.example.app.ui.theme.EvergreenTheme
 
-private val Background = Color(0xFFFAFBFE)
-private val White = Color.White
-private val DarkText = Color(0xFF192047)
-private val SecondaryText = Color(0xFF7B839C)
-private val Purple = Color(0xFF624BFF)
-private val PurpleLight = Color(0xFFF1EEFF)
-private val Blue = Color(0xFF3185F5)
-private val BlueLight = Color(0xFFEEF6FF)
-private val Red = Color(0xFFFF343A)
-private val RedLight = Color(0xFFFFF0F1)
-private val Green = Color(0xFF16A957)
-private val GreenLight = Color(0xFFECFAF2)
-private val Orange = Color(0xFFFF861D)
-private val OrangeLight = Color(0xFFFFF5E9)
-private val Border = Color(0xFFE9EAF2)
+private val Background = AppColors.background
+private val White = AppColors.surface
+private val DarkText = AppColors.textPrimary
+private val SecondaryText = AppColors.textSecondary
+private val Purple = AppColors.purple
+private val PurpleLight = AppColors.purpleLight
+private val Blue = AppColors.blue
+private val BlueLight = AppColors.blueLight
+private val Red = AppColors.red
+private val RedLight = AppColors.redLight
+private val Green = AppColors.green
+private val GreenLight = AppColors.greenLight
+private val Orange = AppColors.orange
+private val OrangeLight = AppColors.orangeLight
+private val Border = AppColors.border
 
 data class UserListItem(
     val id: String,
@@ -114,9 +117,9 @@ fun userRoleFromAccessLevel(accessLevel: String?): UserRole? {
 fun roleLabel(role: UserRole): String {
     return when (role) {
         UserRole.CLIENT -> "Client"
-        UserRole.POC -> "POC"
+        UserRole.POC -> "Client Admin"
         UserRole.TECHNICIAN -> "Technician"
-        UserRole.MANAGER -> "Manager"
+        UserRole.MANAGER -> "Evergreen Manager"
     }
 }
 
@@ -163,53 +166,53 @@ fun UsersListScreen(
             .statusBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            UsersHeader(
-                onMenuClick = onMenuClick,
-                onScanClick = onScanClick,
-                onNotificationClick = onNotificationClick
+            com.example.app.ui.theme.AppHeader(
+                title = "Users",
+                subtitle = "People in your organization",
+                leadingIcon = com.example.app.ui.theme.AppIcons.menu,
+                leadingDescription = "Menu",
+                onLeadingClick = onMenuClick,
+                actions = buildList {
+                    if (showAddUser) {
+                        add(com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.add, "Add user", onAddUserClick))
+                    }
+                    add(com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.scan, "Scan", onScanClick))
+                    add(com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.notifications, "Notifications", onNotificationClick))
+                }
             )
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 5.dp, bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 item {
                     UserCountCards(
+                        selectedRole = selectedRole,
                         clientCount = clientCount,
                         pocCount = pocCount,
                         technicianCount = technicianCount,
-                        managerCount = managerCount
-                    )
-                }
-                item {
-                    UserRoleTabs(
-                        selectedRole = selectedRole,
+                        managerCount = managerCount,
                         onRoleSelected = onRoleSelected
                     )
                 }
                 item {
                     UserSearchBar(
                         query = searchQuery,
-                        onQueryChange = onSearchQueryChange,
-                        onSearchClick = onSearchClick,
-                        onFilterClick = onFilterClick,
-                        selectedRole = selectedRole
+                        onQueryChange = onSearchQueryChange
                     )
                 }
                 if (filteredUsers.isEmpty()) {
                     item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 28.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No users found",
-                                fontSize = 16.sp,
-                                color = SecondaryText
-                            )
-                        }
+                        com.example.app.ui.theme.AppEmptyState(
+                            title = if (searchQuery.isBlank()) "No ${roleLabel(selectedRole).lowercase()}s yet" else "No matching users",
+                            subtitle = if (searchQuery.isBlank()) {
+                                "Add someone with this role to see them here."
+                            } else {
+                                "Try a different name, email, or phone number."
+                            },
+                            actionLabel = if (showAddUser && searchQuery.isBlank()) "Add user" else null,
+                            onAction = if (showAddUser && searchQuery.isBlank()) onAddUserClick else null
+                        )
                     }
                 } else {
                     itemsIndexed(
@@ -219,15 +222,11 @@ fun UsersListScreen(
                         UserCard(user = user, onClick = { onUserClick(user) })
                     }
                 }
-                if (showAddUser) {
-                    item {
-                        AddNewUserButton(onClick = onAddUserClick)
-                    }
-                }
             }
-            UsersBottomNavigation(
+            AppBottomBar(
+                selected = AppTab.HOME,
                 onHomeClick = onHomeClick,
-                onMessagesClick = onMessagesClick,
+                onEquipmentClick = onMessagesClick,
                 onAddClick = onAddClick,
                 onTasksClick = onTasksClick,
                 onProfileClick = onProfileClick
@@ -238,236 +237,143 @@ fun UsersListScreen(
 }
 
 @Composable
-private fun UsersHeader(
-    onMenuClick: () -> Unit,
-    onScanClick: () -> Unit,
-    onNotificationClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(White)
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Default.Group,
-            contentDescription = "Menu",
-            tint = DarkText,
-            modifier = Modifier
-                .size(29.dp)
-                .clickable(onClick = onMenuClick)
-        )
-        Spacer(modifier = Modifier.width(15.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = "Users List", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = DarkText)
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(text = "Manage and view all your users", fontSize = 14.sp, color = SecondaryText)
-        }
-        Icon(
-            imageVector = Icons.Default.QrCodeScanner,
-            contentDescription = "Scan",
-            tint = DarkText,
-            modifier = Modifier
-                .size(25.dp)
-                .clickable(onClick = onScanClick)
-        )
-        Spacer(modifier = Modifier.width(18.dp))
-        Icon(
-            imageVector = Icons.Default.NotificationsNone,
-            contentDescription = "Notifications",
-            tint = DarkText,
-            modifier = Modifier
-                .size(26.dp)
-                .clickable(onClick = onNotificationClick)
-        )
-    }
-}
-
-@Composable
 private fun UserCountCards(
+    selectedRole: UserRole,
     clientCount: Int,
     pocCount: Int,
     technicianCount: Int,
-    managerCount: Int
+    managerCount: Int,
+    onRoleSelected: (UserRole) -> Unit
 ) {
+    val items = listOf(
+        UserRoleCount(UserRole.MANAGER, managerCount, "Managers", Purple, PurpleLight, Icons.Default.WorkspacePremium),
+        UserRoleCount(UserRole.POC, pocCount, "Admins", Green, GreenLight, Icons.Default.Business),
+        UserRoleCount(UserRole.CLIENT, clientCount, "Clients", Blue, BlueLight, Icons.Default.Person),
+        UserRoleCount(UserRole.TECHNICIAN, technicianCount, "Techs", Orange, OrangeLight, Icons.Default.Build)
+    )
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        UserCountCard(Modifier.weight(1f), Icons.Default.Description, clientCount, "Clients", Red, RedLight)
-        UserCountCard(Modifier.weight(1f), Icons.Default.Business, pocCount, "Pocs", Blue, BlueLight)
-        UserCountCard(Modifier.weight(1f), Icons.Default.Build, technicianCount, "Technicians", Purple, PurpleLight)
-        UserCountCard(Modifier.weight(1f), Icons.Default.WorkspacePremium, managerCount, "Managers", Orange, OrangeLight)
+        items.forEach { item ->
+            UserCountCard(
+                modifier = Modifier.weight(1f),
+                item = item,
+                selected = item.role == selectedRole,
+                onClick = { onRoleSelected(item.role) }
+            )
+        }
     }
 }
+
+private data class UserRoleCount(
+    val role: UserRole,
+    val count: Int,
+    val label: String,
+    val color: Color,
+    val background: Color,
+    val icon: ImageVector
+)
 
 @Composable
 private fun UserCountCard(
     modifier: Modifier,
-    icon: ImageVector,
-    count: Int,
-    label: String,
-    iconColor: Color,
-    background: Color
+    item: UserRoleCount,
+    selected: Boolean,
+    onClick: () -> Unit
 ) {
-    Column(
+    Box(
         modifier = modifier
-            .height(139.dp)
-            .clip(RoundedCornerShape(15.dp))
-            .background(background)
-            .padding(horizontal = 9.dp, vertical = 13.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .size(45.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.65f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(imageVector = icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
-        }
-        Spacer(modifier = Modifier.height(9.dp))
-        Text(text = count.toString(), fontSize = 26.sp, fontWeight = FontWeight.Bold, color = iconColor)
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(text = label, fontSize = 14.sp, color = DarkText)
-    }
-}
-
-@Composable
-private fun UserRoleTabs(
-    selectedRole: UserRole,
-    onRoleSelected: (UserRole) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(66.dp)
-            .clip(RoundedCornerShape(15.dp))
-            .background(White)
-            .border(1.dp, Border, RoundedCornerShape(15.dp)),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        UserRoleTab(Modifier.weight(1f), Icons.Default.Group, "Clients", UserRole.CLIENT, selectedRole, onRoleSelected)
-        UserRoleTab(Modifier.weight(1f), Icons.Default.Business, "Pocs", UserRole.POC, selectedRole, onRoleSelected)
-        UserRoleTab(Modifier.weight(1f), Icons.Default.Build, "Technicians", UserRole.TECHNICIAN, selectedRole, onRoleSelected)
-        UserRoleTab(Modifier.weight(1f), Icons.Default.WorkspacePremium, "Managers", UserRole.MANAGER, selectedRole, onRoleSelected)
-    }
-}
-
-@Composable
-private fun UserRoleTab(
-    modifier: Modifier,
-    icon: ImageVector,
-    label: String,
-    role: UserRole,
-    selectedRole: UserRole,
-    onSelected: (UserRole) -> Unit
-) {
-    val selected = role == selectedRole
-    Column(
-        modifier = modifier
-            .fillMaxHeight()
-            .clickable { onSelected(role) },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .height(57.dp)
+            .clip(RoundedCornerShape(9.dp))
+            .background(item.background)
+            .border(
+                width = if (selected) 1.5.dp else 1.dp,
+                color = if (selected) item.color else Color.White,
+                shape = RoundedCornerShape(9.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 6.dp),
+        contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (selected) Purple else SecondaryText,
-                modifier = Modifier.size(20.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(27.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(item.color.copy(alpha = 0.09f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = item.icon,
+                    contentDescription = item.label,
+                    tint = item.color,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
             Spacer(modifier = Modifier.width(5.dp))
-            Text(
-                text = label,
-                fontSize = 14.sp,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (selected) Purple else SecondaryText
-            )
+            Column {
+                Text(
+                    text = item.count.toString(),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = item.color,
+                    maxLines = 1
+                )
+                Text(
+                    text = item.label,
+                    fontSize = 11.sp,
+                    color = DarkText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
-        Spacer(modifier = Modifier.height(10.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.75f)
-                .height(3.dp)
-                .clip(CircleShape)
-                .background(if (selected) Purple else Color.Transparent)
-        )
     }
 }
 
 @Composable
 private fun UserSearchBar(
     query: String,
-    onQueryChange: (String) -> Unit,
-    onSearchClick: () -> Unit,
-    onFilterClick: () -> Unit,
-    selectedRole: UserRole
+    onQueryChange: (String) -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(White)
+            .border(1.dp, Border, RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .height(57.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(White)
-                .border(1.dp, Border, RoundedCornerShape(12.dp))
-                .padding(horizontal = 13.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = SecondaryText,
-                modifier = Modifier
-                    .size(28.dp)
-                    .clickable(onClick = onSearchClick)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                singleLine = true,
-                cursorBrush = SolidColor(DarkText),
-                textStyle = TextStyle(fontSize = 16.sp, color = DarkText),
-                modifier = Modifier.weight(1f),
-                decorationBox = { inner ->
-                    if (query.isEmpty()) {
-                        Text(
-                            text = "Search ${roleLabel(selectedRole).lowercase()}s by name or number...",
-                            fontSize = 14.sp,
-                            color = Color(0xFF8C93AA),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    inner()
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = null,
+            tint = SecondaryText,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        BasicTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            singleLine = true,
+            cursorBrush = SolidColor(DarkText),
+            textStyle = TextStyle(fontSize = 15.sp, color = DarkText),
+            modifier = Modifier.weight(1f),
+            decorationBox = { inner ->
+                if (query.isEmpty()) {
+                    Text(
+                        text = "Search by name, email, or phone",
+                        fontSize = 14.sp,
+                        color = Color(0xFF8C93AA),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-            )
-        }
-        Spacer(modifier = Modifier.width(9.dp))
-        Box(
-            modifier = Modifier
-                .size(57.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(White)
-                .border(1.dp, Border, RoundedCornerShape(12.dp))
-                .clickable(onClick = onFilterClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.FilterList,
-                contentDescription = "Filter",
-                tint = Purple,
-                modifier = Modifier.size(25.dp)
-            )
-        }
+                inner()
+            }
+        )
     }
 }
 
@@ -479,93 +385,87 @@ private fun UserCard(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(17.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(White)
-            .border(1.dp, Border, RoundedCornerShape(17.dp))
+            .border(1.dp, Border, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        UserImage(user = user)
-        Spacer(modifier = Modifier.width(13.dp))
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(PurpleLight),
+            contentAlignment = Alignment.Center
+        ) {
+            if (user.imageRes != null) {
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(user.imageRes),
+                    contentDescription = user.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = Purple,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .width(3.dp)
-                        .height(48.dp)
-                        .clip(CircleShape)
-                        .background(Purple)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = user.name.ifBlank { "-" },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
                     color = DarkText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
                 if (user.status.isNotBlank()) {
+                    Spacer(modifier = Modifier.width(8.dp))
                     ActiveUserBadge(status = user.status)
                 }
             }
-            Spacer(modifier = Modifier.height(9.dp))
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(PurpleLight)
-                    .padding(horizontal = 9.dp, vertical = 5.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = Purple, modifier = Modifier.size(15.dp))
-                Spacer(modifier = Modifier.width(5.dp))
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = roleLabel(user.role),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = Purple
+            )
+            if (user.email.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = roleLabel(user.role) + " Details",
-                    fontSize = 14.sp,
-                    color = Purple,
-                    fontWeight = FontWeight.Medium
+                    text = user.email,
+                    fontSize = 13.sp,
+                    color = SecondaryText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-            Spacer(modifier = Modifier.height(9.dp))
-            UserContactDetails(user = user)
+            if (user.mobile.isNotBlank()) {
+                Text(
+                    text = user.mobile,
+                    fontSize = 13.sp,
+                    color = SecondaryText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
-        Spacer(modifier = Modifier.width(5.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Icon(
             imageVector = Icons.Default.ArrowForwardIos,
             contentDescription = null,
-            tint = Purple,
-            modifier = Modifier.size(14.dp)
+            tint = Color(0xFFB0B6C3),
+            modifier = Modifier.size(12.dp)
         )
-    }
-}
-
-@Composable
-private fun UserImage(user: UserListItem) {
-    Box(
-        modifier = Modifier
-            .width(120.dp)
-            .height(158.dp)
-            .clip(RoundedCornerShape(11.dp))
-            .background(Color(0xFFECE9E2)),
-        contentAlignment = Alignment.Center
-    ) {
-        if (user.imageRes != null) {
-            androidx.compose.foundation.Image(
-                painter = androidx.compose.ui.res.painterResource(user.imageRes),
-                contentDescription = user.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = Purple,
-                modifier = Modifier.size(55.dp)
-            )
-        }
     }
 }
 
@@ -591,154 +491,6 @@ private fun ActiveUserBadge(status: String) {
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = if (active) Green else Red
-        )
-    }
-}
-
-@Composable
-private fun UserContactDetails(user: UserListItem) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(11.dp))
-            .background(Color(0xFFFBFCFF))
-            .border(1.dp, Color(0xFFEDEEF4), RoundedCornerShape(11.dp))
-            .padding(horizontal = 9.dp, vertical = 7.dp)
-    ) {
-        ContactRow(Icons.Default.MailOutline, "Email ID", user.email)
-        Spacer(modifier = Modifier.height(7.dp))
-        ContactRow(Icons.Default.Phone, "Mobile", user.mobile)
-    }
-}
-
-@Composable
-private fun ContactRow(icon: ImageVector, label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(imageVector = icon, contentDescription = null, tint = Purple, modifier = Modifier.size(17.dp))
-        Spacer(modifier = Modifier.width(9.dp))
-        Text(text = label, fontSize = 14.sp, color = SecondaryText, modifier = Modifier.width(80.dp))
-        Text(text = ":", fontSize = 14.sp, color = SecondaryText)
-        Spacer(modifier = Modifier.width(9.dp))
-        Text(
-            text = value.ifBlank { "-" },
-            fontSize = 14.sp,
-            color = SecondaryText,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun AddNewUserButton(onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 2.dp)
-            .height(51.dp)
-            .shadow(elevation = 7.dp, shape = RoundedCornerShape(25.dp))
-            .clip(RoundedCornerShape(25.dp))
-            .background(Brush.horizontalGradient(listOf(Color(0xFF654BFF), Color(0xFF4936E9))))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(29.dp)
-                    .clip(CircleShape)
-                    .background(Color.White),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = Purple, modifier = Modifier.size(20.dp))
-            }
-            Spacer(modifier = Modifier.width(11.dp))
-            Text(text = "Add new user", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.White)
-        }
-    }
-}
-
-@Composable
-private fun UsersBottomNavigation(
-    onHomeClick: () -> Unit,
-    onMessagesClick: () -> Unit,
-    onAddClick: () -> Unit,
-    onTasksClick: () -> Unit,
-    onProfileClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .height(78.dp)
-            .shadow(elevation = 7.dp, shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp))
-            .clip(RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp))
-            .background(White)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            UserNavItem(Icons.Default.Home, "Home", false, onHomeClick)
-            UserNavItem(Icons.Default.Message, "Messages", false, onMessagesClick)
-            Box(modifier = Modifier.width(57.dp), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .shadow(elevation = 8.dp, shape = CircleShape)
-                        .clip(CircleShape)
-                        .background(Color(0xFF216EF5))
-                        .clickable(onClick = onAddClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add", tint = Color.White, modifier = Modifier.size(31.dp))
-                }
-            }
-            UserNavItem(Icons.Default.Description, "Tasks", false, onTasksClick)
-            UserNavItem(Icons.Default.Person, "Profile", false, onProfileClick)
-        }
-    }
-}
-
-@Composable
-private fun UserNavItem(
-    icon: ImageVector,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .width(55.dp)
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .size(39.dp)
-                .clip(CircleShape)
-                .background(if (selected) PurpleLight else Color.Transparent),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = if (selected) Purple else SecondaryText,
-                modifier = Modifier.size(21.dp)
-            )
-        }
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (selected) Purple else SecondaryText
         )
     }
 }

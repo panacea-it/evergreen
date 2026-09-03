@@ -166,6 +166,12 @@ interface RetrofitService {
     @POST(Constants.NOTIFICATIONS_LIST)
     suspend fun getNotifications(@Header("Authorization") authorization: String?,): Response<NotificationsListResponse>
 
+    @POST(Constants.NOTIFICATIONS_PAGE)
+    suspend fun getNotificationsPage(
+        @Body body: JsonObject,
+        @Header("Authorization") authorization: String?
+    ): Response<NotificationsListResponse>
+
     @POST(Constants.UPSERT_TOKEN)
     suspend fun upsertToken(@Body body: JsonObject, @Header("Authorization") authorization: String?): Response<ChangePasswordData>
 
@@ -206,8 +212,16 @@ interface RetrofitService {
 
 
     companion object {
-        private val httpClient = OkHttpClient.Builder().addInterceptor(HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY }).build()
+        private val httpClient = OkHttpClient.Builder()
+            .connectTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(45, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(45, java.util.concurrent.TimeUnit.SECONDS)
+            .callTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BASIC
+            })
+            .build()
 
         private var retrofitService: RetrofitService? = null
 

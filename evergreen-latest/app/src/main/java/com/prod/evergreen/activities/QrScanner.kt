@@ -195,15 +195,23 @@ class QrScanner : AppCompatActivity() {
     }
 
     private fun handleQrCodeData(qrText: String) {
-        if (!hasNavigated) {
-            hasNavigated = true
-            startActivity(
-                Intent(this@QrScanner, EquipmentDetails::class.java)
-                    .putExtra("eq_id", qrText.toInt())
-                    .putExtra("screentype", 1)
-            )
-            finish()
+        if (hasNavigated) return
+        val trimmed = qrText.trim()
+        if (trimmed.isEmpty()) {
+            runOnUiThread {
+                Toast.makeText(this, "This QR code is not a valid equipment code", Toast.LENGTH_SHORT).show()
+            }
+            return
         }
+        val equipmentId = trimmed.toIntOrNull()?.takeIf { it > 0 } ?: 0
+        hasNavigated = true
+        startActivity(
+            Intent(this@QrScanner, EquipmentDetails::class.java)
+                .putExtra("eq_id", equipmentId)
+                .putExtra("eq_sn", trimmed)
+                .putExtra("screentype", 1)
+        )
+        finish()
     }
 
     override fun onRequestPermissionsResult(

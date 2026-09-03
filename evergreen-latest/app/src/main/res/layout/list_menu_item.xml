@@ -2,20 +2,25 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="12dp">
+    android:paddingStart="16dp"
+    android:paddingTop="12dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="12dp">
 
     <ImageView
         android:id="@+id/image_view"
-        android:layout_width="@dimen/_20sdp"
-        android:layout_height="@dimen/_20sdp" />
+        android:layout_width="20dp"
+        android:layout_height="20dp" />
 
     <TextView
-        android:fontFamily="@font/roboto_medium"
-        android:textColor="@color/white"
         android:id="@+id/text_view"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:textSize="@dimen/_12ssp" />
+        android:layout_marginStart="14dp"
+        android:layout_weight="1"
+        android:fontFamily="@font/roboto_medium"
+        android:textColor="@color/black1"
+        android:textSize="14sp" />
 </LinearLayout>

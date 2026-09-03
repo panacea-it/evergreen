@@ -5,17 +5,7 @@ import com.prod.evergreen.models.Users
 import com.prod.evergreen.models.attachedCompanyLabel
 
 fun roleLabel(accessLevel: String?): String {
-    return when (accessLevel?.lowercase()) {
-        "eg_super_admin" -> "Admin"
-        "eg_admin" -> "Manager"
-        "client_admin" -> "Client Admin"
-        "client" -> "Client"
-        "technician" -> "Technician"
-        else -> accessLevel.orEmpty()
-            .replace('_', ' ')
-            .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-            .ifBlank { "-" }
-    }
+    return com.prod.evergreen.helper.RoleLabels.display(accessLevel)
 }
 
 fun Users.toProfileData(): ProfileData {

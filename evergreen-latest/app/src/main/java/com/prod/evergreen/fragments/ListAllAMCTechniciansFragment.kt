@@ -33,9 +33,11 @@ import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.DashboardNav
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.RoleAccess
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import com.prod.evergreen.helper.TabNav
 import com.prod.evergreen.models.Users
 
 private const val ARG_PARAM1 = "param1"
@@ -47,7 +49,7 @@ class ListAllAMCTechniciansFragment : Fragment() {
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     private lateinit var viewModel: MainViewModel
     private val allUsers = mutableStateOf<List<Users>>(emptyList())
-    private val selectedRole = mutableStateOf(UserRole.CLIENT)
+    private val selectedRole = mutableStateOf(UserRole.MANAGER)
     private val searchQuery = mutableStateOf("")
     private val clientCount = mutableIntStateOf(0)
     private val pocCount = mutableIntStateOf(0)
@@ -98,15 +100,11 @@ class ListAllAMCTechniciansFragment : Fragment() {
                         }
                     },
                     onAddUserClick = { onAddUser() },
-                    onAddClick = { onAddUser() },
-                    onHomeClick = { goTo(R.id.homeFragment, "Home") },
-                    onMessagesClick = {
-                        startActivity(Intent(requireActivity(), NotificationList::class.java))
-                    },
-                    onTasksClick = { goTo(R.id.taskFragment, "Tasks List") },
-                    onProfileClick = {
-                        startActivity(Intent(requireActivity(), UserDetails::class.java))
-                    },
+                    onAddClick = { TabNav.createAmc(this@ListAllAMCTechniciansFragment) },
+                    onHomeClick = { TabNav.home(this@ListAllAMCTechniciansFragment) },
+                    onMessagesClick = { TabNav.equipment(this@ListAllAMCTechniciansFragment) },
+                    onTasksClick = { TabNav.tasks(this@ListAllAMCTechniciansFragment) },
+                    onProfileClick = { TabNav.profile(this@ListAllAMCTechniciansFragment) },
                     onScanClick = {
                         startActivity(Intent(requireActivity(), QrScanner::class.java))
                     },
@@ -123,7 +121,7 @@ class ListAllAMCTechniciansFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setViewmodel()
         viewModel.loading.observe(viewLifecycleOwner) { loading ->
-            if (loading) {
+            if (loading && allUsers.value.isEmpty()) {
                 ProgressDialogUtil.showProgressDialog(requireActivity(), "Loading")
             } else {
                 ProgressDialogUtil.hideProgressDialog()
@@ -141,11 +139,21 @@ class ListAllAMCTechniciansFragment : Fragment() {
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
             Toast.makeText(requireActivity(), message, Toast.LENGTH_SHORT).show()
         }
+        DashboardNav.pendingUserRole?.let { role ->
+            selectedRole.value = role
+            DashboardNav.pendingUserRole = null
+        }
         loadUsers(selectedRole.value)
     }
 
+    private var usersReady = false
+
     override fun onResume() {
         super.onResume()
+        if (!usersReady) {
+            usersReady = true
+            return
+        }
         if (::viewModel.isInitialized) {
             loadUsers(selectedRole.value)
         }

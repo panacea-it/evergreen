@@ -67,15 +67,15 @@ class CreateManagerFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentCreateManagerBinding.inflate(layoutInflater, container, false)
-        setViewmodel()
         sharedPreferencesHelper = SharedPreferencesHelper(requireActivity())
-
-        return binding.root
+        startActivity(android.content.Intent(requireActivity(), com.prod.evergreen.activities.AddUser::class.java))
+        findNavController().popBackStack()
+        return View(requireContext())
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        if (!::viewModel.isInitialized) return
         val token = sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
         val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
         viewModel.getAllAmc(token!!)

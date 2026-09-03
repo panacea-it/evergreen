@@ -50,8 +50,10 @@ import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.helper.CameraCaptureHelper
 import com.prod.evergreen.helper.ConstantValues
+import com.prod.evergreen.helper.DashboardNav
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.RoleAccess
+import com.prod.evergreen.helper.TabNav
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.YearPickerHelper
 import com.prod.evergreen.helper.compressor.Compressor
@@ -94,6 +96,7 @@ class CreateTaskFragment : Fragment() {
     private var companyLink: Int? = null
     private val formState = mutableStateOf(CreateTaskFormState())
     private val companyEquipments = mutableStateOf<List<Data>>(emptyList())
+    private var editTaskId: Int? = null
 
     private val pickImageFromGalleryForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
@@ -124,6 +127,8 @@ class CreateTaskFragment : Fragment() {
             location = companylocation.orEmpty(),
             companyLocked = RoleAccess.lockToAttachedCompany(accessType) && (companyLink ?: 0) != 0
         )
+        applyPendingEquipment()
+        applyPendingTask()
 
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -135,14 +140,10 @@ class CreateTaskFragment : Fragment() {
                     onBackClick = { findNavController().popBackStack() },
                     onCreateTaskClick = { submitTask() },
                     onCancelClick = { findNavController().popBackStack() },
-                    onHomeClick = { goTo(R.id.homeFragment, "Home") },
-                    onMessagesClick = {
-                        startActivity(Intent(requireActivity(), NotificationList::class.java))
-                    },
-                    onTasksClick = { goTo(R.id.taskFragment, "Tasks List") },
-                    onProfileClick = {
-                        startActivity(Intent(requireActivity(), com.prod.evergreen.activities.UserDetails::class.java))
-                    },
+                    onHomeClick = { TabNav.home(this@CreateTaskFragment) },
+                    onMessagesClick = { TabNav.equipment(this@CreateTaskFragment) },
+                    onTasksClick = { TabNav.tasks(this@CreateTaskFragment) },
+                    onProfileClick = { TabNav.profile(this@CreateTaskFragment) },
                     onMenuClick = { openDrawer() },
                     onNotificationClick = {
                         startActivity(Intent(requireActivity(), NotificationList::class.java))
@@ -189,6 +190,69 @@ class CreateTaskFragment : Fragment() {
         }
     }
 
+    private fun applyPendingEquipment() {
+        val json = DashboardNav.pendingEquipmentJson ?: return
+        DashboardNav.pendingEquipmentJson = null
+        try {
+            val data = com.google.gson.Gson().fromJson(json, com.prod.evergreen.models.ResponseData::class.java)
+            equipment_id = data.id
+            companyLink = data.companyLink ?: data.company?.id ?: companyLink
+            formState.value = formState.value.copy(
+                companyName = data.company?.name.orEmpty().ifBlank { formState.value.companyName },
+                branchName = data.company?.branchName.orEmpty().ifBlank { formState.value.branchName },
+                location = data.location.orEmpty().ifBlank { data.company?.location.orEmpty().ifBlank { formState.value.location } },
+                equipment = data.name.orEmpty(),
+                equipmentSummary = listOfNotNull(
+                    data.make?.takeIf { it.isNotBlank() }?.let { "Make: $it" },
+                    data.model?.takeIf { it.isNotBlank() }?.let { "Model: $it" },
+                    data.serialNumber?.takeIf { it.isNotBlank() }?.let { "S.no: $it" },
+                    YearPickerHelper.displayYear(data.manufacturerDate)
+                        .takeIf { it.isNotBlank() && it != "-" }
+                        ?.let { "MFD: $it" }
+                ).joinToString("  ·  ")
+            )
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun applyPendingTask() {
+        val json = DashboardNav.pendingTaskJson ?: return
+        DashboardNav.pendingTaskJson = null
+        try {
+            val created = com.google.gson.Gson().fromJson(json, com.prod.evergreen.models.TaskCreated::class.java)
+            val task = created.task
+            editTaskId = listOfNotNull(task?.id, created.taskLink, created.id).firstOrNull { it != 0 }
+            val equipment = task?.equipment
+            equipment_id = equipment?.id ?: task?.equipmentLink?.toInt()
+            companyLink = equipment?.company?.id ?: equipment?.companyLink ?: companyLink
+            backendIssueValue = task?.callType
+            val issueLabel = when (task?.callType) {
+                "service" -> "Service"
+                "amc_preventive_maintenance" -> "AMC Preventive Maintenance"
+                "breakdown" -> "Break Down"
+                else -> task?.callType.orEmpty()
+            }
+            formState.value = formState.value.copy(
+                title = "Edit Task",
+                subtitle = "Update task details",
+                saveLabel = "Update Task",
+                companyName = equipment?.company?.name.orEmpty().ifBlank { formState.value.companyName },
+                branchName = equipment?.company?.branchName.orEmpty().ifBlank { formState.value.branchName },
+                location = equipment?.location.orEmpty().ifBlank { equipment?.company?.location.orEmpty().ifBlank { formState.value.location } },
+                equipment = equipment?.name.orEmpty(),
+                equipmentSummary = listOfNotNull(
+                    equipment?.make?.takeIf { it.isNotBlank() }?.let { "Make: $it" },
+                    equipment?.model?.takeIf { it.isNotBlank() }?.let { "Model: $it" },
+                    equipment?.serialNumber?.takeIf { it.isNotBlank() }?.let { "S.no: $it" }
+                ).joinToString("  ·  "),
+                issueType = issueLabel,
+                subject = task?.name.orEmpty(),
+                description = task?.description.orEmpty()
+            )
+        } catch (_: Exception) {
+        }
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setViewmodel()
@@ -213,7 +277,11 @@ class CreateTaskFragment : Fragment() {
             }
         }
         viewModel.changePasswordDataResponse.observe(viewLifecycleOwner) { data ->
-            if (data.status_code == 200) {
+            if (editTaskId != null) {
+                val message = data.message?.takeIf { it.isNotBlank() }
+                    ?: if (data.status_code == 200) "Task updated successfully" else "Unable to update task"
+                showDialog(message, data.status_code == 200)
+            } else if (data.status_code == 200) {
                 Toast.makeText(requireActivity(), data.message, Toast.LENGTH_SHORT).show()
             }
         }
@@ -258,10 +326,22 @@ class CreateTaskFragment : Fragment() {
             return
         }
         isSubmitting = true
-        viewModel.createTask(
-            createJsonObject(title, desc, equipment_id!!, User_ID!!, issuType!!, imageListserverimag),
-            token!!
-        )
+        val taskId = editTaskId
+        if (taskId != null) {
+            val body = JsonObject().apply {
+                addProperty("task_link", taskId)
+                addProperty("name", title)
+                addProperty("description", desc)
+                addProperty("equipment_link", equipment_id)
+                addProperty("call_type", issuType)
+            }
+            viewModel.updateTask(body, token!!)
+        } else {
+            viewModel.createTask(
+                createJsonObject(title, desc, equipment_id!!, User_ID!!, issuType!!, imageListserverimag),
+                token!!
+            )
+        }
     }
 
     private fun showIssueTypeDialog() {

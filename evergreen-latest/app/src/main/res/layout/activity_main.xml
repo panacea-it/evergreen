@@ -100,10 +100,11 @@
     <!-- Custom Navigation Drawer Start -->
     <LinearLayout
         android:id="@+id/navigation_layout"
-        android:layout_width="@dimen/_250sdp"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@color/black1"
+        android:background="@color/white"
+        android:fitsSystemWindows="true"
         android:orientation="vertical">
        <include
            android:id="@+id/nav_header"
@@ -112,15 +113,40 @@
            layout="@layout/nav_header"/>
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/navigation_rv"
-            android:layout_marginTop="@dimen/_10sdp"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:scrollbarThumbHorizontal="@null"
-            android:scrollbarThumbVertical="@null">
-        </androidx.recyclerview.widget.RecyclerView>
+            android:scrollbarThumbVertical="@null" />
 
+        <LinearLayout
+            android:id="@+id/logout"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_margin="16dp"
+            android:background="@drawable/rounded_corners"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/logout"
+                app:tint="@color/colorRed" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:fontFamily="@font/roboto_medium"
+                android:text="Logout"
+                android:textColor="@color/colorRed"
+                android:textSize="14sp" />
+        </LinearLayout>
     </LinearLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>

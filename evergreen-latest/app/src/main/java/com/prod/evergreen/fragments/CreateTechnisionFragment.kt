@@ -58,15 +58,15 @@ class CreateTechnisionFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        binding= FragmentCreateTechnisionBinding.inflate(layoutInflater, container, false)
-        setViewmodel()
         sharedPreferencesHelper=SharedPreferencesHelper(requireActivity())
-
-       return binding.root
+        startActivity(android.content.Intent(requireActivity(), com.prod.evergreen.activities.AddUser::class.java))
+        findNavController().popBackStack()
+        return View(requireContext())
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        if (!::viewModel.isInitialized) return
         val token=sharedPreferencesHelper.getValueString(ConstantValues.AuthToken)
 //        viewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
 //            Toast.makeText(requireActivity(), errorMessage.toString(), Toast.LENGTH_SHORT).show()

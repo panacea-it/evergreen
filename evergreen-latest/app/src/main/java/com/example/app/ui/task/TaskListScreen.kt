@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Person
@@ -58,18 +59,21 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.prod.evergreen.R
 import com.prod.evergreen.helper.MediaUrl
+import com.example.app.ui.theme.AppBottomBar
+import com.example.app.ui.theme.AppColors
+import com.example.app.ui.theme.AppTab
 import com.example.app.ui.theme.EvergreenTheme
 
-private val Background = Color(0xFFF9FAFD)
-private val White = Color.White
-private val DarkText = Color(0xFF202443)
-private val GrayText = Color(0xFF858BA0)
-private val Purple = Color(0xFF6258F5)
-private val Blue = Color(0xFF1685E8)
-private val Green = Color(0xFF1EAF60)
-private val Orange = Color(0xFFFF921E)
-private val Red = Color(0xFFF0445D)
-private val Border = Color(0xFFE9EAF2)
+private val Background = AppColors.background
+private val White = AppColors.surface
+private val DarkText = AppColors.textPrimary
+private val GrayText = AppColors.textSecondary
+private val Purple = AppColors.purple
+private val Blue = AppColors.blue
+private val Green = AppColors.green
+private val Orange = AppColors.orange
+private val Red = AppColors.red
+private val Border = AppColors.border
 
 data class TaskItem(
     val id: Int = 0,
@@ -82,7 +86,8 @@ data class TaskItem(
     val company: String,
     val createdAt: String,
     val imageUrl: String? = null,
-    val imageRes: Int? = null
+    val imageRes: Int? = null,
+    val technicianAssigned: Boolean = false
 )
 
 data class TaskStatusCount(
@@ -109,13 +114,20 @@ fun TaskListScreen(
     onSearchClick: () -> Unit = {},
     onFilterClick: () -> Unit = {},
     onAddClick: () -> Unit = {},
+    onCreateTaskClick: () -> Unit = {},
     onHomeClick: () -> Unit = {},
     onMessagesClick: () -> Unit = {},
     onTasksClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onScanClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
-    onMenuClick: () -> Unit = {}
+    onMenuClick: () -> Unit = {},
+    filterLabel: String? = null,
+    onClearFilter: () -> Unit = {},
+    showAssignButton: Boolean = false,
+    showReportButton: Boolean = false,
+    onAssignClick: (TaskItem) -> Unit = {},
+    onReportClick: (TaskItem) -> Unit = {}
 ) {
     EvergreenTheme {
     Box(
@@ -125,10 +137,17 @@ fun TaskListScreen(
             .statusBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            TaskHeader(
-                onMenuClick = onMenuClick,
-                onScanClick = onScanClick,
-                onNotificationClick = onNotificationClick
+            com.example.app.ui.theme.AppHeader(
+                title = "Tasks",
+                subtitle = "Open tickets and assignments",
+                leadingIcon = com.example.app.ui.theme.AppIcons.menu,
+                leadingDescription = "Menu",
+                onLeadingClick = onMenuClick,
+                actions = listOf(
+                    com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.add, "Create task", onCreateTaskClick),
+                    com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.scan, "Scan", onScanClick),
+                    com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.notifications, "Notifications", onNotificationClick)
+                )
             )
             TaskStatusRow(statusCounts = statusCounts, onStatusClick = onStatusClick)
             TaskTabs(selectedTab = selectedTab, onTabSelected = onTabSelected)
@@ -138,34 +157,59 @@ fun TaskListScreen(
                 onSearchClick = onSearchClick,
                 onFilterClick = onFilterClick
             )
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 3.dp, bottom = 90.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(
-                    items = tasks,
-                    key = { "${it.id}-${it.title}-${it.serialNumber}-${it.createdAt}" }
-                ) { task ->
-                    TaskCard(task = task, onClick = { onTaskClick(task) })
+            if (!filterLabel.isNullOrBlank()) {
+                FilterChip(label = filterLabel, onClear = onClearFilter)
+            }
+            if (tasks.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    com.example.app.ui.theme.AppEmptyState(
+                        title = if (searchQuery.isNotBlank() || !filterLabel.isNullOrBlank()) {
+                            "No matching tasks"
+                        } else {
+                            "No tasks in this status"
+                        },
+                        subtitle = "Create a task or change the filter to see more.",
+                        actionLabel = "Create task",
+                        onAction = onCreateTaskClick
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 3.dp, bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(
+                        items = tasks,
+                        key = { "${it.id}-${it.title}-${it.serialNumber}-${it.createdAt}" }
+                    ) { task ->
+                        TaskCard(
+                            task = task,
+                            onClick = { onTaskClick(task) },
+                            showAssign = showAssignButton && task.statusKey != "closed",
+                            showReport = showReportButton,
+                            onAssignClick = { onAssignClick(task) },
+                            onReportClick = { onReportClick(task) }
+                        )
+                    }
                 }
             }
-            BottomNavigation(
+            AppBottomBar(
+                selected = AppTab.TASKS,
                 onHomeClick = onHomeClick,
-                onMessagesClick = onMessagesClick,
+                onEquipmentClick = onMessagesClick,
+                onAddClick = onAddClick,
                 onTasksClick = onTasksClick,
-                onProfileClick = onProfileClick,
-                onAddClick = onAddClick
+                onProfileClick = onProfileClick
             )
         }
-        FloatingAddButton(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 30.dp, bottom = 76.dp),
-            onClick = onAddClick
-        )
     }
     }
 }
@@ -184,11 +228,11 @@ private fun TaskHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = Icons.Default.GridView,
+            imageVector = Icons.Default.Menu,
             contentDescription = "Menu",
             tint = DarkText,
             modifier = Modifier
-                .size(21.dp)
+                .size(20.dp)
                 .clickable(onClick = onMenuClick)
         )
         Spacer(modifier = Modifier.width(10.dp))
@@ -286,9 +330,10 @@ private fun TaskStatusCard(
                 )
                 Text(
                     text = status.label,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     color = DarkText,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -309,16 +354,18 @@ private fun TaskTabs(
         taskTabs.forEachIndexed { index, tab ->
             Column(
                 modifier = Modifier
-                    .width(58.dp)
+                    .weight(1f)
                     .clickable { onTabSelected(index) }
                     .padding(vertical = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = tab,
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     fontWeight = if (index == selectedTab) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (index == selectedTab) DarkText else Color(0xFF8C91A5)
+                    color = if (index == selectedTab) DarkText else Color(0xFF8C91A5),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(7.dp))
                 Box(
@@ -330,6 +377,30 @@ private fun TaskTabs(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun FilterChip(label: String, onClear: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 12.dp, vertical = 2.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFFF3F0FF))
+            .clickable(onClick = onClear)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = Purple,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = "Clear", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Purple)
     }
 }
 
@@ -378,7 +449,7 @@ private fun SearchBar(
         Box(
             modifier = Modifier
                 .padding(end = 6.dp)
-                .size(27.dp)
+                .size(48.dp)
                 .clip(RoundedCornerShape(7.dp))
                 .background(Color(0xFFF3F0FF))
                 .clickable(onClick = onFilterClick),
@@ -397,7 +468,11 @@ private fun SearchBar(
 @Composable
 private fun TaskCard(
     task: TaskItem,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    showAssign: Boolean = false,
+    showReport: Boolean = false,
+    onAssignClick: () -> Unit = {},
+    onReportClick: () -> Unit = {}
 ) {
     val accent = statusColor(task.statusKey)
     Box(
@@ -407,7 +482,7 @@ private fun TaskCard(
             .background(Color.White)
             .border(1.dp, Color(0xFFEDEEF4), RoundedCornerShape(13.dp))
             .clickable(onClick = onClick)
-            .padding(9.dp)
+            .padding(8.dp)
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             TaskImage(task = task)
@@ -444,8 +519,51 @@ private fun TaskCard(
                 }
                 Spacer(modifier = Modifier.height(7.dp))
                 DetailsBox(task = task)
+                if (showAssign || showReport) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (showAssign) {
+                            TaskActionChip(
+                                label = if (task.technicianAssigned) "Reassign" else "Assign",
+                                color = Purple,
+                                modifier = Modifier.weight(1f),
+                                onClick = onAssignClick
+                            )
+                        }
+                        if (showReport) {
+                            TaskActionChip(
+                                label = "Report",
+                                color = Blue,
+                                modifier = Modifier.weight(1f),
+                                onClick = onReportClick
+                            )
+                        }
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun TaskActionChip(
+    label: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .height(32.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(color.copy(alpha = 0.1f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = color)
     }
 }
 
@@ -453,8 +571,8 @@ private fun TaskCard(
 private fun TaskImage(task: TaskItem) {
     Box(
         modifier = Modifier
-            .width(84.dp)
-            .height(156.dp)
+            .width(56.dp)
+            .height(80.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(Color(0xFFD9D2C4)),
         contentAlignment = Alignment.Center
@@ -487,7 +605,7 @@ private fun TaskImage(task: TaskItem) {
             else -> {
                 Text(
                     text = task.title.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "T",
-                    fontSize = 25.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF23413F)
                 )
@@ -690,7 +808,7 @@ fun defaultStatusCounts(
     return listOf(
         TaskStatusCount(open.toString(), "Open", Red, Icons.Default.TaskAlt, "open"),
         TaskStatusCount(hold.toString(), "Hold", Blue, Icons.Default.Schedule, "hold"),
-        TaskStatusCount(inProgress.toString(), "In Progress", Orange, Icons.Default.Schedule, "in_progress"),
+        TaskStatusCount(inProgress.toString(), "Progress", Orange, Icons.Default.Schedule, "in_progress"),
         TaskStatusCount(closed.toString(), "Closed", Green, Icons.Default.CheckCircle, "closed")
     )
 }
