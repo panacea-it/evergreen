@@ -153,6 +153,7 @@ data class Client(
 
 data class Count(
     val open: Int,
+    val completed: Int = 0,
     val closed: Int,
     val in_progress: Int,
     val hold: Int,
@@ -165,7 +166,6 @@ data class Technician (
     @SerializedName("phone"        ) var phone       : String? = null
 
 )
-
 
 
 

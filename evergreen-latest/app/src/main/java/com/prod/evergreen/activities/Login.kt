@@ -174,6 +174,7 @@ class Login : AppCompatActivity() {
                     sharedPreferencesHelper.save(ConstantValues.PREF_USERNAME, user.name)
                     sharedPreferencesHelper.save(ConstantValues.PREF_EMAIL, user.email)
                     sharedPreferencesHelper.save(ConstantValues.TYPE_ROLE, user.access_level)
+                    sharedPreferencesHelper.save(ConstantValues.USER_DESIGNATION, user.designation)
                     sharedPreferencesHelper.save(ConstantValues.PREF_MOBILE, user.phone)
                     user.id?.let { sharedPreferencesHelper.saveInt(ConstantValues.USER_ID, it) }
                     val company = user.company_user?.firstOrNull()?.company

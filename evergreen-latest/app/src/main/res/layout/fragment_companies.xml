@@ -24,13 +24,22 @@
             android:background="@drawable/rectangler_searc_back"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_export_companies"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Export Excel"
+            android:layout_marginTop="@dimen/_6sdp"
+            android:layout_marginEnd="@dimen/_10sdp"
+            app:layout_constraintTop_toBottomOf="@+id/et_searc"
+            app:layout_constraintEnd_toEndOf="parent" />
         <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:id="@+id/recycler_companies"
             android:layout_marginTop="@dimen/_5sdp"
             android:layout_marginHorizontal="@dimen/_10sdp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/et_searc"
+            app:layout_constraintTop_toBottomOf="@+id/btn_export_companies"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:orientation="vertical"
             android:layout_height="0dp"/>

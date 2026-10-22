@@ -54,7 +54,7 @@ holder.binding.apply {
         onAssign(item)
     }
     if (item.acceptedBy!=null){
-        technician.text="Technician : ${item.acceptedBy!!.name}"
+        technician.text="Service Engineer : ${item.acceptedBy!!.name}"
     }
     else{
         technician.text="Status : Open"

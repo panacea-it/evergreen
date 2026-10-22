@@ -184,7 +184,7 @@ class HomeFragment : Fragment() {
                         for (entry in dataItems) {
                             when (entry.accessLevel) {
                                 "technician" -> {
-                                    binding.tvTechniciansHead.text = "Technician's"
+                                    binding.tvTechniciansHead.text = "Service Engineers"
                                     binding.tvTechnicians.text = entry.count.toString()
                                 }
                                 "client_admin" -> {
@@ -323,4 +323,3 @@ if (companiesStatsData.data!=null) {
         viewModel = ViewModelProvider(this, viewModelFactory)[MainViewModel::class.java]
     }
     }
-

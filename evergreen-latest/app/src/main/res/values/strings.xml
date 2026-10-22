@@ -14,7 +14,7 @@
     <string name="registration">Registration</string>
     <string name="please_enter_the_verification_code">Please enter the verification code</string>
     <string name="name">Name</string>
-    <string name="enter_name_of_technician">Enter name of technician</string>
+    <string name="enter_name_of_technician">Enter name of service engineer</string>
     <string name="mobile_number">Enter Mobile number</string>
     <string name="enter_mobile_number">Enter mobile number</string>
     <string name="email">Email</string>
@@ -23,7 +23,7 @@
     <string name="enter_password">Enter password</string>
     <string name="please_selcte_amc">Please selcte AMC</string>
     <string name="assign_to_amc">Assign to AMC</string>
-    <string name="create_technician">Create Technician</string>
+    <string name="create_technician">Create Service Engineer</string>
     <string name="choose_amc">Create Company</string>
     <string name="enter_name">Enter name</string>
     <string name="companies_list">Companies List</string>

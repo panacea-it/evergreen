@@ -17,7 +17,14 @@ object RoleAccess {
 
     fun canManageUsers(role: String?): Boolean {
         return when (role?.lowercase()) {
-            "eg_super_admin", "eg_admin", "client_admin" -> true
+            "eg_super_admin", "eg_admin" -> true
+            else -> false
+        }
+    }
+
+    fun canViewUsers(role: String?): Boolean {
+        return when (role?.lowercase()) {
+            "eg_super_admin", "eg_admin" -> true
             else -> false
         }
     }

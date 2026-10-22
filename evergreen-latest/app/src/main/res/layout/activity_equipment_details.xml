@@ -144,7 +144,7 @@
             android:textColor="@color/black1"
             android:fontFamily="@font/roboto_medium"
             android:textSize="@dimen/_12ssp"
-            android:text="Technician"
+            android:text="Service Engineer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"/>
 

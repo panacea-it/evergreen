@@ -57,7 +57,7 @@
                         android:textSize="@dimen/_14ssp"
                         android:layout_marginTop="@dimen/_20sdp"
                         app:layout_constraintStart_toStartOf="parent"
-                        android:text="Site name *"
+                        android:text="Company name *"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                     <EditText
@@ -68,7 +68,7 @@ android:id="@+id/sitename"
                         android:textColor="@color/black_blue"
                         android:layout_marginTop="@dimen/_2sdp"
                         android:paddingHorizontal="@dimen/_10sdp"
-                        android:hint="Enter site name"
+                        android:hint="Enter company name"
                         android:background="@drawable/edit_text_background"
                         app:layout_constraintTop_toBottomOf="@+id/text_email"
                         android:layout_width="match_parent"
@@ -102,6 +102,29 @@ android:id="@+id/sitename"
                         android:inputType="textEmailAddress"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent" />
+
+                    <TextView
+                        android:textColor="@color/gray1"
+                        android:fontFamily="@font/roboto_regular"
+                        android:textSize="@dimen/_14ssp"
+                        android:layout_marginTop="@dimen/_10sdp"
+                        android:text="GST number *"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <EditText
+                        android:id="@+id/gst_number"
+                        android:fontFamily="@font/roboto_medium"
+                        android:textSize="@dimen/_16ssp"
+                        android:textColorHint="@color/gray2"
+                        android:textColor="@color/black_blue"
+                        android:layout_marginTop="@dimen/_2sdp"
+                        android:paddingHorizontal="@dimen/_10sdp"
+                        android:hint="Enter GST number"
+                        android:background="@drawable/edit_text_background"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/_50sdp"
+                        android:inputType="textCapCharacters"
+                        android:maxLength="15" />
 
 
                     <TextView
@@ -152,7 +175,7 @@ android:id="@+id/sitename"
                                 android:fontFamily="@font/roboto_regular"
                                 android:textSize="@dimen/_14ssp"
                                 app:layout_constraintStart_toStartOf="parent"
-                                android:text="Start Date *"
+                                android:text="Start Date (optional)"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"/>
                             <TextView
@@ -187,7 +210,7 @@ android:id="@+id/sitename"
                                 android:fontFamily="@font/roboto_regular"
                                 android:textSize="@dimen/_14ssp"
                                 app:layout_constraintStart_toStartOf="parent"
-                                android:text="End Date *"
+                                android:text="End Date (optional)"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"/>
                             <TextView
@@ -213,17 +236,15 @@ android:id="@+id/sitename"
                     </LinearLayout>
 
                     <TextView
-                        android:visibility="gone"
                         android:textColor="@color/gray1"
                         android:fontFamily="@font/roboto_regular"
                         android:textSize="@dimen/_14ssp"
                         android:layout_marginTop="@dimen/_10sdp"
                         app:layout_constraintStart_toStartOf="parent"
-                        android:text="Site Location"
+                        android:text="Company address *"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
                     <EditText
-                        android:visibility="gone"
                         android:id="@+id/site_location"
                         android:fontFamily="@font/roboto_medium"
                         android:textSize="@dimen/_16ssp"
@@ -231,7 +252,7 @@ android:id="@+id/sitename"
                         android:textColor="@color/black_blue"
                         android:layout_marginTop="@dimen/_2sdp"
                         android:paddingHorizontal="@dimen/_10sdp"
-                        android:hint="Please enter site location"
+                        android:hint="Enter company address"
                         android:background="@drawable/edit_text_background"
                         app:layout_constraintTop_toBottomOf="@+id/text_email"
                         android:layout_width="match_parent"
@@ -313,6 +334,25 @@ android:id="@+id/sitename"
                     <include layout="@layout/poc"
                         android:id="@+id/poc"
                         />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/bulk_upload_companies"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/_20sdp"
+                        app:cardBackgroundColor="@color/btn_back"
+                        app:cardCornerRadius="@dimen/_6sdp">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:padding="@dimen/_14sdp"
+                            android:text="Bulk Upload Companies from Excel"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_16ssp"
+                            android:fontFamily="@font/roboto_medium" />
+                    </com.google.android.material.card.MaterialCardView>
 
 
                     <com.google.android.material.card.MaterialCardView

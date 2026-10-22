@@ -42,6 +42,7 @@ class AddUser : AppCompatActivity() {
     private var selected_accessleve: String? = null
     private var isSubmitting = false
     private var editUserId: Int? = null
+    private var editingDesignation: String? = null
     lateinit var binding: ActivityAddUserBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +62,7 @@ class AddUser : AppCompatActivity() {
             Pair("eg_admin", "Manager"),
             Pair("client_admin", "Client Admin"),
             Pair("client", "Client"),
-            Pair("technician", "Technician")
+            Pair("technician", "Service Engineer")
         )
 
         // Initialize filteredItems as a mutable list
@@ -88,7 +89,7 @@ class AddUser : AppCompatActivity() {
                 it.equals("Client Admin", ignoreCase = true) || it.equals(
                     "Client",
                     ignoreCase = true
-                ) || it.equals("Technician", ignoreCase = true)
+                ) || it.equals("Service Engineer", ignoreCase = true)
             }
             filteredItemsFirst = filteredItemsFirst.filter {
                 it.equals("client_admin", ignoreCase = true) || it.equals(
@@ -113,12 +114,24 @@ class AddUser : AppCompatActivity() {
                         filteredItemsFirst[position] // assuming allItems is your list of pairs
                     selected_accessleve = selectedItemPair
                     applyCompanyPickerForRole(selectedItemPair, accessType)
+                    syncDesignationPicker()
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>) {
                     // Do nothing
                 }
             }
+
+        val designationAdapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            listOf("Select designation", "Senior Service Engineer", "Junior Technician")
+        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+        binding.designationSpinner.adapter = designationAdapter
+        binding.designationSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) = Unit
+            override fun onNothingSelected(parent: AdapterView<*>) = Unit
+        }
 
         viewModel.errorMessage.observe(this) { errorMessage ->
             Toast.makeText(this, errorMessage.toString(), Toast.LENGTH_SHORT).show()
@@ -140,6 +153,7 @@ class AddUser : AppCompatActivity() {
         if (!editJson.isNullOrBlank()) {
             val existing = com.google.gson.Gson().fromJson(editJson, com.prod.evergreen.models.Users::class.java)
             editUserId = existing.id
+            editingDesignation = existing.designation
             binding.tvHeader.text = "Update User"
             binding.name.setText(existing.name)
             binding.email.setText(existing.email)
@@ -150,7 +164,10 @@ class AddUser : AppCompatActivity() {
                 binding.chooseAccessType.setSelection(roleIndex)
                 selected_accessleve = filteredItemsFirst[roleIndex]
             }
+            val designationIndex = designationAdapter.getPosition(existing.designation)
+            if (designationIndex >= 0) binding.designationSpinner.setSelection(designationIndex)
         }
+        syncDesignationPicker()
 
         if (RoleAccess.lockToAttachedCompany(accessType)) {
             val attachedId = sharedPreferencesHelper.getValueInt(ConstantValues.COMAPNY_LINK)
@@ -202,6 +219,10 @@ class AddUser : AppCompatActivity() {
             }
 
             val technicianSelected = selected_accessleve.equals("technician", ignoreCase = true)
+            if (technicianSelected && binding.designationSpinner.selectedItemPosition == 0) {
+                Toast.makeText(this, "Select a service engineer designation", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             if (!technicianSelected && com.prod.evergreen.helper.FormValidator.firstInvalid(
                     com.prod.evergreen.helper.FormValidator.Check(
                         binding.chooseAmc, "Please select company", amc_id != null
@@ -231,6 +252,11 @@ class AddUser : AppCompatActivity() {
                     add("company_link", companyLinksArray)
                 }
                 addProperty("access_level", selected_accessleve)
+                if (technicianSelected) {
+                    addProperty("designation", binding.designationSpinner.selectedItem.toString())
+                } else {
+                    add("designation", com.google.gson.JsonNull.INSTANCE)
+                }
             }
             // val jsonObject = createJsonObject(email, password, name, mobile, amc, companyLinks)
             Log.d("output", jsondata.toString())
@@ -245,6 +271,15 @@ class AddUser : AppCompatActivity() {
                 viewModel.createTechnician(jsondata, token)
             }
         }
+    }
+
+    private fun syncDesignationPicker() {
+        val isTechnician = selected_accessleve.equals("technician", ignoreCase = true)
+        binding.designationLabel.visibility = if (isTechnician) View.VISIBLE else View.GONE
+        binding.designationContainer.visibility = if (isTechnician) View.VISIBLE else View.GONE
+        val currentIndex = (binding.designationSpinner.adapter as? ArrayAdapter<String>)
+            ?.getPosition(editingDesignation) ?: -1
+        if (isTechnician && currentIndex > 0) binding.designationSpinner.setSelection(currentIndex)
     }
 
     private fun setViewmodel() {

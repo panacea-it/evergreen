@@ -59,6 +59,7 @@ lateinit var bindin:FragmentTaskStatusBinding
     private var accessType: String? = null
     private var pendingTaskMutation = false
     private var pendingAssignTask: com.prod.evergreen.models.TaskCreated? = null
+    private var pendingReportTicketNumber: String? = null
 
     private fun resolveTaskId(task: com.prod.evergreen.models.TaskCreated): Int {
         return listOfNotNull(task.task?.id, task.taskLink).firstOrNull { it != 0 } ?: task.id
@@ -103,6 +104,25 @@ lateinit var bindin:FragmentTaskStatusBinding
                 object1.addProperty("task_user_link", taskData.id)
                 object1.addProperty("status", "in_progress")
                 viewModel.upDateTaskStatus(object1, authToken)
+            } else if (taskData.status == "in_progress" && currentAccessType.equals("technician")) {
+                androidx.appcompat.app.AlertDialog.Builder(requireActivity())
+                    .setTitle("Update task status")
+                    .setItems(arrayOf("Hold", "Completed")) { _, choice ->
+                        if (choice == 0) {
+                            SetHoldFagment.newInstance(taskData.id, "")
+                                .show(childFragmentManager, "")
+                        } else {
+                            val json = Gson().toJson(taskData)
+                            feedbackFormLauncher.launch(Intent(requireActivity(), FeedbackFormActivity::class.java)
+                                .putExtra("jsonData", json))
+                        }
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            } else if (taskData.status == "completed") {
+                val json = Gson().toJson(taskData)
+                feedbackFormLauncher.launch(Intent(requireActivity(), FeedbackFormActivity::class.java)
+                    .putExtra("jsonData", json))
             } else if (taskData.status == "in_progress") {
                 if (currentAccessType.equals("technician")) {
                     if (taskData.task?.followUp == null) {
@@ -180,6 +200,7 @@ lateinit var bindin:FragmentTaskStatusBinding
                 if (taskId == null || taskId == 0) {
                     Toast.makeText(requireActivity(), "Unable to generate service report", Toast.LENGTH_SHORT).show()
                 } else {
+                    pendingReportTicketNumber = item.task?.ticketNo
                     Toast.makeText(requireActivity(), "Generating service report...", Toast.LENGTH_SHORT).show()
                     val object1 = JsonObject()
                     object1.addProperty("task_link", taskId)
@@ -227,7 +248,7 @@ lateinit var bindin:FragmentTaskStatusBinding
 
         viewModel.assignTechnicianDataResponse.observe(viewLifecycleOwner) { response ->
             if (response.status_code == 200) {
-                showDialog(response.message ?: "Technician assigned successfully")
+                showDialog(response.message ?: "Service engineer assigned successfully")
                 viewModel.getAllTasks(authToken, object1)
             }
             else{
@@ -243,7 +264,7 @@ lateinit var bindin:FragmentTaskStatusBinding
                 it.access_level.equals("technician", ignoreCase = true)
             }
             if (technicians.isEmpty()) {
-                Toast.makeText(requireActivity(), "No technicians available to assign", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireActivity(), "No service engineers available to assign", Toast.LENGTH_SHORT).show()
                 return@observe
             }
             val labels = technicians.map { tech ->
@@ -251,7 +272,7 @@ lateinit var bindin:FragmentTaskStatusBinding
                 if (phone.isBlank()) tech.name.orEmpty() else "${tech.name} ($phone)"
             }.toTypedArray()
             androidx.appcompat.app.AlertDialog.Builder(requireActivity())
-                .setTitle("Assign Technician")
+                .setTitle("Assign Service Engineer")
                 .setItems(labels) { _, which ->
                     val chosen = technicians[which]
                     val taskId = resolveTaskId(task)
@@ -353,16 +374,17 @@ lateinit var bindin:FragmentTaskStatusBinding
             val canAssign = com.prod.evergreen.helper.RoleAccess.canAssignTechnician(role) &&
                 task.status != "closed"
             val options = if (canAssign) {
-                arrayOf("Assign Technician", "Edit Task", "Delete Task", "Cancel")
+                arrayOf("Assign Service Engineer", "Change Status", "Edit Task", "Delete Task", "Cancel")
             } else {
-                arrayOf("Edit Task", "Delete Task", "Cancel")
+                arrayOf("Change Status", "Edit Task", "Delete Task", "Cancel")
             }
             androidx.appcompat.app.AlertDialog.Builder(requireActivity())
                 .setTitle(task.task?.name ?: "Task")
                 .setItems(options) { dialog, which ->
                     val selected = options[which]
                     when (selected) {
-                        "Assign Technician" -> showTechnicianPicker(task)
+                        "Assign Service Engineer" -> showTechnicianPicker(task)
+                        "Change Status" -> showTaskStatusOptions(task)
                         "Edit Task" -> showEditTaskDialog(task)
                         "Delete Task" -> confirmDeleteTask(task)
                         else -> dialog.dismiss()
@@ -372,6 +394,50 @@ lateinit var bindin:FragmentTaskStatusBinding
         } catch (error: Exception) {
             Toast.makeText(requireActivity(), "Unable to open task actions", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun showTaskStatusOptions(task: com.prod.evergreen.models.TaskCreated) {
+        val statusOptions = when (task.status) {
+            "open" -> listOf("In Progress" to "in_progress")
+            "hold" -> listOf("In Progress" to "in_progress")
+            "in_progress" -> listOf("Hold" to "hold", "Completed" to "completed")
+            "completed" -> listOf("Approve (Completed)" to "closed")
+            else -> emptyList()
+        }
+        if (statusOptions.isEmpty()) {
+            Toast.makeText(requireActivity(), "This ticket has no available status update", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (com.prod.evergreen.helper.RoleAccess.isUnassigned(task.technicianLink)) {
+            Toast.makeText(requireActivity(), "Assign a service engineer before updating this ticket", Toast.LENGTH_SHORT).show()
+            return
+        }
+        androidx.appcompat.app.AlertDialog.Builder(requireActivity())
+            .setTitle("Update ticket status")
+            .setItems(statusOptions.map { it.first }.toTypedArray()) { _, selected ->
+                val nextStatus = statusOptions[selected].second
+                if (nextStatus == "hold") {
+                    SetHoldFagment.newInstance(task.id, "").show(childFragmentManager, "")
+                    return@setItems
+                }
+                val authToken = token ?: return@setItems
+                val body = JsonObject().apply {
+                    addProperty("task_user_link", task.id)
+                    addProperty("status", nextStatus)
+                }
+                if (task.status == "hold") {
+                    val holdReason = task.task?.holdReason.orEmpty().firstOrNull()
+                    if (holdReason?.id != null) {
+                        body.add("hold", JsonObject().apply {
+                            addProperty("release_from_hold", true)
+                            addProperty("hold_reason_link", holdReason.id)
+                        })
+                    }
+                }
+                viewModel.upDateTaskStatus(body, authToken)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun showTechnicianPicker(task: com.prod.evergreen.models.TaskCreated) {
@@ -583,7 +649,14 @@ lateinit var bindin:FragmentTaskStatusBinding
         if (!isAdded) return
         try {
             val bytes = android.util.Base64.decode(base64, android.util.Base64.DEFAULT)
-            val file = java.io.File(requireActivity().cacheDir, "evergreen_service_report.pdf")
+            val safeTicket = pendingReportTicketNumber
+                ?.replace(Regex("[^A-Za-z0-9_-]"), "_")
+                ?.takeIf { it.isNotBlank() }
+            if (safeTicket == null) {
+                showDialog("The service report is missing its ticket number")
+                return
+            }
+            val file = java.io.File(requireActivity().cacheDir, "Ticket_${safeTicket}.pdf")
             file.writeBytes(bytes)
             val uri = androidx.core.content.FileProvider.getUriForFile(
                 requireActivity(),

@@ -164,7 +164,7 @@
                             android:textSize="@dimen/_14ssp"
                             android:includeFontPadding="false"
                             android:fontFamily="@font/roboto_regular"
-                            android:text="Assigned Technician:"
+                            android:text="Assigned Service Engineer:"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"/>
                         <TextView

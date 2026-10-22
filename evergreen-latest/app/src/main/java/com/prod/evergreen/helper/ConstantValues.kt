@@ -24,6 +24,7 @@ object ConstantValues {
     val PREF_ID = "PREF_ID"
     val USER_ID = "USER_ID"
     val AuthToken = "auth_token"
+    val USER_DESIGNATION = "USER_DESIGNATION"
     val NEED_UPDATE = "need_update"
     val TYPE_LOGIN = "TYPE_LOGIN"
     val TYPE_ROLE = "TYPE_ROLE"

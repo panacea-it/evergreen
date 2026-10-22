@@ -47,8 +47,29 @@ class EquipmentsList : AppCompatActivity() {
        binding.recyclerCompanies.adapter=equipmentlistAdapter
 
 
+        val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        val canManageEquipment = com.prod.evergreen.helper.RoleAccess.canManageEquipment(accessType)
+        binding.tvAddEq.visibility = if (canManageEquipment) View.VISIBLE else View.GONE
         binding.tvAddEq.setOnClickListener {
-            startActivity(Intent(this@EquipmentsList, AddEquipment::class.java).putExtra("companyname",name).putExtra("companylink",id).putExtra("hide_company", true))
+            val choices = arrayOf("Single equipment", "Bulk upload from Excel")
+            AlertDialog.Builder(this)
+                .setTitle("Add equipment")
+                .setItems(choices) { _, selected ->
+                    when (selected) {
+                        0 -> startActivity(
+                            Intent(this, AddEquipment::class.java)
+                                .putExtra("companyname", name)
+                                .putExtra("companylink", id)
+                                .putExtra("hide_company", true)
+                        )
+                        1 -> startActivity(
+                            Intent(this, BulkEquipmentUploadActivity::class.java)
+                                .putExtra(BulkEquipmentUploadActivity.EXTRA_COMPANY_ID, id)
+                                .putExtra(BulkEquipmentUploadActivity.EXTRA_COMPANY_NAME, name.orEmpty())
+                        )
+                    }
+                }
+                .show()
         }
 
         viewModel.loading.observe(this) { data ->
@@ -64,11 +85,11 @@ class EquipmentsList : AppCompatActivity() {
             loadEquipments()
         }
         viewModel.allequipmentsDataResponse.observe(this) { data ->
-if(data.status==200)
-            equipmentlistAdapter.addData(data.data)
-
-            //need to check
-            if (data.data!!.isEmpty()){
+            val equipments = data.data.orEmpty()
+            if (data.status == 200) {
+                equipmentlistAdapter.addData(equipments)
+            }
+            if (equipments.isEmpty()) {
                 binding.etSearch!!.visibility= View.GONE
                 binding.noDataLayout!!.visibility= View.VISIBLE
             }

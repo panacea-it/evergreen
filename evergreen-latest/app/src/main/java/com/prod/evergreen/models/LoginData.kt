@@ -20,6 +20,7 @@ data class User (
     val password: String? = null,
     val notes: String? = null,
     val access_level: String? = null,
+    val designation: String? = null,
     val pan_id: String? = null,
     val aadhaar_id: String? = null,
     val permanent_address: String? = null,

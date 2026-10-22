@@ -27,6 +27,7 @@ import com.prod.evergreen.models.attachedCompanyLabel
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
+private const val ARG_PARAM3 = "designation"
 
 /**
  * A simple [Fragment] subclass.
@@ -42,6 +43,7 @@ class AmcListFragment : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
+    private var designation: String? = null
     lateinit var binding: FragmentAmcListBinding
     private var token: String? = null
 
@@ -50,6 +52,7 @@ class AmcListFragment : Fragment() {
         arguments?.let {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
+            designation = it.getString(ARG_PARAM3)
         }
     }
 
@@ -68,6 +71,7 @@ class AmcListFragment : Fragment() {
         super.onResume()
         val object1 = JsonObject()
         object1.addProperty("access_level", param2)
+        designation?.let { object1.addProperty("designation", it) }
         viewModel.getAllUsers(token!!, object1)
     }
 
@@ -84,10 +88,17 @@ class AmcListFragment : Fragment() {
         viewModel.allUsersDataResponse.observe(viewLifecycleOwner) { data ->
            // if (data.status == 200) {
             sharedViewModel.setSharedDataCounter(data.count!!)
-            amcListAdapter.addData(data.data!!)
+            val users = data.data.orEmpty().filter { user ->
+                when {
+                    designation.isNullOrBlank() -> true
+                    designation == "unclassified" -> user.designation.isNullOrBlank()
+                    else -> user.designation.equals(designation, ignoreCase = true)
+                }
+            }
+            amcListAdapter.addData(users)
               Log.d("COUNT :: ",data.count.toString())
 
-                if (data.data.isEmpty()) {
+                if (users.isEmpty()) {
                     binding.noDataLayout.visibility = View.VISIBLE
                 } else {
                     binding.noDataLayout.visibility = View.GONE
@@ -143,11 +154,12 @@ class AmcListFragment : Fragment() {
     companion object {
         // TODO: Rename and change types and number of parameters
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
+        fun newInstance(param1: String, param2: String, designation: String? = null) =
             AmcListFragment().apply {
                 arguments = Bundle().apply {
                     putString(ARG_PARAM1, param1)
                     putString(ARG_PARAM2, param2)
+                    putString(ARG_PARAM3, designation)
                 }
             }
 

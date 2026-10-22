@@ -84,10 +84,11 @@ class MainActivity : AppCompatActivity() {
              binding.navHeader.accessLevel.text="Manager"
              }
             "client_admin"->{
-                binding.navHeader.accessLevel.text="Client"
+                binding.navHeader.accessLevel.text="Client Admin"
             }
             "technician"->{
-                binding.navHeader.accessLevel.text="Technician"
+                binding.navHeader.accessLevel.text = sharedPreferencesHelper.getValueString(ConstantValues.USER_DESIGNATION)
+                    ?.takeIf { it.isNotBlank() } ?: "Service Engineer"
             }
             "eg_super_admin"->{
                 binding.navHeader.accessLevel.text="Admin"
@@ -193,13 +194,13 @@ class MainActivity : AppCompatActivity() {
             ListItem("Create Task", R.drawable.ic_create_task_icon, R.id.createTaskFragment),
            // ListItem("Add Users", R.drawable.ic_add_user_icon, R.id.createManagerFragment),
             ListItem("Users List", R.drawable.ic_users_list_icon, R.id.amc_mangers),
-            ListItem("Assign Tasks to Technician", R.drawable.ic_assign_tasks_to_technician_icon, R.id.taskFragment),
+            ListItem("Assign Tasks to Service Engineer", R.drawable.ic_assign_tasks_to_technician_icon, R.id.taskFragment),
         //    ListItem("Create Technian ", R.drawable.ic_create_techni_n_icon, R.id.amc_mangers),
        //     ListItem("Create  Manager", R.drawable.ic_create_manager_icon, R.id.amc_mangers),
-            ListItem("Create AMC", R.drawable.ic_create_amc_icon, R.id.createAmcFragment),
+            ListItem("Create Company", R.drawable.ic_create_amc_icon, R.id.createAmcFragment),
             ListItem("Upload Equipments Excel Data", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadEqpmntExcelData),
             ListItem("Upload AMCs Excel Data", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadAmcExcelData),
-            ListItem("Upload Technicians Excel Data", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadTechnicianExcelData),
+            ListItem("Upload Service Engineers Excel Data", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadTechnicianExcelData),
             ListItem("Download QR", R.drawable.ic_pending_task_list_icon, R.id.downloadQrFragment),
          //   ListItem("Notifications", R.drawable.ic_notifications_icon, R.id.uploadEqpmntExcelData),
             ListItem("Add Equipment", R.drawable.ic_add_equipment_icon, R.id.addEquipmentFragment)
@@ -223,15 +224,16 @@ class MainActivity : AppCompatActivity() {
             }
 
             Enums.Companion.ClientRole.client_admin -> allItems.filter {
-                it.name in listOf("Home","Equipments List", "Tasks List","Create Task","Upload Equipments Excel Data","Add Equipment","Download QR","Users List")
+                it.name in listOf("Home","Equipments List", "Tasks List","Create Task","Upload Equipments Excel Data","Add Equipment","Download QR")
             }
 
             Enums.Companion.ClientRole.others -> allItems.filter {
                 it.name in listOf("Home", "Notifications")
             }
         }.filter { item ->
-            item.name != "Assign Tasks to Technician" ||
-                RoleAccess.canAssignTechnician(accessLevel.name)
+            (item.name != "Assign Tasks to Service Engineer" ||
+                RoleAccess.canAssignTechnician(accessLevel.name)) &&
+                (item.name != "Users List" || RoleAccess.canViewUsers(accessLevel.name))
         }
     }
 

@@ -140,7 +140,7 @@ class UploadEqpmntExcelData : Fragment() {
         }
         binding.downloadTemplate.text = when (uploadType) {
             "amc" -> "Download AMC Excel template"
-            "technician" -> "Download technician Excel template"
+            "technician" -> "Download service engineer Excel template"
             else -> "Download Excel template"
         }
         binding.downloadTemplate.setOnClickListener { copyExcelTemplate() }

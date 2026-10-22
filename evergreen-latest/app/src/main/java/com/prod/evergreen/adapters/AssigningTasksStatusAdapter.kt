@@ -41,8 +41,9 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
             binding.status.text = when (datum.status) {
                 "open" -> "Not Started"
                 "in_progress" -> "In Progress"
+                "completed" -> "Awaiting Approval"
                 "hold" -> "Hold"
-                "closed" -> "Closed"
+                "closed" -> "Completed"
                 else -> datum.status.orEmpty()
             }
 
@@ -77,7 +78,7 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
 
         holder.bind(datum, accessType)
         if (accessType == "technician") {
-            if (datum.status != "closed") {
+            if (datum.status != "closed" && datum.status != "completed") {
                 holder.binding.taskStatusUpdater.visibility = View.VISIBLE
                 holder.binding.tvHold.visibility = View.INVISIBLE
                if (datum.technicianLink!=null){
@@ -99,20 +100,9 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
                 holder.binding.taskStatusUpdater.text = when {
                     com.prod.evergreen.helper.RoleAccess.isUnassigned(datum.technicianLink) -> "Accept"
                     datum.status == "open" -> "Move to InProgress"
-                    datum.status == "in_progress" && datum.task?.followUp == null -> "Move to Done"
-                    datum.status == "in_progress" && datum.task?.followUp != null -> "Move to Done"
+                    datum.status == "in_progress" -> "Update Status"
                     else -> "Move to In Progress"
                 }
-                if (datum.status == "in_progress" && datum.task?.followUp != null){
-
-                    holder.binding.taskStatusUpdater.visibility = View.INVISIBLE
-                    holder.binding.tvHold.visibility = View.INVISIBLE
-                    holder.binding.editReason.visibility = View.VISIBLE
-                    holder.binding.content.visibility = View.VISIBLE
-                    holder.binding.content.text="Awaiting for client response"
-                }
-
-
             } else {
                 holder.binding.actionBtn.visibility = View.GONE
                 holder.binding.taskStatusUpdater.visibility = View.GONE
@@ -128,7 +118,8 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
                 }
                 val canAssign = com.prod.evergreen.helper.RoleAccess.canAssignTechnician(accessType)
                 val unassigned = com.prod.evergreen.helper.RoleAccess.isUnassigned(datum.technicianLink)
-                val awaitingApproval = datum.status == "in_progress" && datum.task?.followUp != null
+                val awaitingApproval = datum.status == "completed" ||
+                    (datum.status == "in_progress" && datum.task?.followUp == true)
                 holder.binding.taskStatusUpdater.visibility = when {
                     awaitingApproval -> View.VISIBLE
                     canAssign -> View.VISIBLE
@@ -136,8 +127,8 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
                 }
                 holder.binding.taskStatusUpdater.text = when {
                     awaitingApproval -> "Approval"
-                    canAssign && unassigned -> "Assign Technician"
-                    canAssign -> "Reassign Technician"
+                    canAssign && unassigned -> "Assign Service Engineer"
+                    canAssign -> "Reassign Service Engineer"
                     else -> ""
                 }
 
@@ -164,7 +155,8 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
 
         holder.binding.taskStatusUpdater.setOnClickListener {
             val canAssign = com.prod.evergreen.helper.RoleAccess.canAssignTechnician(accessType)
-            val awaitingApproval = datum.status == "in_progress" && datum.task?.followUp != null
+            val awaitingApproval = datum.status == "completed" ||
+                (datum.status == "in_progress" && datum.task?.followUp == true)
             if (canAssign && datum.status != "closed" && !awaitingApproval) {
                 assignTechnician(datum)
             } else {
@@ -241,4 +233,3 @@ class AssigningTasksStatusAdapter( val sharedPreferencesHelper: SharedPreference
     }
 
 }
-

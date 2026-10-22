@@ -24,16 +24,19 @@ class CompanieslistAdapter(
     class ViewHolder(val binding: CompaniesListItemsBinding) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(datum: AMCData) {
-            binding.location.text = "Location : ${datum.branchName.orEmpty()}"
+            val location = datum.location?.takeIf { it.isNotBlank() } ?: datum.branchName.orEmpty()
+            binding.location.text = "Location : ${location.ifBlank { "-" }}"
+            binding.cEmail.text = "Email ID : ${datum.email.orEmpty().ifBlank { "-" }}"
+            binding.cEmail.visibility = if (datum.email.isNullOrBlank()) android.view.View.GONE else android.view.View.VISIBLE
             val inactiveLabel = if (datum.isCompanyActive()) "" else "  (Inactive)"
             binding.companyName.text = "Name : ${datum.name.orEmpty()}$inactiveLabel"
             binding.statDate.text = "Start Date : ${formatDate(datum.startDate)}"
             binding.endDate.text = "End Date : ${formatDate(datum.endDate)}"
 
             val pocUser = datum.pocDetails?.user
-            binding.pocName.text = "Name : ${pocUser?.name.orEmpty()}"
-            binding.pocMail.text = "Email ID : ${pocUser?.email.orEmpty()}"
-            binding.pocMobile.text = "Mobile : ${pocUser?.phone.orEmpty()}"
+            binding.pocName.text = "Name : ${pocUser?.name.orEmpty().ifBlank { "-" }}"
+            binding.pocMail.text = "Email ID : ${pocUser?.email.orEmpty().ifBlank { "-" }}"
+            binding.pocMobile.text = "Mobile : ${pocUser?.phone.orEmpty().ifBlank { "-" }}"
         }
 
         private fun formatDate(date: String?): String {

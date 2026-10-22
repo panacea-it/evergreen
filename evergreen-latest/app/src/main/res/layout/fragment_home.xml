@@ -315,7 +315,7 @@
             android:fontFamily="@font/roboto_regular"
             android:textColor="@color/black_blue"
             android:textSize="@dimen/_16ssp"
-            android:text="Total Count of Clients, Technicians, Managers"
+            android:text="Total Count of Clients, Service Engineers, Managers"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
@@ -356,7 +356,7 @@
                 android:layout_gravity="center"
                 android:layout_weight="1"
                 android:textColor="#FECA5E"
-                android:text="Technicians"
+                android:text="Service Engineers"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
             <TextView

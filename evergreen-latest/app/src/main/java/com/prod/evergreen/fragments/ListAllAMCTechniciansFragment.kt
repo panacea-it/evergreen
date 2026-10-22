@@ -9,13 +9,16 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import com.prod.evergreen.activities.AddUser
+import com.prod.evergreen.R
 import com.prod.evergreen.api.SharedViewModel
 import com.prod.evergreen.databinding.FragmentListAllAMCTechniciansBinding
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.SharedPreferencesHelper
+import com.prod.evergreen.helper.RoleAccess
 
 
 private const val ARG_PARAM1 = "param1"
@@ -25,8 +28,12 @@ class ListAllAMCTechniciansFragment : Fragment() {
     private val sharedViewModel: SharedViewModel by activityViewModels()
     private var param1: String? = null
     private var param2: String? = null
-    val items = listOf("Client Admins", "Clients","Technicians","Managers")
-    val types = listOf("client_admin", "client","technician","eg_admin")
+    private val items = listOf(
+        "Client Admins", "Clients", "Senior Service Engineers", "Junior Technicians",
+        "Unclassified Service Engineers", "Managers"
+    )
+    private val types = listOf("client_admin", "client", "technician", "technician", "technician", "eg_admin")
+    private val designations = listOf(null, null, "Senior Service Engineer", "Junior Technician", "unclassified", null)
     lateinit var sharedPreferencesHelper: SharedPreferencesHelper
     lateinit var binding: FragmentListAllAMCTechniciansBinding
 
@@ -60,12 +67,18 @@ class ListAllAMCTechniciansFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val accessLevel = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
+        if (!RoleAccess.canViewUsers(accessLevel)) {
+            Toast.makeText(requireContext(), "You do not have access to the user list", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.homeFragment)
+            return
+        }
         binding.buttons.llPocs.setOnClickListener {
             binding.viewPager.currentItem = 0
         }
 
         binding.buttons.llAdmin.setOnClickListener {
-            binding.viewPager.currentItem = 3
+            binding.viewPager.currentItem = 5
         }
         binding.buttons.llManagers.setOnClickListener {
             binding.viewPager.currentItem = 1
@@ -90,7 +103,7 @@ binding.adduser.setOnClickListener {
     startActivity(Intent(requireActivity(), AddUser::class.java))
 }
 
-        binding.viewPager.adapter = ViewPagerAdapter(requireActivity(),items,types)
+        binding.viewPager.adapter = ViewPagerAdapter(requireActivity(), items, types, designations)
 
 
 
@@ -112,11 +125,16 @@ binding.adduser.setOnClickListener {
                 }
             }
     }
-    private  class ViewPagerAdapter(fa: FragmentActivity, val list: List<String>, val types: List<String>) : FragmentStateAdapter(fa) {
+    private class ViewPagerAdapter(
+        fa: FragmentActivity,
+        val list: List<String>,
+        val types: List<String>,
+        val designations: List<String?>
+    ) : FragmentStateAdapter(fa) {
         override fun getItemCount(): Int = list.size
 
         override fun createFragment(position: Int): Fragment {
-            return AmcListFragment.newInstance(list[position], types[position])
+            return AmcListFragment.newInstance(list[position], types[position], designations[position])
 
         }
     }

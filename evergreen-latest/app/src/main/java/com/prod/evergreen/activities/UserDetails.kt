@@ -86,6 +86,7 @@ class UserDetails : AppCompatActivity() {
         val current = user ?: return
         val role = when (current.access_level) {
             "client_admin" -> "Client Admin"
+            "technician" -> current.designation ?: "Service Engineer"
             else -> current.access_level.orEmpty().replace('_', ' ')
                 .replaceFirstChar { it.uppercase() }
         }.ifBlank { "-" }

@@ -18,6 +18,7 @@ data class Users (
     val password: String? = null,
     val notes: String? = null,
     val access_level: String? = null,
+    val designation: String? = null,
     val pan_id: String? = null,
     val aadhaar_id: String? = null,
     val permanent_ddress: String? = null,
@@ -49,5 +50,8 @@ data class Countdata(
     val eg_admin: Int,
     val client_admin: Int,
     val client: Int,
-    val technician: Int
+    val technician: Int,
+    val senior_service_engineer: Int = 0,
+    val junior_technician: Int = 0,
+    val unclassified: Int = 0
 )

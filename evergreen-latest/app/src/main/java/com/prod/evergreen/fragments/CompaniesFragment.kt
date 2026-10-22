@@ -2,6 +2,7 @@ package com.prod.evergreen.fragments
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
@@ -15,6 +16,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import com.google.gson.JsonObject
 import com.prod.evergreen.XApplication
@@ -44,6 +46,10 @@ class CompaniesFragment : Fragment() {
     private var param2: String? = null
     private var pendingDeleteCompanyId: Int? = null
     private lateinit var binding: FragmentCompaniesBinding
+    private var companyData: List<AMCData> = emptyList()
+    private val exportWorkbook = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    ) { uri -> uri?.let(::writeCompanyWorkbook) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +88,13 @@ class CompaniesFragment : Fragment() {
 
         binding.recyclerCompanies.setHasFixedSize(true)
         binding.recyclerCompanies.adapter = companieslistAdapter
+        binding.btnExportCompanies.setOnClickListener {
+            if (companyData.isEmpty()) {
+                Toast.makeText(requireContext(), "There are no companies to export", Toast.LENGTH_SHORT).show()
+            } else {
+                exportWorkbook.launch("evergreen_amc_companies.xlsx")
+            }
+        }
         binding.etSearc.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -102,10 +115,11 @@ class CompaniesFragment : Fragment() {
         viewModel.allAmcDataResponse.observe(viewLifecycleOwner) { data ->
             if (data.status == 200) {
                 val companies = data.data.orEmpty()
+                companyData = companies
+                companieslistAdapter.addData(companies)
                 if (companies.isEmpty()) {
                     binding.noDataLayout?.visibility = View.VISIBLE
                 } else {
-                    companieslistAdapter.addData(companies)
                     binding.noDataLayout?.visibility = View.GONE
                 }
             }
@@ -142,6 +156,15 @@ class CompaniesFragment : Fragment() {
         viewModel.getAllAmc(token)
     }
 
+    private fun writeCompanyWorkbook(destination: Uri) {
+        try {
+            AmcWorkbookExporter.write(requireContext(), companyData, destination)
+            Toast.makeText(requireContext(), "Exported ${companyData.size} companies", Toast.LENGTH_SHORT).show()
+        } catch (error: Exception) {
+            Toast.makeText(requireContext(), "Unable to export companies: ${error.message ?: "Unknown error"}", Toast.LENGTH_LONG).show()
+        }
+    }
+
     private fun showCompanyActions(company: AMCData) {
         val companyName = company.name?.takeIf { it.isNotBlank() } ?: "Company"
         val statusAction = if (company.isCompanyActive()) "Mark Inactive" else "Mark Active"
@@ -170,7 +193,7 @@ class CompaniesFragment : Fragment() {
         }
 
         val pocUser = company.pocDetails?.user
-        val siteNameInput = createDialogEditText("Site Name *", company.name.orEmpty())
+        val siteNameInput = createDialogEditText("Company Name *", company.name.orEmpty())
         val branchNameInput = createDialogEditText("Branch Name *", company.branchName.orEmpty())
         val locationInput = createDialogEditText("Site Location", company.location.orEmpty())
         val emailInput = createDialogEditText("Company Email ID", company.email.orEmpty())
@@ -236,7 +259,7 @@ class CompaniesFragment : Fragment() {
                 }
                 if (com.prod.evergreen.helper.FormValidator.firstInvalid(
                         com.prod.evergreen.helper.FormValidator.Check(
-                            siteNameInput, "Please enter site name", siteName.isNotBlank()
+                            siteNameInput, "Please enter company name", siteName.isNotBlank()
                         ),
                         com.prod.evergreen.helper.FormValidator.Check(
                             branchNameInput, "Please enter branch name", branchName.isNotBlank()

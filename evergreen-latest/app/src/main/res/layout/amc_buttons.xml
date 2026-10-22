@@ -84,7 +84,7 @@
             android:layout_gravity="center"
             android:fontFamily="@font/roboto_medium"
             android:textColor="@color/black_blue"
-            android:text="Technicians"
+            android:text="Engineers"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </LinearLayout>

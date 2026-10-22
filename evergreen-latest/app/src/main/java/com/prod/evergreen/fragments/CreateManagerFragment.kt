@@ -84,7 +84,7 @@ class CreateManagerFragment : Fragment() {
             Pair("eg_admin", "Manager"),
             Pair("client_admin", "Client Admin"),
             Pair("client", "Client"),
-            Pair("technician", "Technician"))
+            Pair("technician", "Service Engineer"))
         // Initialize filteredItems as a mutable list
          var filteredItems = spinnerItems.filter { it.second.isNotEmpty() } // Filter out items with empty second strings
              .map { it.second } // Map to extract the second item (value) from each pair
@@ -109,7 +109,7 @@ class CreateManagerFragment : Fragment() {
         if (accessType.equals("eg_admin", ignoreCase = true)) {
             // Filter out "Super Admin" and "Manager" based on accessType condition
             filteredItems = filteredItems.filter {
-                it.equals("Client Admin", ignoreCase = true)|| it.equals("Client", ignoreCase = true)|| it.equals("Technician", ignoreCase = true)
+                it.equals("Client Admin", ignoreCase = true)|| it.equals("Client", ignoreCase = true)|| it.equals("Service Engineer", ignoreCase = true)
             }
             filteredItemsFirst = filteredItemsFirst.filter {
                 it.equals("client_admin", ignoreCase = true)|| it.equals("client", ignoreCase = true)|| it.equals("technician", ignoreCase = true)
@@ -352,7 +352,6 @@ class CreateManagerFragment : Fragment() {
         }
     }
 }
-
 
 
 

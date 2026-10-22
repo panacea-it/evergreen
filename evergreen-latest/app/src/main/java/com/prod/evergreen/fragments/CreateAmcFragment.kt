@@ -25,6 +25,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
@@ -140,6 +141,9 @@ lateinit var binding:FragmentCreateAmcBinding
             showImageSourceDialog()
         }
         setViewmodel()
+        binding.bulkUploadCompanies.setOnClickListener {
+            findNavController().navigate(R.id.uploadAmcExcelData)
+        }
         binding.startDate.setOnClickListener {
             showDatePicker { date, timestamp ->
                 selectedStartDate = timestamp // Store the start date timestamp
@@ -147,14 +151,8 @@ lateinit var binding:FragmentCreateAmcBinding
             }
         }
         binding.endDate.setOnClickListener {
-            if (selectedStartDate != null) {
-                // Pass the selectedStartDate to restrict the minimum date
-                showDatePicker(minDate = selectedStartDate) { date, _ ->
-                    binding.endDate.setText(date)
-                }
-            } else {
-                // Optionally, show a message to select the start date first
-                Toast.makeText(requireActivity(), "Please select the start date first", Toast.LENGTH_SHORT).show()
+            showDatePicker(minDate = selectedStartDate) { date, _ ->
+                binding.endDate.setText(date)
             }
         }
 
@@ -204,6 +202,7 @@ lateinit var binding:FragmentCreateAmcBinding
             val endDate = binding.endDate.text?.toString()?.trim().orEmpty()
             val startDate = binding.startDate.text?.toString()?.trim().orEmpty()
             val siteLocation = binding.siteLocation.text?.toString()?.trim().orEmpty()
+            val gstNumber = binding.gstNumber.text?.toString()?.trim()?.uppercase(Locale.ROOT).orEmpty()
             val siteBranch = binding.siteBranch.text?.toString()?.trim().orEmpty()
             val sitename = binding.sitename.text?.toString()?.trim().orEmpty()
             val siteemail = binding.siteEmail.text?.toString()?.trim().orEmpty()
@@ -214,16 +213,17 @@ lateinit var binding:FragmentCreateAmcBinding
 
             val validationMessage = com.prod.evergreen.helper.FormValidator.firstInvalid(
                 com.prod.evergreen.helper.FormValidator.Check(
-                    binding.sitename, "Please enter site name", sitename.isNotBlank()
+                    binding.sitename, "Please enter company name", sitename.isNotBlank()
                 ),
                 com.prod.evergreen.helper.FormValidator.Check(
                     binding.siteBranch, "Please enter branch name", siteBranch.isNotBlank()
                 ),
                 com.prod.evergreen.helper.FormValidator.Check(
-                    binding.startDate, "Select start date", startDate.isNotBlank()
+                    binding.siteLocation, "Please enter company address", siteLocation.isNotBlank()
                 ),
                 com.prod.evergreen.helper.FormValidator.Check(
-                    binding.endDate, "Select end date", endDate.isNotBlank()
+                    binding.gstNumber, "Please enter a valid GST number",
+                    gstNumber.matches(Regex("^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$"))
                 ),
                 com.prod.evergreen.helper.FormValidator.Check(
                     binding.siteImage,
@@ -256,15 +256,18 @@ lateinit var binding:FragmentCreateAmcBinding
                 addProperty("company_name", sitename)
                 addProperty("branch_name", siteBranch)
                 addProperty("company_email", siteemail)
-                addProperty("password", password)
-                addProperty("start_date", startDate)
-                addProperty("end_date", endDate)
+                addProperty("gst_number", gstNumber)
+                if (startDate.isNotBlank()) addProperty("start_date", startDate)
+                if (endDate.isNotBlank()) addProperty("end_date", endDate)
                 addProperty("company_location", siteLocation)
-                // Name/email/password are optional in client details.
-                addProperty("name", pocName)
-                addProperty("location", "")
-                addProperty("phone", pocMobile)
-                addProperty("email", pocMail)
+                val hasClientAdminDetails = listOf(pocName, pocMobile, pocMail, password).any { it.isNotBlank() }
+                if (hasClientAdminDetails) {
+                    addProperty("name", pocName)
+                    addProperty("location", "")
+                    addProperty("phone", pocMobile)
+                    addProperty("email", pocMail)
+                    addProperty("password", password)
+                }
                 addProperty("logo", file_name)
             }
 
@@ -498,6 +501,7 @@ private fun setViewmodel() {
         binding.siteBranch.text?.clear()
         binding.siteEmail.text?.clear()
         binding.siteLocation.text?.clear()
+        binding.gstNumber.text?.clear()
         binding.startDate.text = ""
         binding.endDate.text = ""
         binding.poc.pocName.text?.clear()
