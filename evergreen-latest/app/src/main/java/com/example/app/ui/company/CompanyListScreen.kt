@@ -81,6 +81,7 @@ data class Company(
     val location: String,
     val pocName: String,
     val email: String,
+    val companyEmail: String = "",
     val mobile: String,
     val startDate: String,
     val endDate: String,
@@ -414,7 +415,7 @@ private fun CompanyCard(
                                 )
                                 Spacer(modifier = Modifier.width(3.dp))
                                 Text(
-                                    text = company.location,
+                                    text = company.location.ifBlank { "-" },
                                     fontSize = 14.sp,
                                     color = GrayText,
                                     maxLines = 1,
@@ -429,6 +430,7 @@ private fun CompanyCard(
                             modifier = Modifier.size(11.dp)
                         )
                     }
+                    CompanyInfoRow(Icons.Default.Email, "Company Email", company.companyEmail)
                     Spacer(modifier = Modifier.height(8.dp))
                     POCDetails(company = company)
                 }

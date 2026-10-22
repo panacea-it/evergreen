@@ -203,6 +203,7 @@ class CompaniesFragment : Fragment() {
             location = locationText,
             pocName = poc?.name.orEmpty(),
             email = poc?.email.orEmpty(),
+            companyEmail = email.orEmpty(),
             mobile = poc?.phone.orEmpty(),
             startDate = DateConverter.convertToLocalUtcAndFormat(startDate),
             endDate = DateConverter.convertToLocalUtcAndFormat(endDate),
