@@ -37,14 +37,18 @@ class EquipmentsList : AppCompatActivity() {
 
         val id= intent.getIntExtra("c_id",0)
         val name= intent.getStringExtra("name")
-        loadEquipments()
         equipmentlistAdapter = EquipmentListAdapter(
             sharedPreferencesHelper,
             onViewClick = { data -> EquipmentEditor.openDetails(this, data) },
             onActionClick = { data -> showEquipmentActions(data) }
         )
 
-       binding.recyclerCompanies.adapter=equipmentlistAdapter
+        binding.recyclerCompanies.adapter=equipmentlistAdapter
+        if (id <= 0) {
+            android.widget.Toast.makeText(this, "Unable to identify the selected company", android.widget.Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
 
 
         val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
@@ -85,10 +89,8 @@ class EquipmentsList : AppCompatActivity() {
             loadEquipments()
         }
         viewModel.allequipmentsDataResponse.observe(this) { data ->
-            val equipments = data.data.orEmpty()
-            if (data.status == 200) {
-                equipmentlistAdapter.addData(equipments)
-            }
+            val equipments = data?.takeIf { it.status == 200 }?.data.orEmpty()
+            equipmentlistAdapter.addData(equipments)
             if (equipments.isEmpty()) {
                 binding.etSearch!!.visibility= View.GONE
                 binding.noDataLayout!!.visibility= View.VISIBLE

@@ -91,10 +91,10 @@ class MainActivity : AppCompatActivity() {
                     ?.takeIf { it.isNotBlank() } ?: "Service Engineer"
             }
             "eg_super_admin"->{
-                binding.navHeader.accessLevel.text="Admin"
+                binding.navHeader.accessLevel.text="Super Admin"
             }
             "client"->{
-                binding.navHeader.accessLevel.text="Client"
+                binding.navHeader.accessLevel.text="Admin"
             }
             else -> {
                 println("Unknown access level.")

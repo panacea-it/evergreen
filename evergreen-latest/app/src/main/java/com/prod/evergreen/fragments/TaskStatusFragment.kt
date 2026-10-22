@@ -308,8 +308,12 @@ lateinit var bindin:FragmentTaskStatusBinding
 
 
         viewModel.upDateTaskStatusDataResponse.observe(viewLifecycleOwner) { response ->
-            showDialog(response.message ?: "Task updated")
-            viewModel.getAllTasks(authToken, object1)
+            val succeeded = response.status_code == 200
+            showDialog(
+                response.message?.takeIf { it.isNotBlank() }
+                    ?: if (succeeded) "Task updated" else "Unable to update task"
+            )
+            if (succeeded) viewModel.getAllTasks(authToken, object1)
 
         }
         viewModel.changePasswordDataResponse.observe(viewLifecycleOwner) { response ->

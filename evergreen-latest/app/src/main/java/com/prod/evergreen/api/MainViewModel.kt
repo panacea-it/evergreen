@@ -33,6 +33,7 @@ class MainViewModel(private val mainRepository: MainRepository) : ViewModel() {
     val allTasksDataResponse :MutableLiveData<AllTasks> = MutableLiveData()
     val allUsersDataResponse :MutableLiveData<AllUsers> = MutableLiveData()
     val allequipmentsDataResponse :MutableLiveData<AllEquipmentsData> = MutableLiveData()
+    private var equipmentRequestVersion = 0
     val allAmcDataResponse :MutableLiveData<AllAmcData> = MutableLiveData()
     val userloginresponse :MutableLiveData<LoginData> = MutableLiveData()
     val forgotPasswordResponse :MutableLiveData<ForgotPasswordData> = MutableLiveData()
@@ -187,15 +188,19 @@ if (response.data.status==200) {
 
 
     fun getAllEquipmentsByID(authorization: String,c_id:JsonObject) {
+        val requestVersion = ++equipmentRequestVersion
         loading.value = true
         viewModelScope.launch(exceptionHandler) {
             when (val response = mainRepository.getAllEquipmentsByID(authorization,c_id)) {
                 is NetworkState.Success -> {
-                    allequipmentsDataResponse.postValue(response.data)
-                    loading.value = false
+                    if (requestVersion == equipmentRequestVersion) {
+                        allequipmentsDataResponse.postValue(response.data)
+                        loading.value = false
+                    }
                 }
                 is NetworkState.Error -> {
                     Log.d("errors",response.message.toString())
+                    if (requestVersion != equipmentRequestVersion) return@launch
                     loading.value = false
                     if ((response.statusCode ?: 0) >= 500) {
                         onError("Internal Server Error: Please try again later.")

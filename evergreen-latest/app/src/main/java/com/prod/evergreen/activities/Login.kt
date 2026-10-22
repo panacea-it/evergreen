@@ -8,6 +8,9 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import android.widget.ArrayAdapter
+import android.text.method.PasswordTransformationMethod
+import android.text.method.HideReturnsTransformationMethod
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -45,6 +48,14 @@ class Login : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     lateinit var bindingLoginBinding: ActivityLoginBinding
     private var fcmToken:String=""
+    private val loginRoles = listOf(
+        "Super Admin" to "eg_super_admin",
+        "Manager" to "eg_admin",
+        "Client Admin" to "client_admin",
+        "Admin" to "client",
+        "Technician" to "technician"
+    )
+    private var passwordVisible = false
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -69,6 +80,23 @@ class Login : AppCompatActivity() {
         enableEdgeToEdge()
         bindingLoginBinding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(bindingLoginBinding.root)
+        val roleLabels = listOf("Select login type") + loginRoles.map { it.first }
+        bindingLoginBinding.loginRole.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            roleLabels
+        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+        bindingLoginBinding.loginRole.setSelection(0)
+        bindingLoginBinding.togglePasswordVisibility.setOnClickListener {
+            passwordVisible = !passwordVisible
+            bindingLoginBinding.editTextTextPassword.transformationMethod =
+                if (passwordVisible) HideReturnsTransformationMethod.getInstance()
+                else PasswordTransformationMethod.getInstance()
+            bindingLoginBinding.togglePasswordVisibility.text = if (passwordVisible) "Hide" else "Show"
+            bindingLoginBinding.editTextTextPassword.setSelection(
+                bindingLoginBinding.editTextTextPassword.text?.length ?: 0
+            )
+        }
 //        database = FirebaseDatabase.getInstance(this).reference
 
 
@@ -170,6 +198,17 @@ class Login : AppCompatActivity() {
                         ).show()
                         return@observe
                     }
+                    val selectedRole = bindingLoginBinding.loginRole.selectedItemPosition
+                        .takeIf { it > 0 }
+                        ?.let { loginRoles.getOrNull(it - 1)?.second }
+                    if (selectedRole == null) {
+                        Toast.makeText(this@Login, "Please select your login type", Toast.LENGTH_SHORT).show()
+                        return@observe
+                    }
+                    if (!selectedRole.equals(user.access_level, ignoreCase = true)) {
+                        Toast.makeText(this@Login, "This account does not match the selected login type", Toast.LENGTH_SHORT).show()
+                        return@observe
+                    }
                     sharedPreferencesHelper.save(ConstantValues.AuthToken, data.access_token)
                     sharedPreferencesHelper.save(ConstantValues.PREF_USERNAME, user.name)
                     sharedPreferencesHelper.save(ConstantValues.PREF_EMAIL, user.email)
@@ -227,6 +266,10 @@ class Login : AppCompatActivity() {
                     Toast.makeText(this@Login,"Please Enter password",Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
 
+                }
+                if (loginRole.selectedItemPosition == 0) {
+                    Toast.makeText(this@Login, "Please select your login type", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
                 }
 
 

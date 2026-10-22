@@ -151,6 +151,8 @@ class CreateTaskFragment : Fragment() {
         if (companyLink != null) {
             val object1 = JsonObject()
             object1.addProperty("company_link", companyLink)
+            bindning.eqName.text = "Loading equipment…"
+            bindning.eqName.isEnabled = false
             viewModel.getAllEquipmentsByID(token!!, object1)
         }
         val listItems = arrayOf("Camera", "Gallery", "Cancel")
@@ -200,6 +202,19 @@ class CreateTaskFragment : Fragment() {
             }
         }
 
+        viewModel.allequipmentsDataResponse.observe(viewLifecycleOwner) { response ->
+            if (response == null) return@observe
+            val activeEquipment = response.data.orEmpty().filter { it.isActive() }
+            bindning.eqName.isEnabled = activeEquipment.isNotEmpty()
+            if (activeEquipment.isEmpty()) {
+                equipment_id = null
+                bindning.eqName.text = "No active equipment available"
+                bindning.specificationLayout.view.visibility = View.GONE
+            } else if (equipment_id == null) {
+                bindning.eqName.text = "Select equipment"
+            }
+        }
+
         viewModel.getAllAmc(token!!)
 
         val accessType = sharedPreferencesHelper.getValueString(ConstantValues.TYPE_ROLE)
@@ -213,6 +228,10 @@ class CreateTaskFragment : Fragment() {
                     bindning.siteBranch.text = selectedItem.branchName
                     bindning.siteEmail.setText(selectedItem.location.orEmpty())
                     companyLink = selectedItem.id
+                    equipment_id = null
+                    bindning.eqName.text = "Loading equipment…"
+                    bindning.eqName.isEnabled = false
+                    bindning.specificationLayout.view.visibility = View.GONE
                     val object1 = JsonObject()
                     object1.addProperty("company_link", companyLink)
                     viewModel.getAllEquipmentsByID(token!!, object1)
@@ -226,7 +245,7 @@ class CreateTaskFragment : Fragment() {
                 equipment_id = selectedItem.id
                 bindning.eqName.text = selectedItem.name
                 bindning.specificationLayout.view.visibility = View.VISIBLE
-                Glide.with(requireActivity()).load(selectedItem).into(bindning.eqImage)
+                Glide.with(requireActivity()).load(selectedItem.image_url).into(bindning.eqImage)
                 bindning.specificationLayout.tvMfd.text =
                     com.prod.evergreen.helper.YearPickerHelper.displayYear(selectedItem.manufacturer_date)
                 bindning.specificationLayout.tvMake.text = selectedItem.make?.takeIf { it.isNotBlank() } ?: "-"
@@ -250,7 +269,7 @@ class CreateTaskFragment : Fragment() {
 
         bindning.issueTye.setOnClickListener {
 
-            val optionsMap = mapOf(
+            val optionsMap = linkedMapOf(
                 "Service" to "service",
                 "AMC Preventive Maintenance" to "amc_preventive_maintenance",
                 "Break Down" to "breakdown"
