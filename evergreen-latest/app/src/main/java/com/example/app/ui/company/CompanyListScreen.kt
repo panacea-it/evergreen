@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -98,6 +99,7 @@ fun CompanyListScreen(
     onCompanyLongClick: (Company) -> Unit = {},
     onSearchClick: () -> Unit = {},
     onFilterClick: () -> Unit = {},
+    onExportClick: () -> Unit = {},
     onAddClick: () -> Unit = {},
     onHomeClick: () -> Unit = {},
     onMessagesClick: () -> Unit = {},
@@ -117,12 +119,12 @@ fun CompanyListScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             com.example.app.ui.theme.AppHeader(
                 title = "Companies",
-                subtitle = "AMC sites and branches",
+                subtitle = "Company list and branches",
                 leadingIcon = com.example.app.ui.theme.AppIcons.menu,
                 leadingDescription = "Menu",
                 onLeadingClick = onMenuClick,
                 actions = listOf(
-                    com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.add, "Create AMC", onAddClick),
+                    com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.add, "Create Company", onAddClick),
                     com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.scan, "Scan", onScanClick),
                     com.example.app.ui.theme.AppHeaderAction(com.example.app.ui.theme.AppIcons.notifications, "Notifications", onNotificationClick)
                 )
@@ -134,6 +136,23 @@ fun CompanyListScreen(
                 onSearchClick = onSearchClick,
                 onFilterClick = onFilterClick
             )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(onClick = onExportClick) {
+                    Icon(
+                        imageVector = com.example.app.ui.theme.AppIcons.download,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Export Excel")
+                }
+            }
 
             if (companies.isEmpty()) {
                 Box(
@@ -147,9 +166,9 @@ fun CompanyListScreen(
                         subtitle = if (searchQuery.isNotBlank()) {
                             "Try a different name or location."
                         } else {
-                            "Create an AMC company to get started."
+                            "Create a company to get started."
                         },
-                        actionLabel = if (searchQuery.isBlank()) "Create AMC" else null,
+                        actionLabel = if (searchQuery.isBlank()) "Create Company" else null,
                         onAction = if (searchQuery.isBlank()) onAddClick else null
                     )
                 }

@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
             navigateToDestination(R.id.createTaskFragment, "Create Task")
         }
         if (intent.getBooleanExtra("open_create_amc", false)) {
-            navigateToDestination(R.id.createAmcFragment, "Create AMC")
+            navigateToDestination(R.id.createAmcFragment, "Create Company")
         }
         if (intent.getBooleanExtra("open_service_report_form", false)) {
             navigateToDestination(R.id.serviceReportFormFragment, "Generate Service Report")
@@ -183,7 +183,7 @@ class MainActivity : AppCompatActivity() {
             ListItem("Users", R.drawable.ic_users_list_icon, R.id.amc_mangers, "Users List"),
             ListItem("Assign Tasks", R.drawable.ic_assign_tasks_to_technician_icon, R.id.taskFragment, "Assign Tasks to Technician"),
             ListItem("Service Reports", R.drawable.task_square, R.id.serviceReportsFragment, "Service Reports"),
-            ListItem("Create AMC", R.drawable.ic_create_amc_icon, R.id.createAmcFragment, "Create AMC"),
+            ListItem("Create Company", R.drawable.ic_create_amc_icon, R.id.createAmcFragment, "Create Company"),
             ListItem("Upload Equipment", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadEqpmntExcelData, "Upload Equipments Excel Data"),
             ListItem("Upload AMCs", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadAmcExcelData, "Upload AMCs Excel Data"),
             ListItem("Upload Technicians", R.drawable.ic_upload_equipments_excel_data_icon, R.id.uploadTechnicianExcelData, "Upload Technicians Excel Data"),
@@ -256,7 +256,7 @@ class MainActivity : AppCompatActivity() {
             navigateToDestination(R.id.createTaskFragment, "Create Task")
         }
         if (intent.getBooleanExtra("open_create_amc", false)) {
-            navigateToDestination(R.id.createAmcFragment, "Create AMC")
+            navigateToDestination(R.id.createAmcFragment, "Create Company")
         }
         if (intent.getBooleanExtra("open_service_report_form", false)) {
             navigateToDestination(R.id.serviceReportFormFragment, "Generate Service Report")

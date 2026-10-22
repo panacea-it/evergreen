@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LocationOn
@@ -42,6 +43,7 @@ object AppIcons {
     val email = Icons.Default.Mail
     val calendar = Icons.Default.CalendarMonth
     val more = Icons.Default.MoreVert
+    val download = Icons.Default.FileDownload
 
     val nav = 20.dp
     val header = 20.dp

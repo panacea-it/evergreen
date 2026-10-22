@@ -9,7 +9,7 @@ import com.prod.evergreen.activities.MainActivity
 object TabNav {
     fun home(fragment: Fragment) = go(fragment, R.id.homeFragment, "Home")
     fun equipment(fragment: Fragment) = go(fragment, R.id.equipmentFragment, "Equipments List")
-    fun createAmc(fragment: Fragment) = go(fragment, R.id.createAmcFragment, "Create AMC")
+    fun createAmc(fragment: Fragment) = go(fragment, R.id.createAmcFragment, "Create Company")
     fun tasks(fragment: Fragment) = go(fragment, R.id.taskFragment, "Tasks List")
     fun profile(fragment: Fragment) = go(fragment, R.id.profileFragment, "Profile")
     fun serviceReports(fragment: Fragment) = go(fragment, R.id.serviceReportsFragment, "Service Reports")

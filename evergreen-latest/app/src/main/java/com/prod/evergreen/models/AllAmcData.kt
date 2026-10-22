@@ -73,6 +73,9 @@ data class AMCData(
 	@field:SerializedName("email")
 	val email: String? = null,
 
+	@field:SerializedName("gst_number")
+	val gstNumber: String? = null,
+
 	@field:SerializedName("start_date")
 	val startDate: String? = null,
 

@@ -2,6 +2,7 @@ package com.prod.evergreen.fragments
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
 import android.view.LayoutInflater
@@ -20,6 +21,7 @@ import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.activity.result.contract.ActivityResultContracts
 import com.example.app.ui.company.Company
 import com.example.app.ui.company.CompanyListScreen
 import com.google.gson.JsonObject
@@ -55,6 +57,9 @@ class CompaniesFragment : Fragment() {
     private val allCompanies = mutableStateOf<List<AMCData>>(emptyList())
     private val searchQuery = mutableStateOf("")
     private val filterMode = mutableStateOf(FilterMode.ALL)
+    private val exportCompanies = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    ) { uri -> uri?.let(::writeCompaniesWorkbook) }
 
     private enum class FilterMode { ALL, ACTIVE, INACTIVE }
 
@@ -97,6 +102,13 @@ class CompaniesFragment : Fragment() {
                         source.firstOrNull { it.id == company.id }?.let { showCompanyActions(it) }
                     },
                     onFilterClick = { showFilterDialog() },
+                    onExportClick = {
+                        if (source.isEmpty()) {
+                            showToast("There are no companies to export")
+                        } else {
+                            exportCompanies.launch("evergreen_amc_companies.xlsx")
+                        }
+                    },
                     onAddClick = { TabNav.createAmc(this@CompaniesFragment) },
                     onHomeClick = { TabNav.home(this@CompaniesFragment) },
                     onMessagesClick = { TabNav.equipment(this@CompaniesFragment) },
@@ -242,6 +254,115 @@ class CompaniesFragment : Fragment() {
         viewModel.getAllAmc(token)
     }
 
+    /** Writes company data into the existing AMC upload workbook layout. Passwords are never exported. */
+    private fun writeCompaniesWorkbook(destination: Uri) {
+        try {
+            val template = requireActivity().assets.open("evergreen_amc_template.xlsx")
+            val headers = amcExcelHeaders()
+            val instructions = amcExcelInstructions()
+            val companyRows = allCompanies.value.map { company ->
+                val admin = company.pocDetails?.user
+                listOf(
+                    company.name.orEmpty(),
+                    company.branchName.orEmpty(),
+                    company.email.orEmpty(),
+                    company.location.orEmpty(),
+                    company.startDate.orEmpty(),
+                    company.endDate.orEmpty(),
+                    admin?.name.orEmpty(),
+                    admin?.phone.orEmpty(),
+                    admin?.email.orEmpty(),
+                    "",
+                    ""
+                )
+            }
+            template.use { input ->
+                requireActivity().contentResolver.openOutputStream(destination)?.use { output ->
+                    java.util.zip.ZipInputStream(input).use { zipInput ->
+                        java.util.zip.ZipOutputStream(output).use { zipOutput ->
+                            var entry = zipInput.nextEntry
+                            while (entry != null) {
+                                val name = entry.name
+                                val bytes = zipInput.readBytes()
+                                val content = when (name) {
+                                    "xl/sharedStrings.xml" -> {
+                                        sharedStringsXml(headers + instructions + companyRows.flatten()).toByteArray(Charsets.UTF_8)
+                                    }
+                                    "xl/worksheets/sheet1.xml" -> {
+                                        companySheetXml(companyRows).toByteArray(Charsets.UTF_8)
+                                    }
+                                    "xl/worksheets/sheet2.xml" -> {
+                                        instructionsSheetXml(instructions, headers.size).toByteArray(Charsets.UTF_8)
+                                    }
+                                    else -> bytes
+                                }
+                                zipOutput.putNextEntry(java.util.zip.ZipEntry(name))
+                                zipOutput.write(content)
+                                zipOutput.closeEntry()
+                                zipInput.closeEntry()
+                                entry = zipInput.nextEntry
+                            }
+                        }
+                    }
+                } ?: error("Could not open the selected download location")
+            }
+            showToast("Exported ${companyRows.size} companies")
+        } catch (error: Exception) {
+            showToast("Unable to export companies: ${error.message ?: "Unknown error"}")
+        }
+    }
+
+    private fun amcExcelHeaders() = listOf(
+        "company_name", "branch_name", "company_email", "company_location", "start_date", "end_date",
+        "admin_name", "admin_phone", "admin_email", "admin_password", "admin_location"
+    )
+
+    private fun amcExcelInstructions() = listOf(
+        "How to use this sheet",
+        "Use the AMCs sheet. Keep the first row headers exactly as they are.",
+        "Each row creates one AMC/company and its client admin.",
+        "Required: company_name, branch_name, admin_name, admin_phone, admin_email, admin_password.",
+        "admin_phone must be a 10-digit Indian mobile number.",
+        "Optional: company_email, company_location, start_date, end_date (YYYY-MM-DD), admin_location.",
+        "If dates are empty, start_date becomes today and end_date one year later.",
+        "Do not reuse a company+branch pair or an existing admin phone/email.",
+        "Delete the sample rows before uploading real data, or change phones/emails so they are unique."
+    )
+
+    private fun sharedStringsXml(values: List<String>): String = buildString {
+        append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"${values.size}\" uniqueCount=\"${values.size}\">")
+        values.forEach { value -> append("<si><t xml:space=\"preserve\">${value.escapeXml()}</t></si>") }
+        append("</sst>")
+    }
+
+    private fun companySheetXml(rows: List<List<String>>): String {
+        val headers = amcExcelHeaders()
+        val allRows = listOf(headers) + rows
+        val columns = listOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K")
+        return buildString {
+            append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><dimension ref=\"A1:K${allRows.size}\"/><sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"1\" topLeftCell=\"A2\" activePane=\"bottomLeft\" state=\"frozen\"/><selection pane=\"bottomLeft\"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight=\"15\"/><cols><col min=\"1\" max=\"11\" width=\"22\" customWidth=\"1\"/></cols><sheetData>")
+            var sharedStringIndex = 0
+            allRows.forEachIndexed { rowIndex, row ->
+                append("<row r=\"${rowIndex + 1}\">")
+                row.forEachIndexed { columnIndex, _ ->
+                    append("<c r=\"${columns[columnIndex]}${rowIndex + 1}\" t=\"s\"><v>${sharedStringIndex++}</v></c>")
+                }
+                append("</row>")
+            }
+            append("</sheetData><autoFilter ref=\"A1:K${allRows.size}\"/></worksheet>")
+        }
+    }
+
+    private fun instructionsSheetXml(instructions: List<String>, stringOffset: Int): String = buildString {
+        append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"><dimension ref=\"A1:A${instructions.size}\"/><sheetFormatPr defaultRowHeight=\"15\"/><cols><col min=\"1\" max=\"1\" width=\"110\" customWidth=\"1\"/></cols><sheetData>")
+        instructions.forEachIndexed { index, _ ->
+            append("<row r=\"${index + 1}\"><c r=\"A${index + 1}\" t=\"s\"><v>${stringOffset + index}</v></c></row>")
+        }
+        append("</sheetData></worksheet>")
+    }
+
+    private fun String.escapeXml(): String = replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&apos;")
+
     private fun showCompanyActions(company: AMCData) {
         val companyName = company.name?.takeIf { it.isNotBlank() } ?: "Company"
         val statusAction = if (company.isCompanyActive()) "Mark Inactive" else "Mark Active"
@@ -260,7 +381,7 @@ class CompaniesFragment : Fragment() {
     private fun openEditCompany(company: AMCData) {
         com.prod.evergreen.helper.DashboardNav.pendingCompanyJson =
             com.google.gson.Gson().toJson(company)
-        goTo(R.id.createAmcFragment, "Edit AMC")
+        goTo(R.id.createAmcFragment, "Edit Company")
     }
 
     private fun showEditCompanyDialog(company: AMCData) {

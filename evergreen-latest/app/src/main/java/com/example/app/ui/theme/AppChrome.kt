@@ -167,7 +167,7 @@ fun AppBottomBar(
                 ) {
                     Icon(
                         imageVector = AppIcons.add,
-                        contentDescription = "Create AMC",
+                        contentDescription = "Create Company",
                         tint = Color.White,
                         modifier = Modifier.size(22.dp)
                     )

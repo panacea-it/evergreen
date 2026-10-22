@@ -77,13 +77,15 @@ private val InputBackground = AppColors.surface
 private val RequiredRed = AppColors.red
 
 data class CreateAmcFormState(
-    val title: String = "Create AMC",
-    val subtitle: String = "Add new AMC company",
-    val saveLabel: String = "Save & Continue",
+    val title: String = "Create Company",
+    val subtitle: String = "Add a new company",
+    val saveLabel: String = "Create Company",
     val siteName: String = "",
     val branchName: String = "",
     val companyEmail: String = "",
     val siteLocation: String = "",
+    val gstNumber: String = "",
+    val gstNumberRequired: Boolean = true,
     val startDate: String = "",
     val endDate: String = "",
     val clientName: String = "",
@@ -225,10 +227,10 @@ private fun CompanyInformationSection(
         Spacer(modifier = Modifier.height(13.dp))
         FormField(
             icon = Icons.Default.GridView,
-            label = "Site name",
+            label = "Company name",
             required = true,
             value = state.siteName,
-            placeholder = "Enter site name",
+            placeholder = "Enter company name",
             onValueChange = { onStateChange(state.copy(siteName = it)) }
         )
         Spacer(modifier = Modifier.height(10.dp))
@@ -252,8 +254,8 @@ private fun CompanyInformationSection(
         Spacer(modifier = Modifier.height(10.dp))
         FormField(
             icon = Icons.Default.CalendarMonth,
-            label = "Start Date",
-            required = true,
+            label = "Start Date (optional)",
+            required = false,
             value = state.startDate,
             placeholder = "Select start date",
             trailingIcon = Icons.Default.CalendarMonth,
@@ -264,8 +266,8 @@ private fun CompanyInformationSection(
         Spacer(modifier = Modifier.height(10.dp))
         FormField(
             icon = Icons.Default.CalendarMonth,
-            label = "End Date",
-            required = true,
+            label = "End Date (optional)",
+            required = false,
             value = state.endDate,
             placeholder = "Select end date",
             trailingIcon = Icons.Default.CalendarMonth,
@@ -276,11 +278,20 @@ private fun CompanyInformationSection(
         Spacer(modifier = Modifier.height(10.dp))
         FormField(
             icon = Icons.Default.LocationOn,
-            label = "Site Location",
-            required = false,
+            label = "Company address",
+            required = true,
             value = state.siteLocation,
-            placeholder = "Please enter site location",
+            placeholder = "Enter company address",
             onValueChange = { onStateChange(state.copy(siteLocation = it)) }
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        FormField(
+            icon = Icons.Default.GridView,
+            label = "GST number",
+            required = state.gstNumberRequired,
+            value = state.gstNumber,
+            placeholder = "Enter GST number",
+            onValueChange = { onStateChange(state.copy(gstNumber = it.uppercase().take(15))) }
         )
         Spacer(modifier = Modifier.height(13.dp))
         UploadLogoBox(

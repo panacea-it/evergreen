@@ -137,16 +137,8 @@ class CreateAmcFragment : Fragment() {
                         }
                     },
                     onEndDateClick = {
-                        if (selectedStartDate != null) {
-                            showDatePicker(minDate = selectedStartDate) { date, _ ->
-                                formState.value = formState.value.copy(endDate = date)
-                            }
-                        } else {
-                            Toast.makeText(
-                                requireActivity(),
-                                "Please select the start date first",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                        showDatePicker(minDate = selectedStartDate) { date, _ ->
+                            formState.value = formState.value.copy(endDate = date)
                         }
                     },
                     onLogoClick = { showImageSourceDialog() },
@@ -202,6 +194,7 @@ class CreateAmcFragment : Fragment() {
         val startDate = state.startDate.trim()
         val endDate = state.endDate.trim()
         val siteLocation = state.siteLocation.trim()
+        val gstNumber = state.gstNumber.trim().uppercase(Locale.ROOT)
         val siteemail = state.companyEmail.trim()
         val password = state.password.trim()
         val pocMobile = state.mobileNumber.trim()
@@ -209,10 +202,11 @@ class CreateAmcFragment : Fragment() {
         val pocMail = state.email.trim()
 
         val validationMessage = when {
-            sitename.isBlank() -> "Please enter site name"
+            sitename.isBlank() -> "Please enter company name"
             siteBranch.isBlank() -> "Please enter branch name"
-            startDate.isBlank() -> "Select start date"
-            endDate.isBlank() -> "Select end date"
+            siteLocation.isBlank() -> "Please enter company address"
+            editCompanyId == null && !gstNumber.matches(Regex("^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")) -> "Please enter a valid GST number"
+            editCompanyId != null && gstNumber.isNotBlank() && !gstNumber.matches(Regex("^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")) -> "Please enter a valid GST number"
             file_name.isNullOrBlank() && compressedImage == null -> "Please select image"
             !FormValidator.cardCompleteOrEmpty(pocName, pocMobile, pocMail, password) ->
                 "Please fill all Client Admin details or leave them empty"
@@ -233,14 +227,18 @@ class CreateAmcFragment : Fragment() {
             addProperty("company_name", sitename)
             addProperty("branch_name", siteBranch)
             addProperty("company_email", siteemail)
-            addProperty("password", password)
-            addProperty("start_date", startDate)
-            addProperty("end_date", endDate)
+            if (gstNumber.isNotBlank()) addProperty("gst_number", gstNumber)
+            if (startDate.isNotBlank()) addProperty("start_date", startDate)
+            if (endDate.isNotBlank()) addProperty("end_date", endDate)
             addProperty("company_location", siteLocation)
-            addProperty("name", pocName)
-            addProperty("location", "")
-            addProperty("phone", pocMobile)
-            addProperty("email", pocMail)
+            val hasClientAdminDetails = listOf(pocName, pocMobile, pocMail, password).any { it.isNotBlank() }
+            if (hasClientAdminDetails) {
+                addProperty("name", pocName)
+                addProperty("location", "")
+                addProperty("phone", pocMobile)
+                addProperty("email", pocMail)
+                addProperty("password", password)
+            }
             addProperty("logo", file_name)
         }
 
@@ -277,13 +275,15 @@ class CreateAmcFragment : Fragment() {
                 }
             }
             formState.value = CreateAmcFormState(
-                title = "Edit AMC",
+                title = "Edit Company",
                 subtitle = "Update company details",
-                saveLabel = "Update AMC",
+                saveLabel = "Update Company",
                 siteName = company.name.orEmpty(),
                 branchName = company.branchName.orEmpty(),
                 companyEmail = company.email.orEmpty(),
                 siteLocation = company.location.orEmpty(),
+                gstNumber = company.gstNumber.orEmpty(),
+                gstNumberRequired = false,
                 startDate = start,
                 endDate = end,
                 clientName = poc?.name.orEmpty(),
