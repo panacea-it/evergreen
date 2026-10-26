@@ -156,10 +156,63 @@ android:id="@+id/sitename"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent" />
 
-
+                    <TextView
+                        android:textColor="@color/gray1"
+                        android:fontFamily="@font/roboto_regular"
+                        android:textSize="@dimen/_14ssp"
+                        android:layout_marginTop="@dimen/_10sdp"
+                        android:text="Service type *"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:id="@+id/service_type"
+                        android:gravity="center_vertical"
+                        android:fontFamily="@font/roboto_medium"
+                        android:textSize="@dimen/_16ssp"
+                        android:textColorHint="@color/gray2"
+                        android:textColor="@color/black_blue"
+                        android:layout_marginTop="@dimen/_2sdp"
+                        android:paddingHorizontal="@dimen/_10sdp"
+                        android:hint="Select service type"
+                        android:background="@drawable/edit_text_background"
+                        app:drawableEndCompat="@drawable/arrow_down"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/_50sdp" />
 
                     <LinearLayout
-                        android:layout_marginTop="@dimen/_20sdp"
+                        android:id="@+id/amc_type_group"
+                        android:visibility="gone"
+                        android:orientation="vertical"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:textColor="@color/gray1"
+                            android:fontFamily="@font/roboto_regular"
+                            android:textSize="@dimen/_14ssp"
+                            android:layout_marginTop="@dimen/_10sdp"
+                            android:text="AMC type *"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:id="@+id/amc_type"
+                            android:gravity="center_vertical"
+                            android:fontFamily="@font/roboto_medium"
+                            android:textSize="@dimen/_16ssp"
+                            android:textColorHint="@color/gray2"
+                            android:textColor="@color/black_blue"
+                            android:layout_marginTop="@dimen/_2sdp"
+                            android:paddingHorizontal="@dimen/_10sdp"
+                            android:hint="Select C AMC or NC AMC"
+                            android:background="@drawable/edit_text_background"
+                            app:drawableEndCompat="@drawable/arrow_down"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/_50sdp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/amc_dates_row"
+                        android:visibility="gone"
+                        android:layout_marginTop="@dimen/_10sdp"
                         android:weightSum="2"
                         android:orientation="horizontal"
                         android:layout_width="match_parent"
@@ -175,7 +228,7 @@ android:id="@+id/sitename"
                                 android:fontFamily="@font/roboto_regular"
                                 android:textSize="@dimen/_14ssp"
                                 app:layout_constraintStart_toStartOf="parent"
-                                android:text="Start Date (optional)"
+                                android:text="Start Date *"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"/>
                             <TextView
@@ -210,7 +263,7 @@ android:id="@+id/sitename"
                                 android:fontFamily="@font/roboto_regular"
                                 android:textSize="@dimen/_14ssp"
                                 app:layout_constraintStart_toStartOf="parent"
-                                android:text="End Date (optional)"
+                                android:text="End Date *"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"/>
                             <TextView

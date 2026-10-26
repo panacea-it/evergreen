@@ -41,6 +41,7 @@ import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.FragmentCreateAmcBinding
 import com.prod.evergreen.helper.CameraCaptureHelper
+import com.prod.evergreen.helper.CompanyServiceType
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.SharedPreferencesHelper
 import com.prod.evergreen.helper.Validator
@@ -68,6 +69,8 @@ private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 class CreateAmcFragment : Fragment() {
     private var selectedStartDate: Long? = null
+    private var selectedServiceType: String? = null
+    private var selectedAmcType: String? = null
 
     private val cameraPermission = Manifest.permission.CAMERA
     private val galleryPermission = Manifest.permission.READ_EXTERNAL_STORAGE
@@ -144,6 +147,21 @@ lateinit var binding:FragmentCreateAmcBinding
         binding.bulkUploadCompanies.setOnClickListener {
             findNavController().navigate(R.id.uploadAmcExcelData)
         }
+        binding.serviceType.setOnClickListener {
+            showOptionPicker("Service type", CompanyServiceType.serviceTypes) { value, label ->
+                selectedServiceType = value
+                binding.serviceType.text = label
+                binding.serviceType.error = null
+                updateAmcFieldsVisibility()
+            }
+        }
+        binding.amcType.setOnClickListener {
+            showOptionPicker("AMC type", CompanyServiceType.amcTypes) { value, label ->
+                selectedAmcType = value
+                binding.amcType.text = label
+                binding.amcType.error = null
+            }
+        }
         binding.startDate.setOnClickListener {
             showDatePicker { date, timestamp ->
                 selectedStartDate = timestamp // Store the start date timestamp
@@ -210,6 +228,7 @@ lateinit var binding:FragmentCreateAmcBinding
             val pocMobile = binding.poc.pocNumber.text?.toString()?.trim().orEmpty()
             val pocName = binding.poc.pocName.text?.toString()?.trim().orEmpty()
             val pocMail = binding.poc.pocMail.text?.toString()?.trim().orEmpty()
+            val isAmc = selectedServiceType == CompanyServiceType.AMC
 
             val validationMessage = com.prod.evergreen.helper.FormValidator.firstInvalid(
                 com.prod.evergreen.helper.FormValidator.Check(
@@ -224,6 +243,18 @@ lateinit var binding:FragmentCreateAmcBinding
                 com.prod.evergreen.helper.FormValidator.Check(
                     binding.gstNumber, "Please enter a valid GST number",
                     gstNumber.matches(Regex("^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$"))
+                ),
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.serviceType, "Please select a service type", selectedServiceType != null
+                ),
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.amcType, "Please select C AMC or NC AMC", !isAmc || selectedAmcType != null
+                ),
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.startDate, "Please select start date", !isAmc || startDate.isNotBlank()
+                ),
+                com.prod.evergreen.helper.FormValidator.Check(
+                    binding.endDate, "Please select end date", !isAmc || endDate.isNotBlank()
                 ),
                 com.prod.evergreen.helper.FormValidator.Check(
                     binding.siteImage,
@@ -257,8 +288,12 @@ lateinit var binding:FragmentCreateAmcBinding
                 addProperty("branch_name", siteBranch)
                 addProperty("company_email", siteemail)
                 addProperty("gst_number", gstNumber)
-                if (startDate.isNotBlank()) addProperty("start_date", startDate)
-                if (endDate.isNotBlank()) addProperty("end_date", endDate)
+                addProperty("service_type", selectedServiceType)
+                if (isAmc) {
+                    addProperty("amc_type", selectedAmcType)
+                    addProperty("start_date", startDate)
+                    addProperty("end_date", endDate)
+                }
                 addProperty("company_location", siteLocation)
                 val hasClientAdminDetails = listOf(pocName, pocMobile, pocMail, password).any { it.isNotBlank() }
                 if (hasClientAdminDetails) {
@@ -281,6 +316,33 @@ lateinit var binding:FragmentCreateAmcBinding
             viewModel.createAMC(object1, token)
         }
 
+    }
+
+    private fun showOptionPicker(
+        title: String,
+        options: List<Pair<String, String>>,
+        onSelected: (String, String) -> Unit
+    ) {
+        AlertDialog.Builder(requireActivity())
+            .setTitle(title)
+            .setItems(options.map { it.second }.toTypedArray()) { _, which ->
+                val (value, label) = options[which]
+                onSelected(value, label)
+            }
+            .show()
+    }
+
+    private fun updateAmcFieldsVisibility() {
+        val isAmc = selectedServiceType == CompanyServiceType.AMC
+        binding.amcTypeGroup.visibility = if (isAmc) View.VISIBLE else View.GONE
+        binding.amcDatesRow.visibility = if (isAmc) View.VISIBLE else View.GONE
+        if (!isAmc) {
+            selectedAmcType = null
+            selectedStartDate = null
+            binding.amcType.text = ""
+            binding.startDate.text = ""
+            binding.endDate.text = ""
+        }
     }
 
     private fun showDatePicker(minDate: Long? = null, onDateSelected: (String, Long) -> Unit) {
@@ -508,6 +570,9 @@ private fun setViewmodel() {
         binding.poc.pocNumber.text?.clear()
         binding.poc.pocMail.text?.clear()
         binding.poc.sitePswd.text?.clear()
+        selectedServiceType = null
+        binding.serviceType.text = ""
+        updateAmcFieldsVisibility()
         selectedStartDate = null
         compressedImage = null
         actualImage = null

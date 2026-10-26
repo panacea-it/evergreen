@@ -27,6 +27,7 @@ import com.prod.evergreen.api.MainViewModel
 import com.prod.evergreen.api.MyViewModelFactory
 import com.prod.evergreen.api.RetrofitService
 import com.prod.evergreen.databinding.FragmentCompaniesBinding
+import com.prod.evergreen.helper.CompanyServiceType
 import com.prod.evergreen.helper.ConstantValues
 import com.prod.evergreen.helper.ProgressDialogUtil
 import com.prod.evergreen.helper.SharedPreferencesHelper
@@ -197,10 +198,35 @@ class CompaniesFragment : Fragment() {
         val branchNameInput = createDialogEditText("Branch Name *", company.branchName.orEmpty())
         val locationInput = createDialogEditText("Site Location", company.location.orEmpty())
         val emailInput = createDialogEditText("Company Email ID", company.email.orEmpty())
+        var serviceType = company.serviceType
+        var amcType = company.amcType
+        val serviceTypeInput =
+            createDialogPicker("Service Type *", CompanyServiceType.serviceLabel(serviceType))
+        val amcTypeInput = createDialogPicker("AMC Type *", CompanyServiceType.amcLabel(amcType))
         val startDateInput =
             createDialogEditText("Start Date (YYYY-MM-DD) *", extractDateValue(company.startDate))
         val endDateInput =
             createDialogEditText("End Date (YYYY-MM-DD) *", extractDateValue(company.endDate))
+        fun refreshAmcFields() {
+            val visibility = if (serviceType == CompanyServiceType.AMC) View.VISIBLE else View.GONE
+            listOf(amcTypeInput, startDateInput, endDateInput).forEach { it.visibility = visibility }
+        }
+        refreshAmcFields()
+        serviceTypeInput.setOnClickListener {
+            showOptionPicker("Service type", CompanyServiceType.serviceTypes) { value, label ->
+                serviceType = value
+                serviceTypeInput.setText(label)
+                serviceTypeInput.error = null
+                refreshAmcFields()
+            }
+        }
+        amcTypeInput.setOnClickListener {
+            showOptionPicker("AMC type", CompanyServiceType.amcTypes) { value, label ->
+                amcType = value
+                amcTypeInput.setText(label)
+                amcTypeInput.error = null
+            }
+        }
         val pocCardLabel = TextView(requireActivity()).apply {
             text = "Client Admin Details (optional — fill all or leave empty)"
             textSize = 15f
@@ -219,6 +245,8 @@ class CompaniesFragment : Fragment() {
             branchNameInput,
             locationInput,
             emailInput,
+            serviceTypeInput,
+            amcTypeInput,
             startDateInput,
             endDateInput,
             pocCardLabel,
@@ -248,6 +276,7 @@ class CompaniesFragment : Fragment() {
                 val pocEmail = pocEmailInput.text.toString().trim()
                 val pocPassword = pocPasswordInput.text.toString().trim()
                 val companyEmail = emailInput.text.toString().trim()
+                val isAmc = serviceType == CompanyServiceType.AMC
                 val clientAdminComplete = if (pocUser == null) {
                     com.prod.evergreen.helper.FormValidator.cardCompleteOrEmpty(
                         pocName, pocMobile, pocEmail, pocPassword
@@ -270,10 +299,16 @@ class CompaniesFragment : Fragment() {
                             companyEmail.isBlank() || Validator.isEmailValid(companyEmail)
                         ),
                         com.prod.evergreen.helper.FormValidator.Check(
-                            startDateInput, "Use YYYY-MM-DD", isValidDateFormat(startDate)
+                            serviceTypeInput, "Please select a service type", serviceType != null
                         ),
                         com.prod.evergreen.helper.FormValidator.Check(
-                            endDateInput, "Use YYYY-MM-DD", isValidDateFormat(endDate)
+                            amcTypeInput, "Please select C AMC or NC AMC", !isAmc || amcType != null
+                        ),
+                        com.prod.evergreen.helper.FormValidator.Check(
+                            startDateInput, "Use YYYY-MM-DD", !isAmc || isValidDateFormat(startDate)
+                        ),
+                        com.prod.evergreen.helper.FormValidator.Check(
+                            endDateInput, "Use YYYY-MM-DD", !isAmc || isValidDateFormat(endDate)
                         ),
                         com.prod.evergreen.helper.FormValidator.Check(
                             pocNameInput,
@@ -305,8 +340,12 @@ class CompaniesFragment : Fragment() {
                 val body = JsonObject().apply {
                     addProperty("company_name", siteName)
                     addProperty("branch_name", branchName)
-                    addProperty("start_date", startDate)
-                    addProperty("end_date", endDate)
+                    addProperty("service_type", serviceType)
+                    if (isAmc) {
+                        addProperty("amc_type", amcType)
+                        addProperty("start_date", startDate)
+                        addProperty("end_date", endDate)
+                    }
                     addProperty("company_location", locationInput.text.toString().trim())
                     addProperty("company_email", emailInput.text.toString().trim())
                     addProperty("logo", company.logo.orEmpty())
@@ -360,6 +399,28 @@ class CompaniesFragment : Fragment() {
             setText(value)
             inputType = InputType.TYPE_CLASS_TEXT
         }
+    }
+
+    private fun createDialogPicker(hint: String, value: String?): EditText {
+        return createDialogEditText(hint, value.orEmpty()).apply {
+            isFocusable = false
+            isCursorVisible = false
+            keyListener = null
+        }
+    }
+
+    private fun showOptionPicker(
+        title: String,
+        options: List<Pair<String, String>>,
+        onSelected: (String, String) -> Unit
+    ) {
+        AlertDialog.Builder(requireActivity())
+            .setTitle(title)
+            .setItems(options.map { it.second }.toTypedArray()) { _, which ->
+                val (value, label) = options[which]
+                onSelected(value, label)
+            }
+            .show()
     }
 
     private fun extractDateValue(rawDate: String?): String {

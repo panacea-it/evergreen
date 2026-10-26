@@ -76,6 +76,12 @@ data class AMCData(
 	@field:SerializedName("start_date")
 	val startDate: String? = null,
 
+	@field:SerializedName("service_type")
+	val serviceType: String? = null,
+
+	@field:SerializedName("amc_type")
+	val amcType: String? = null,
+
 	@field:SerializedName("is_active")
 	val isActive: Boolean? = null
 )

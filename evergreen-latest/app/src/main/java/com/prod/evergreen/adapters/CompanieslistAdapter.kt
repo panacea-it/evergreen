@@ -1,6 +1,7 @@
 package com.prod.evergreen.adapters
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
@@ -9,6 +10,7 @@ import com.bumptech.glide.Glide
 import com.prod.evergreen.R
 import com.prod.evergreen.api.Constants
 import com.prod.evergreen.databinding.CompaniesListItemsBinding
+import com.prod.evergreen.helper.CompanyServiceType
 import com.prod.evergreen.helper.DateConverter
 import com.prod.evergreen.models.AMCData
 import com.prod.evergreen.models.isCompanyActive
@@ -30,6 +32,11 @@ class CompanieslistAdapter(
             binding.cEmail.visibility = if (datum.email.isNullOrBlank()) android.view.View.GONE else android.view.View.VISIBLE
             val inactiveLabel = if (datum.isCompanyActive()) "" else "  (Inactive)"
             binding.companyName.text = "Name : ${datum.name.orEmpty()}$inactiveLabel"
+            val serviceLabel = CompanyServiceType.displayLabel(datum.serviceType, datum.amcType)
+            binding.serviceType.text = "Service Type : ${serviceLabel.orEmpty()}"
+            binding.serviceType.visibility = if (serviceLabel == null) View.GONE else View.VISIBLE
+            val hasContractDates = datum.serviceType == null || datum.serviceType == CompanyServiceType.AMC
+            binding.datesRow.visibility = if (hasContractDates) View.VISIBLE else View.GONE
             binding.statDate.text = "Start Date : ${formatDate(datum.startDate)}"
             binding.endDate.text = "End Date : ${formatDate(datum.endDate)}"
 
